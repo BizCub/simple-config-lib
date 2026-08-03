@@ -1,0 +1,10 @@
+### Mod properties
+mod.name="BizCub Lib"
+mod.id="bizcub_lib"
+mod.version="1.0"
+mod.description="first line\nsecond line"
+
+### Publishing
+mod.modrinth="uEiSR0ob"
+mod.curseforge="1252453"
+mod.github="stonecutter-multiloader"

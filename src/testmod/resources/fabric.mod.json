@@ -1,0 +1,10 @@
+{
+    "schemaVersion": 1,
+    "id": "test_lib",
+    "name": "Test Lib",
+    "version": "1.0.0",
+    "entrypoints": {
+        "modmenu": ["com.bizcub.test.platform.Fabric$ModMenu"],
+        "main": ["com.bizcub.test.platform.Fabric"]
+    }
+}

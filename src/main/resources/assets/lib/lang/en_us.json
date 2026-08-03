@@ -1,0 +1,50 @@
+{
+    "config.my_mod.group.general": "General",
+    "config.my_mod.group.gameplay": "Gameplay",
+
+    "config.my_mod.option.enable_optimizations": "Enable Optimizations",
+    "config.my_mod.option.fps_limit": "FPS Limit",
+    "config.my_mod.option.fps_limit.tooltip": "Maximum frames per second the game will render.",
+    "config.my_mod.option.render_distance": "Render Distance",
+    "config.my_mod.option.render_distance.tooltip": "Number of chunks rendered around the player.",
+    "config.my_mod.option.preset": "Performance Preset",
+    "config.my_mod.option.preset.tooltip": "Overall performance profile applied to the game.",
+    "config.my_mod.option.fps_overlay_color": "FPS Overlay Color",
+    "config.my_mod.option.profiler_background": "Profiler Background",
+    "config.my_mod.option.ignored_mods": "Ignored Mods",
+    "config.my_mod.option.ignored_mods.tooltip": "Mods excluded from optimizations.",
+    "config.my_mod.option.per_dimension_culling": "Per-Dimension Culling",
+    "config.my_mod.option.header_note": "Header Note",
+    "config.my_mod.option.empty_note": "Empty Note",
+    "config.my_mod.option.hints": "Hints",
+
+    "config.my_mod.option.world_profile": "World Profile",
+    "config.my_mod.option.world_profile.tooltip": "Active world tuning profile.",
+    "config.my_mod.option.entity_lod_bias": "Entity LOD Bias",
+    "config.my_mod.option.render_quality": "Render Quality",
+    "config.my_mod.option.chunk_profiles": "Chunk Profiles",
+    "config.my_mod.option.chunk_profiles.element": "Chunk Profile",
+
+    "config.my_mod.option.graphics": "Graphics",
+    "config.my_mod.option.vsync": "VSync",
+    "config.my_mod.option.brightness": "Brightness",
+    "config.my_mod.option.overlay": "Overlay Color",
+    "config.my_mod.option.shader_packs": "Shader Packs",
+
+    "config.my_mod.option.async": "Async",
+    "config.my_mod.option.worker_threads": "Worker Threads",
+    "config.my_mod.option.name": "Name",
+    "config.my_mod.option.test": "Test",
+
+    "config.my_mod.enum.performance_preset.potato": "Potato",
+    "config.my_mod.enum.performance_preset.fast": "Fast",
+    "config.my_mod.enum.performance_preset.balanced": "Balanced",
+    "config.my_mod.enum.performance_preset.quality": "Quality",
+
+    "config.my_mod.reset": "Reset all settings to defaults",
+    "config.my_mod.reset.shift": "Hold Shift to confirm",
+    "config.my_mod.confirm.title": "Discard changes?",
+    "config.my_mod.confirm.message": "You have unsaved changes. Exit without saving?",
+    "config.confirm.discard": "Discard",
+    "config.confirm.keep": "Keep Editing"
+}
