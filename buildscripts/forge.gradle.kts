@@ -17,6 +17,10 @@ multiloader {
         if (scp >= "1.21.6") annotationProcessor("net.minecraftforge:eventbus-validator:7.0.0")
     }
 
+    sourceSets["main"].apply {
+        runtimeClasspath += sourceSets["testmod"].output
+    }
+
     minecraft {
         mappings("official", mod.mc)
         accessTransformers.from(atForgeFile)

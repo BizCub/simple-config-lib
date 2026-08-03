@@ -1,4 +1,4 @@
-package com.bizcub.lib.autoconfig.util;
+package com.bizcub.lib.util;
 
 public final class KeyFormatter {
 

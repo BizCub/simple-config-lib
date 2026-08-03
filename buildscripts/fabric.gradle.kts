@@ -16,16 +16,14 @@ multiloader {
             accessWidenerPath.set(ctFabricFile)
 
         runConfigs {
+            configureEach {
+                sourceSet = "testmod"
+            }
             getByName("client") {
                 runDirectory.set(clientRunFile)
             }
             getByName("server") {
                 runDirectory.set(serverRunFile)
-            }
-            create("testmodClient") {
-                client()
-                runDirectory.set(clientRunFile)
-                sourceSet = "testmod"
             }
         }
     }

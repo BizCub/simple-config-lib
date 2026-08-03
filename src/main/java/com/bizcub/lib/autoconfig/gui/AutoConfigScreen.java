@@ -1,17 +1,17 @@
-package com.bizcub.lib.autoconfig.screen;
+package com.bizcub.lib.autoconfig.gui;
 
 import com.bizcub.lib.autoconfig.ConfigHolder;
 import com.bizcub.lib.autoconfig.annotation.*;
 import com.bizcub.lib.autoconfig.annotation.Tooltip;
-import com.bizcub.lib.autoconfig.util.KeyFormatter;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.Element;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.GroupNode;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.ListModel;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.ListNode;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.Node;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.ObjectElement;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.ScalarElement;
-import com.bizcub.lib.autoconfig.screen.AutoConfigList.WidgetNode;
+import com.bizcub.lib.util.KeyFormatter;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.Element;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.GroupNode;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.ListModel;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.ListNode;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.Node;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.ObjectElement;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.ScalarElement;
+import com.bizcub.lib.autoconfig.gui.AutoConfigList.WidgetNode;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

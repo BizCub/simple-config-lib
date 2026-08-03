@@ -1,12 +1,12 @@
 package com.bizcub.lib.autoconfig;
 
+import com.bizcub.lib.Main;
 import com.bizcub.lib.autoconfig.annotation.Config;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
@@ -78,7 +78,7 @@ public class ConfigHolder<T> {
     }
 
     private Path path() {
-        return Minecraft.getInstance().gameDirectory.toPath().resolve("config").resolve(this.name + ".json");
+        return Main.gameDir().resolve("config").resolve(this.name + ".json");
     }
 
     public static <T> ConfigHolder<T> register(final Class<T> type) {

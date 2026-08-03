@@ -12,9 +12,10 @@ multiloader {
         if (isMainCTFileExist())
             accessTransformers.from(atNeoForgeFile)
 
-        mods.create(mod.id, Action {
-            sourceSet(sourceSets.main.get())
-        })
+        mods {
+            register("main") { sourceSet(sourceSets.main.get()) }
+            register("testmod") { sourceSet(sourceSets.testmod.get()) }
+        }
 
         runs {
             configureEach {

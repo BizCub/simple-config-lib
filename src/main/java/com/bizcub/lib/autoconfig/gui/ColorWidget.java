@@ -1,4 +1,4 @@
-package com.bizcub.lib.autoconfig.screen;
+package com.bizcub.lib.autoconfig.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

@@ -1,4 +1,4 @@
-package com.bizcub.lib.autoconfig.screen;
+package com.bizcub.lib.autoconfig.gui;
 
 import com.bizcub.lib.autoconfig.annotation.Color;
 import com.bizcub.lib.autoconfig.annotation.Slider;
