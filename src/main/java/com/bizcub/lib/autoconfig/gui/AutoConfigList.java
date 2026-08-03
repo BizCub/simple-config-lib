@@ -463,6 +463,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     }
                     model.expanded = true;
                     refreshButtons();
+                    AutoConfigList.this.markDirty();
                     AutoConfigList.this.rebuild();
                 }).size(HEADER_BTN, HEADER_BTN).build();
 
@@ -472,6 +473,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                         model.elements.remove(model.selectedIndex);
                         model.selectedIndex = -1;
                         refreshButtons();
+                        AutoConfigList.this.markDirty();
                         AutoConfigList.this.rebuild();
                     }
                 }).size(HEADER_BTN, HEADER_BTN).build();

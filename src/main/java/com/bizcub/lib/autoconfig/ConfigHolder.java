@@ -87,17 +87,52 @@ public class ConfigHolder<T> {
 
     public void load() {
         Path file = path();
+        T loaded = null;
         if (Files.exists(file)) {
             try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-                this.instance = GSON.fromJson(reader, this.type);
+                loaded = GSON.fromJson(reader, this.type);
             } catch (Exception e) {
                 LOGGER.error("Failed to read config {}", file, e);
-                this.instance = null;
             }
         }
-        if (this.instance == null) {
-            this.instance = newDefault();
+        if (loaded == null) {
+            loaded = newDefault();
+            if (this.instance == null) {
+                this.instance = loaded;
+            } else {
+                copyInto(loaded, this.instance);
+            }
             save();
+            return;
+        }
+        if (this.instance == null) {
+            this.instance = loaded;
+        } else {
+            copyInto(loaded, this.instance);
+        }
+    }
+
+    public void reset() {
+        T defaults = newDefault();
+        if (this.instance == null) {
+            this.instance = defaults;
+        } else {
+            copyInto(defaults, this.instance);
+        }
+    }
+
+    private void copyInto(final T source, final T target) {
+        for (java.lang.reflect.Field f : this.type.getDeclaredFields()) {
+            int mods = f.getModifiers();
+            if (java.lang.reflect.Modifier.isStatic(mods) || java.lang.reflect.Modifier.isTransient(mods)) {
+                continue;
+            }
+            try {
+                f.setAccessible(true);
+                f.set(target, f.get(source));
+            } catch (IllegalAccessException e) {
+                LOGGER.error("Failed to copy config field {}", f.getName(), e);
+            }
         }
     }
 
@@ -120,9 +155,5 @@ public class ConfigHolder<T> {
             throw new IllegalStateException("The @Config class " + this.type.getName()
                     + " must have a public constructor without arguments.", e);
         }
-    }
-
-    public void reset() {
-        this.instance = newDefault();
     }
 }
