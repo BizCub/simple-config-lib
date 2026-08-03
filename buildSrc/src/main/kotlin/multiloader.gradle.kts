@@ -5,6 +5,13 @@ plugins {
 }
 
 multiloader {
+    sc.replacements {
+        string(scp >= "26.2") {
+            replace("TabNavigationBar", "MenuTabBar")
+            replace(".setScreen(", ".gui.setScreen(")
+        }
+    }
+
     addSourceSet("testmod")
 
     setMREnvironment(mrEnvs.clientOnly)

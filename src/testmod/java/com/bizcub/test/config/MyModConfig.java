@@ -2,9 +2,9 @@ package com.bizcub.test.config;
 
 import com.bizcub.lib.autoconfig.annotation.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.ClickEvent;
+//import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
+//import net.minecraft.network.chat.HoverEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,9 +51,10 @@ public class MyModConfig {
             .withStyle(style -> style
                     .withColor(ChatFormatting.YELLOW)
                     .withUnderlined(true)
-                    .withHoverEvent(new HoverEvent.ShowText(
-                            Component.literal("Changing these may affect FPS")))
-                    .withClickEvent(new ClickEvent.CopyToClipboard("456")));
+//                    .withHoverEvent(new HoverEvent.ShowText(
+//                            Component.literal("Changing these may affect FPS")))
+//                    .withClickEvent(new ClickEvent.CopyToClipboard("456"))
+            );
 
     @ListConfig(editable = false)
     public List<Component> hints = new ArrayList<>(List.of(headerNote, emptyNote));

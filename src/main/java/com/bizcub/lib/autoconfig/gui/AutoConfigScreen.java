@@ -16,10 +16,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
-import net.minecraft.client.gui.components.tabs.GridLayoutTab;
-import net.minecraft.client.gui.components.tabs.Tab;
-import net.minecraft.client.gui.components.tabs.TabManager;
-import net.minecraft.client.gui.components.tabs.TabNavigationBar;
+import net.minecraft.client.gui.components.tabs.*;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -59,7 +56,7 @@ public class AutoConfigScreen extends Screen {
     private final Map<ObjectElement, Object> objectBacking = new IdentityHashMap<>();
 
     @Nullable
-    private TabNavigationBar tabNavigationBar;
+    private MenuTabBar tabNavigationBar;
 
     @Nullable
     private Button resetButton;
@@ -83,7 +80,7 @@ public class AutoConfigScreen extends Screen {
                 tabs.add(new ConfigTab(key, value))
         );
 
-        this.tabNavigationBar = this.addRenderableWidget(TabNavigationBar.builder(this.tabManager, this.width)
+        this.tabNavigationBar = this.addRenderableWidget(MenuTabBar.builder(this.tabManager, this.width)
                 .addTabs(tabs.toArray(new Tab[0]))
                 .build()
         );
@@ -97,7 +94,7 @@ public class AutoConfigScreen extends Screen {
             this.applyActions.forEach(Runnable::run);
             this.holder.save();
             this.dirty = false;
-            this.minecraft.setScreen(this.lastScreen);
+            this.minecraft.gui.setScreen(this.lastScreen);
         }).build());
         this.doneButton.active = false;
 
@@ -111,7 +108,7 @@ public class AutoConfigScreen extends Screen {
         this.resetButton = this.addRenderableWidget(
                 Button.builder(Component.literal("\uD83D\uDDD8"), b -> {
                             onReset();
-                            this.minecraft.setScreen(new AutoConfigScreen(this.lastScreen, this.holder));
+                            this.minecraft.gui.setScreen(new AutoConfigScreen(this.lastScreen, this.holder));
                         })
                         .size(20, 20)
                         .pos(6, this.height - 20 - 6)
@@ -213,7 +210,8 @@ public class AutoConfigScreen extends Screen {
     @Override
     protected void repositionElements() {
         if (this.tabNavigationBar != null) {
-            this.tabNavigationBar.updateWidth(this.width);
+            //~ if >=26.2 'updateWidth' -> 'arrangeElements'
+            this.tabNavigationBar.arrangeElements(this.width);
             int tabAreaTop = this.tabNavigationBar.getRectangle().bottom();
             ScreenRectangle tabArea = new ScreenRectangle(0, tabAreaTop, this.width,
                     this.height - this.layout.getFooterHeight() - tabAreaTop);
@@ -235,17 +233,17 @@ public class AutoConfigScreen extends Screen {
     public void onClose() {
         if (!this.dirty) {
             this.holder.load();
-            this.minecraft.setScreen(this.lastScreen);
+            this.minecraft.gui.setScreen(this.lastScreen);
             return;
         }
 
-        this.minecraft.setScreen(new ConfirmScreen(
+        this.minecraft.gui.setScreen(new ConfirmScreen(
                 yes -> {
                     if (yes) {
                         this.holder.load();
-                        this.minecraft.setScreen(this.lastScreen);
+                        this.minecraft.gui.setScreen(this.lastScreen);
                     } else {
-                        this.minecraft.setScreen(this);
+                        this.minecraft.gui.setScreen(this);
                     }
                 },
                 Component.translatable("config." + this.holder.name() + ".confirm.title"),

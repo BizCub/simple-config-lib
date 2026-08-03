@@ -17,5 +17,6 @@ plugins {
 }
 
 multiloader {
+    match("26.2", fb)
     match("26.1.2", fb, fg, nf)
 }
