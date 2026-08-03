@@ -9,7 +9,7 @@ neoforged = "2.0+"
 
 [plugins]
 stonecutter = { id = "dev.kikugie.stonecutter" }
-multiloader = { id = "com.bizcub.multiloader" }
+multiloader = { id = "io.github.bizcub.multiloader" }
 loom = { id = "fabric-loom", version.ref = "loom" }
 loom-arch = { id = "dev.architectury.loom", version.ref = "loom-arch" }
 forge = { id = "net.minecraftforge.gradle", version.ref = "forge" }
@@ -17,5 +17,5 @@ neoforged = { id = "net.neoforged.moddev", version.ref = "neoforged" }
 
 [libraries]
 stonecutter = { module = "dev.kikugie:stonecutter", version.ref = "stonecutter" }
-multiloader = { module = "com.bizcub:multiloader", version.ref = "multiloader" }
+multiloader = { module = "io.github.bizcub:multiloader", version.ref = "multiloader" }
 publish = { module = "me.modmuss50:mod-publish-plugin", version.ref = "publish" }

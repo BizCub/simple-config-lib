@@ -1,7 +1,7 @@
 plugins {
     id("me.modmuss50.mod-publish-plugin")
     id("dev.kikugie.fletching-table")
-    id("com.bizcub.multiloader")
+    id("io.github.bizcub.multiloader")
 }
 
 multiloader {
@@ -12,16 +12,19 @@ multiloader {
 
     if (isFabric) {
         addDependency(
-            dependency = "net.fabricmc:fabric-loader:${getDep("fabric")}"
+            dependency = "net.fabricmc:fabric-loader:${getDep("fabric")}",
+            configuration = "compileOnly"
         )
         addDependency(
             dependency = "net.fabricmc.fabric-api:fabric-api:${getDep("fabric-api")}",
+            configurations = arrayOf("compileOnly", "testmodImplementation"),
             isPublishDepEnabled = true,
             isPublishDepRequired = true
         )
         addDependency(
             dependency = "com.terraformersmc:modmenu:${getDep("modmenu")}",
-            repository = "maven.terraformersmc.com/releases"
+            repository = "maven.terraformersmc.com/releases",
+            configuration = "testmodImplementation"
         )
     }
 }
