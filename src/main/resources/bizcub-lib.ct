@@ -1,2 +1,2 @@
-accessWidener v1 official
+classTweaker v1 named
 accessible method net/minecraft/client/gui/screens/Screen defaultHandleClickEvent (Lnet/minecraft/network/chat/ClickEvent;Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/Screen;)V

@@ -2,7 +2,7 @@ package com.bizcub.lib.autoconfig.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -153,7 +153,7 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    protected void extractWidgetRenderState(final GuiGraphicsExtractor graphics,
+    protected void renderWidget(final GuiGraphics graphics,
                                             final int mouseX, final int mouseY, final float partial) {
         int sx = swatchX(), sy = swatchY();
         graphics.fill(sx - 1, sy - 1, sx + SWATCH + 1, sy + SWATCH + 1, 0xFF000000);
@@ -161,10 +161,10 @@ public final class ColorWidget extends AbstractWidget {
 
         this.box.setPosition(getX() + SWATCH + GAP, getY());
         this.box.setWidth(getWidth() - SWATCH - GAP);
-        this.box.extractRenderState(graphics, mouseX, mouseY, partial);
+        this.box.render(graphics, mouseX, mouseY, partial);
     }
 
-    void renderPicker(final GuiGraphicsExtractor graphics) {
+    void renderPicker(final GuiGraphics graphics) {
         if (!this.pickerOpen) return;
 
         graphics.fill(pickerX() - 1, pickerY() - 1,
@@ -180,7 +180,7 @@ public final class ColorWidget extends AbstractWidget {
         renderCursors(graphics);
     }
 
-    private void renderSvSquare(final GuiGraphicsExtractor graphics) {
+    private void renderSvSquare(final GuiGraphics graphics) {
         int x0 = svX(), y0 = svY();
         int colW = Math.max(1, SV_SIZE / SV_STEPS);
         int rowH = Math.max(1, SV_SIZE / SV_STEPS);
@@ -197,7 +197,7 @@ public final class ColorWidget extends AbstractWidget {
         }
     }
 
-    private void renderHueBar(final GuiGraphicsExtractor graphics) {
+    private void renderHueBar(final GuiGraphics graphics) {
         int x0 = hueX(), y0 = hueY();
         int stepH = Math.max(1, SV_SIZE / HUE_STEPS);
         for (int cy = 0; cy < SV_SIZE; cy += stepH) {
@@ -208,7 +208,7 @@ public final class ColorWidget extends AbstractWidget {
         }
     }
 
-    private void renderAlphaBar(final GuiGraphicsExtractor graphics) {
+    private void renderAlphaBar(final GuiGraphics graphics) {
         int x0 = alphaX(), y0 = alphaY();
         int rgb = hsvToRgb(this.hue, this.sat, this.val) & 0xFFFFFF;
 
@@ -234,7 +234,7 @@ public final class ColorWidget extends AbstractWidget {
         return this.draggingSV || this.draggingHue || this.draggingAlpha;
     }
 
-    private void renderCursors(final GuiGraphicsExtractor graphics) {
+    private void renderCursors(final GuiGraphics graphics) {
         int cx = svX() + Math.round(this.sat * SV_SIZE);
         int cy = svY() + Math.round((1f - this.val) * SV_SIZE);
         int r = 3;

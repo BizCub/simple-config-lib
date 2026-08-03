@@ -4,7 +4,7 @@ import com.bizcub.lib.autoconfig.annotation.Color;
 import com.bizcub.lib.autoconfig.annotation.Slider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -14,7 +14,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,13 +42,13 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     @Override
-    public void extractWidgetRenderState(final GuiGraphicsExtractor graphics,
+    public void renderWidget(final GuiGraphics graphics,
                                          final int mouseX, final int mouseY, final float a) {
         boolean overPopup = isPopupOpenAt(mouseX, mouseY);
         int hoverX = overPopup ? Integer.MIN_VALUE : mouseX;
         int hoverY = overPopup ? Integer.MIN_VALUE : mouseY;
 
-        super.extractWidgetRenderState(graphics, hoverX, hoverY, a);
+        super.renderWidget(graphics, hoverX, hoverY, a);
 
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
@@ -133,7 +132,6 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
     }
 
-    @Nullable
     private static ColorWidget colorPickerOf(final Row row) {
         if (row instanceof WidgetRow wr && wr.node.widget instanceof ColorWidget cw) {
             return cw;
@@ -211,7 +209,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     public abstract static class Node {
         public Component label;
-        @Nullable public Component tooltip;
+        public Component tooltip;
     }
 
     public static final class WidgetNode extends Node {
@@ -231,8 +229,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         public boolean editable;
         public boolean expanded;
         public final boolean addToFront;
-        @Nullable public Slider sliderCfg;
-        @Nullable public Color colorCfg;
+        public Slider sliderCfg;
+        public Color colorCfg;
         public int selectedIndex = -1;
         public Class<?> type;
 
@@ -254,7 +252,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     public static final class ScalarElement implements Element {
         public String value;
-        @Nullable public Component component;
+        public Component component;
 
         public ScalarElement(final String value) {
             this.value = value;
@@ -287,19 +285,19 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY,
+        public void renderContent(final GuiGraphics graphics, final int mouseX, final int mouseY,
                                    final boolean hovered, final float a) {
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
             int y = this.getContentY();
             int labelX = rowLeft + this.depth * INDENT;
 
-            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
             int widgetX = rowLeft + rowWidth - WIDGET_WIDTH;
             this.node.widget.setPosition(widgetX, y);
             this.node.widget.setWidth(WIDGET_WIDTH);
-            this.node.widget.extractRenderState(graphics, mouseX, mouseY, a);
+            this.node.widget.render(graphics, mouseX, mouseY, a);
 
             int labelWidth = AutoConfigList.this.font.width(this.node.label);
             boolean overLabel = mouseX >= labelX && mouseX <= labelX + labelWidth
@@ -385,18 +383,18 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY,
+        public void renderContent(final GuiGraphics graphics, final int mouseX, final int mouseY,
                                    final boolean hovered, final float a) {
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
             int y = this.getContentY();
             int labelX = rowLeft + this.depth * INDENT;
 
-            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
             int toggleX = rowLeft + rowWidth - HEADER_BTN;
             this.toggleButton.setPosition(toggleX, y);
-            this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a);
+            this.toggleButton.render(graphics, mouseX, mouseY, a);
 
             if (this.node.tooltip != null) {
                 int labelWidth = AutoConfigList.this.font.width(this.node.label);
@@ -439,8 +437,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     private final class ListHeaderRow extends Row {
         private final ListNode node;
         private final int depth;
-        @Nullable private final Button addButton;
-        @Nullable private final Button removeButton;
+        private final Button addButton;
+        private final Button removeButton;
         private final Button toggleButton;
 
         ListHeaderRow(final ListNode node, final int depth) {
@@ -500,27 +498,27 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY,
+        public void renderContent(final GuiGraphics graphics, final int mouseX, final int mouseY,
                                    final boolean hovered, final float a) {
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
             int y = this.getContentY();
             int labelX = rowLeft + this.depth * INDENT;
 
-            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
             int right = rowLeft + rowWidth;
             int toggleX = right - HEADER_BTN;
             this.toggleButton.setPosition(toggleX, y);
-            this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a);
+            this.toggleButton.render(graphics, mouseX, mouseY, a);
 
             if (this.node.model.editable) {
                 int removeX = toggleX - HEADER_BTN - HEADER_BTN_GAP;
                 int addX = removeX - HEADER_BTN - HEADER_BTN_GAP;
                 this.addButton.setPosition(addX, y);
                 this.removeButton.setPosition(removeX, y);
-                this.addButton.extractRenderState(graphics, mouseX, mouseY, a);
-                this.removeButton.extractRenderState(graphics, mouseX, mouseY, a);
+                this.addButton.render(graphics, mouseX, mouseY, a);
+                this.removeButton.render(graphics, mouseX, mouseY, a);
             }
 
             if (this.node.tooltip != null) {
@@ -573,7 +571,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         private final int index;
         private final int depth;
         private final AbstractWidget widget;
-        private @Nullable Component componentLabel;
+        private Component componentLabel;
 
         ScalarElementRow(final ListModel model, final int index, final int depth) {
             this.model = model;
@@ -641,7 +639,6 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             }
         }
 
-        @Nullable
         private ScalarElement scalar() {
             if (this.index < this.model.elements.size()
                     && this.model.elements.get(this.index) instanceof ScalarElement s) {
@@ -658,7 +655,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY,
+        public void renderContent(final GuiGraphics graphics, final int mouseX, final int mouseY,
                                    final boolean hovered, final float a) {
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
@@ -673,10 +670,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             this.widget.setPosition(boxX, y);
             this.widget.setWidth(boxW);
-            this.widget.extractRenderState(graphics, mouseX, mouseY, a);
+            this.widget.render(graphics, mouseX, mouseY, a);
 
             if (this.componentLabel != null) {
-                graphics.text(AutoConfigList.this.font,
+                graphics.drawString(AutoConfigList.this.font,
                         this.componentLabel.getVisualOrderText(), boxX, y + 6, LABEL_COLOR);
 
                 int labelW = AutoConfigList.this.font.width(this.componentLabel);
@@ -763,7 +760,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY,
+        public void renderContent(final GuiGraphics graphics, final int mouseX, final int mouseY,
                                    final boolean hovered, final float a) {
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
@@ -775,11 +772,11 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             }
 
             GroupNode g = group();
-            graphics.text(AutoConfigList.this.font, g.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, g.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
             int toggleX = rowLeft + rowWidth - HEADER_BTN;
             this.toggleButton.setPosition(toggleX, y);
-            this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a);
+            this.toggleButton.render(graphics, mouseX, mouseY, a);
         }
 
         @Override

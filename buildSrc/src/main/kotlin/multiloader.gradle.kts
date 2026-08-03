@@ -10,6 +10,13 @@ multiloader {
             replace("TabNavigationBar", "MenuTabBar")
             replace(".setScreen(", ".gui.setScreen(")
         }
+        string(scp >= "26.1") {
+            replace("GuiGraphics", "GuiGraphicsExtractor")
+            replace("render(", "extractRenderState(")
+            replace("renderWidget(", "extractWidgetRenderState(")
+            replace("renderContent(", "extractContent(")
+            replace(".drawString(", ".text(")
+        }
     }
 
     addSourceSet("testmod")
@@ -19,14 +26,11 @@ multiloader {
 
     if (isFabric) {
         addDependency(
-            dependency = "net.fabricmc:fabric-loader:${getDep("fabric")}",
-            configuration = "compileOnly"
+            dependency = "net.fabricmc:fabric-loader:${getDep("fabric")}"
         )
         addDependency(
             dependency = "net.fabricmc.fabric-api:fabric-api:${getDep("fabric-api")}",
-            configurations = arrayOf("compileOnly", "testmodImplementation"),
-            isPublishDepEnabled = true,
-            isPublishDepRequired = true
+            configurations = arrayOf("compileOnly", "testmodImplementation")
         )
         addDependency(
             dependency = "com.terraformersmc:modmenu:${getDep("modmenu")}",

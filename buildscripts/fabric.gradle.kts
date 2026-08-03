@@ -16,6 +16,9 @@ multiloader {
         if (isMainCTFileExist())
             accessWidenerPath.set(ctFabricFile)
 
+        if (isObfuscated)
+            createRemapConfigurations(sourceSets["testmod"])
+
         runConfigs {
             configureEach {
                 sourceSet = "testmod"

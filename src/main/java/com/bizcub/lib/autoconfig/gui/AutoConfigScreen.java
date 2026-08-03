@@ -14,7 +14,7 @@ import com.bizcub.lib.autoconfig.gui.AutoConfigList.ScalarElement;
 import com.bizcub.lib.autoconfig.gui.AutoConfigList.WidgetNode;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.tabs.*;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
@@ -27,7 +27,6 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
@@ -55,10 +54,8 @@ public class AutoConfigScreen extends Screen {
 
     private final Map<ObjectElement, Object> objectBacking = new IdentityHashMap<>();
 
-    @Nullable
-    private MenuTabBar tabNavigationBar;
+    private TabNavigationBar tabNavigationBar;
 
-    @Nullable
     private Button resetButton;
     private Button doneButton;
     private boolean dirty;
@@ -80,7 +77,7 @@ public class AutoConfigScreen extends Screen {
                 tabs.add(new ConfigTab(key, value))
         );
 
-        this.tabNavigationBar = this.addRenderableWidget(MenuTabBar.builder(this.tabManager, this.width)
+        this.tabNavigationBar = this.addRenderableWidget(TabNavigationBar.builder(this.tabManager, this.width)
                 .addTabs(tabs.toArray(new Tab[0]))
                 .build()
         );
@@ -94,7 +91,7 @@ public class AutoConfigScreen extends Screen {
             this.applyActions.forEach(Runnable::run);
             this.holder.save();
             this.dirty = false;
-            this.minecraft.gui.setScreen(this.lastScreen);
+            this.minecraft.setScreen(this.lastScreen);
         }).build());
         this.doneButton.active = false;
 
@@ -108,7 +105,7 @@ public class AutoConfigScreen extends Screen {
         this.resetButton = this.addRenderableWidget(
                 Button.builder(Component.literal("\uD83D\uDDD8"), b -> {
                             onReset();
-                            this.minecraft.gui.setScreen(new AutoConfigScreen(this.lastScreen, this.holder));
+                            this.minecraft.setScreen(new AutoConfigScreen(this.lastScreen, this.holder));
                         })
                         .size(20, 20)
                         .pos(6, this.height - 20 - 6)
@@ -151,14 +148,13 @@ public class AutoConfigScreen extends Screen {
         return groups;
     }
 
-    @Nullable
     private AutoConfigList currentList() {
         Tab tab = this.tabManager.getCurrentTab();
         return tab instanceof ConfigTab ct ? ct.list() : null;
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         if (this.resetButton != null) {
             boolean shift = Minecraft.getInstance().hasShiftDown();
             this.resetButton.active = shift;
@@ -170,7 +166,7 @@ public class AutoConfigScreen extends Screen {
                               .append("\n")
                               .append(Component.translatable("config." + holder.name() + ".reset.shift"))));
         }
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+        super.render(graphics, mouseX, mouseY, a);
     }
 
     @Override
@@ -210,8 +206,8 @@ public class AutoConfigScreen extends Screen {
     @Override
     protected void repositionElements() {
         if (this.tabNavigationBar != null) {
-            //~ if >=26.2 'updateWidth' -> 'arrangeElements'
-            this.tabNavigationBar.arrangeElements(this.width);
+            //~ if >=26.2 || <=1.21.11 'updateWidth' -> 'arrangeElements'
+            this.tabNavigationBar.arrangeElements(/*? >=26.1 >> ')'*/ /*this.width*/);
             int tabAreaTop = this.tabNavigationBar.getRectangle().bottom();
             ScreenRectangle tabArea = new ScreenRectangle(0, tabAreaTop, this.width,
                     this.height - this.layout.getFooterHeight() - tabAreaTop);
@@ -233,17 +229,17 @@ public class AutoConfigScreen extends Screen {
     public void onClose() {
         if (!this.dirty) {
             this.holder.load();
-            this.minecraft.gui.setScreen(this.lastScreen);
+            this.minecraft.setScreen(this.lastScreen);
             return;
         }
 
-        this.minecraft.gui.setScreen(new ConfirmScreen(
+        this.minecraft.setScreen(new ConfirmScreen(
                 yes -> {
                     if (yes) {
                         this.holder.load();
-                        this.minecraft.gui.setScreen(this.lastScreen);
+                        this.minecraft.setScreen(this.lastScreen);
                     } else {
-                        this.minecraft.gui.setScreen(this);
+                        this.minecraft.setScreen(this);
                     }
                 },
                 Component.translatable("config." + this.holder.name() + ".confirm.title"),
@@ -284,7 +280,6 @@ public class AutoConfigScreen extends Screen {
         }
     }
 
-    @Nullable
     private Node buildNode(final Object config, final Field field) {
         field.setAccessible(true);
         try {
@@ -335,7 +330,6 @@ public class AutoConfigScreen extends Screen {
         }
     }
 
-    @Nullable
     private Node buildListNode(final Object config, final Field field) throws IllegalAccessException {
         final Class<?> element = resolveListElementType(field);
         if (element == null) {
@@ -524,7 +518,6 @@ public class AutoConfigScreen extends Screen {
                 element.getSimpleName());
     }
 
-    @Nullable
     private Component tooltipFor(final Field field) {
         Tooltip tip = field.getAnnotation(Tooltip.class);
         if (tip == null) {
@@ -590,7 +583,6 @@ public class AutoConfigScreen extends Screen {
         }
     }
 
-    @Nullable
     private Class<?> resolveListElementType(final Field field) {
         Type generic = field.getGenericType();
         if (generic instanceof ParameterizedType pt && pt.getActualTypeArguments().length == 1) {
@@ -602,7 +594,6 @@ public class AutoConfigScreen extends Screen {
         return null;
     }
 
-    @Nullable
     private static Object parseElement(final Class<?> type, final String raw) {
         String s = raw.trim();
         try {
