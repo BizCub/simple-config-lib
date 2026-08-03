@@ -17,6 +17,9 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class ConfigHolder<T> {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -48,6 +51,7 @@ public class ConfigHolder<T> {
     private final Class<T> type;
     private final String name;
     private final boolean snakeCaseKeys;
+    private final List<Consumer<T>> saveListeners = new ArrayList<>();
     private T instance;
 
     ConfigHolder(final Class<T> type) {
@@ -83,6 +87,13 @@ public class ConfigHolder<T> {
 
     public static <T> ConfigHolder<T> register(final Class<T> type) {
         return new ConfigHolder<>(type);
+    }
+
+    public ConfigHolder<T> onSave(final Consumer<T> listener) {
+        if (listener != null) {
+            this.saveListeners.add(listener);
+        }
+        return this;
     }
 
     public void load() {
@@ -145,6 +156,14 @@ public class ConfigHolder<T> {
             }
         } catch (Exception e) {
             LOGGER.error("Failed to save config {}", file, e);
+            return;
+        }
+        for (Consumer<T> listener : this.saveListeners) {
+            try {
+                listener.accept(this.instance);
+            } catch (Exception e) {
+                LOGGER.error("Config save listener failed for {}", this.name, e);
+            }
         }
     }
 
