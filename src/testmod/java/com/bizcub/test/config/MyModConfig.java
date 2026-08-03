@@ -9,7 +9,7 @@ import net.minecraft.network.chat.HoverEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-@Config(name = "my_mod", snakeCaseKeys = true)
+@Config(name = "test", snakeCaseKeys = true)
 public class MyModConfig {
     public boolean enableOptimizations = true;
 
