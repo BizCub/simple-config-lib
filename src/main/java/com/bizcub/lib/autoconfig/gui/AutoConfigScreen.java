@@ -478,8 +478,10 @@ public class AutoConfigScreen extends Screen {
             Enum[] values = (Enum[]) t.getEnumConstants();
             EnumConfig cfg = field.getAnnotation(EnumConfig.class);
             final boolean translate = cfg != null && cfg.translate();
-            return CycleButton.builder((Enum v) -> enumValueLabel(v, translate), initial)
+            return CycleButton.builder((Enum v) -> enumValueLabel(v, translate) /*? >=1.21.11 >> ')'*//*, initial*/)
                     .withValues(values)
+                    //? <1.21.11
+                    .withInitialValue(initial)
                     .displayOnlyValue()
                     .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, Component.empty(),
                             (b, v) -> apply(config, field, v));
