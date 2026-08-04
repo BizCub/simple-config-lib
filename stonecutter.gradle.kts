@@ -3,4 +3,4 @@ plugins {
     alias(libs.plugins.multiloader)
 }
 
-stonecutter active "1.21.3-fabric"
+stonecutter active "1.20.4-fabric"

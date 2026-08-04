@@ -280,7 +280,12 @@ public class AutoConfigScreen extends Screen {
 
         @Override
         public void doLayout(final ScreenRectangle rectangle) {
-            this.list.updateSizeAndPosition(rectangle.width(), rectangle.height(), rectangle.top());
+            //? >=1.20.5 {
+            /*this.list.updateSizeAndPosition(rectangle.width(), rectangle.height(), rectangle.top());
+
+            *///?} else {
+            this.list.setSize(rectangle.width(), rectangle.height());
+            this.list.setPosition(0, rectangle.top());//?}
         }
     }
 

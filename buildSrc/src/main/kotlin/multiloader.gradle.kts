@@ -41,6 +41,9 @@ multiloader {
             replace(".renderTooltip(", ".setTooltipForNextFrame(")
             replace("screen.handleComponentClicked(style);", "Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);")
         }
+        string(scp >= "1.21.5") {
+            replace("protected int getScrollbarPosition()", "protected int scrollBarX()")
+        }
     }
 
     addSourceSet("testmod")
@@ -59,7 +62,8 @@ multiloader {
         addDependency(
             dependency = "com.terraformersmc:modmenu:${getDep("modmenu")}",
             repository = "maven.terraformersmc.com/releases",
-            configuration = "testmodImplementation"
+            configuration = "testmodImplementation",
+            excludedModules = listOf("eu.pb4")
         )
     }
 }

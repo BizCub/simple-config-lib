@@ -73,6 +73,11 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     @Override
+    protected int getScrollbarPosition() {
+        return this.getRowLeft() + this.getRowWidth() + 8;
+    }
+
+    @Override
     public int getRowWidth() {
         return 310;
     }
