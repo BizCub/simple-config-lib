@@ -87,7 +87,8 @@ public class AutoConfigScreen extends Screen {
         //? >=1.20.2 {
         /*LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
         *///?} else {
-        LinearLayout footer = new LinearLayout(0, 0, LinearLayout.Orientation.HORIZONTAL);//?}
+        LinearLayout footer = this.layout.addToFooter(new LinearLayout(0, 0, LinearLayout.Orientation.HORIZONTAL));
+        footer.defaultChildLayoutSetting().padding(4, 0);//?}
 
         footer.addChild(Button.builder(CommonComponents.GUI_CANCEL, b -> onClose()).build());
         this.doneButton = footer.addChild(Button.builder(CommonComponents.GUI_DONE, b -> {
@@ -161,6 +162,7 @@ public class AutoConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        //? <1.20.2
         this.renderBackground(graphics);
         if (this.resetButton != null) {
             boolean shift = Screen.hasShiftDown();
