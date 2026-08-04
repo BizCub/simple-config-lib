@@ -31,11 +31,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
@@ -90,8 +86,8 @@ public class AutoConfigScreen extends Screen {
         LinearLayout footer = this.layout.addToFooter(new LinearLayout(0, 0, LinearLayout.Orientation.HORIZONTAL));
         footer.defaultChildLayoutSetting().padding(4, 0);//?}
 
-        footer.addChild(Button.builder(CommonComponents.GUI_CANCEL, b -> onClose()).build());
-        this.doneButton = footer.addChild(Button.builder(CommonComponents.GUI_DONE, b -> {
+        Button cancelButton = Button.builder(CommonComponents.GUI_CANCEL, b -> onClose()).build();
+        this.doneButton = Button.builder(CommonComponents.GUI_DONE, b -> {
             for (AutoConfigList l : this.lists) {
                 l.commitElements();
             }
@@ -99,8 +95,13 @@ public class AutoConfigScreen extends Screen {
             this.holder.save();
             this.dirty = false;
             this.minecraft.setScreen(this.lastScreen);
-        }).build());
+        }).build();
         this.doneButton.active = false;
+
+        List<Button> buttons = new ArrayList<>(List.of(cancelButton, this.doneButton));
+        //? <1.20.2
+        Collections.reverse(buttons);
+        buttons.forEach(footer::addChild);
 
         this.layout.visitWidgets(w -> {
             w.setTabOrderGroup(1);
