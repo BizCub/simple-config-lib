@@ -314,7 +314,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                         ? value
                         : this.node.tooltip;
                 if (tooltipText != null) {
-                    graphics.setTooltipForNextFrame(
+                    graphics.renderTooltip(
                             AutoConfigList.this.font,
                             AutoConfigList.this.font.split(tooltipText, 200),
                             mouseX,
@@ -351,7 +351,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             if (overLabel) {
                 Style style = this.node.label.getStyle();
                 if (style.getClickEvent() != null) {
-                    Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
+                    screen.handleComponentClicked(style);
                     return true;
                 }
             }
@@ -407,7 +407,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             if (this.node.tooltip != null) {
                 int labelWidth = AutoConfigList.this.font.width(this.node.label);
                 if (mouseX >= labelX && mouseX <= labelX + labelWidth && mouseY >= y && mouseY <= y + 20) {
-                    graphics.setTooltipForNextFrame(
+                    graphics.renderTooltip(
                             AutoConfigList.this.font,
                             AutoConfigList.this.font.split(this.node.tooltip, 200),
                             mouseX, mouseY);
@@ -534,7 +534,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             if (this.node.tooltip != null) {
                 int labelWidth = AutoConfigList.this.font.width(this.node.label);
                 if (mouseX >= labelX && mouseX <= labelX + labelWidth && mouseY >= y && mouseY <= y + 20) {
-                    graphics.setTooltipForNextFrame(
+                    graphics.renderTooltip(
                             AutoConfigList.this.font,
                             AutoConfigList.this.font.split(this.node.tooltip, 200),
                             mouseX, mouseY);
@@ -692,7 +692,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 if (mouseX >= boxX && mouseX <= boxX + labelW && mouseY >= y && mouseY <= y + 20) {
                     Style style = this.componentLabel.getStyle();
                     if (style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)) {
-                        graphics.setTooltipForNextFrame(AutoConfigList.this.font,
+                        graphics.renderTooltip(AutoConfigList.this.font,
                                 AutoConfigList.this.font.split(value, 200), mouseX, mouseY);
                     }
                 }
@@ -719,7 +719,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 if (mouseX >= boxX && mouseX <= boxX + labelW && mouseY >= y && mouseY <= y + 20) { //~ !mb_event
                     Style style = this.componentLabel.getStyle();
                     if (style.getClickEvent() != null) {
-                        Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
+                        screen.handleComponentClicked(style);
                         return true;
                     }
                 }

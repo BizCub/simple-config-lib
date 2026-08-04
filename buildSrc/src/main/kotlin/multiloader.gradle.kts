@@ -37,6 +37,10 @@ multiloader {
             replace("mouseX", "mouseButtonEvent.x()")
             replace("mouseY", "mouseButtonEvent.y()")
         }
+        string(scp >= "1.21.6") {
+            replace(".renderTooltip(", ".setTooltipForNextFrame(")
+            replace("screen.handleComponentClicked(style);", "Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);")
+        }
     }
 
     addSourceSet("testmod")
