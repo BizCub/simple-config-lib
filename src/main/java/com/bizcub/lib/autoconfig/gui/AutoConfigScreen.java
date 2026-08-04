@@ -162,8 +162,6 @@ public class AutoConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        //? <1.20.2
-        this.renderBackground(graphics);
         if (this.resetButton != null) {
             boolean shift = Screen.hasShiftDown();
             this.resetButton.active = shift;
