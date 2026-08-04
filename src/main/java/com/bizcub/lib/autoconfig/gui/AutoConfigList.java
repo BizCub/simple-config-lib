@@ -310,9 +310,16 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             if (overLabel) {
                 Style style = this.node.label.getStyle();
-                FormattedText tooltipText = style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
+                //? >=1.21.5 {
+                /*FormattedText tooltipText = style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
                         ? value
                         : this.node.tooltip;
+
+                *///?} else {
+                HoverEvent hover = style.getHoverEvent();
+                Component value = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;
+                FormattedText tooltipText = value != null ? value : this.node.tooltip;//?}
+
                 if (tooltipText != null) {
                     graphics.renderTooltip(
                             AutoConfigList.this.font,
@@ -691,9 +698,19 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 int labelW = AutoConfigList.this.font.width(this.componentLabel);
                 if (mouseX >= boxX && mouseX <= boxX + labelW && mouseY >= y && mouseY <= y + 20) {
                     Style style = this.componentLabel.getStyle();
-                    if (style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)) {
+
+                    //? >=1.21.5 {
+                    /*Component tooltipValue = style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
+                            ? value
+                            : null;
+
+                    *///?} else {
+                    HoverEvent hover = style.getHoverEvent();
+                    Component tooltipValue = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;//?}
+
+                    if (tooltipValue != null) {
                         graphics.renderTooltip(AutoConfigList.this.font,
-                                AutoConfigList.this.font.split(value, 200), mouseX, mouseY);
+                                AutoConfigList.this.font.split(tooltipValue, 200), mouseX, mouseY);
                     }
                 }
             }
