@@ -38,19 +38,20 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     private final List<Node> nodes = new ArrayList<>();
 
     public AutoConfigList(final Minecraft minecraft, final int width, final int height, final int y, final Screen screen) {
-        super(minecraft, width, height, y, ROW_HEIGHT);
+        super(minecraft, width, height, y, /*? <1.20.3 >>+ ','*/ y + height, ROW_HEIGHT);
         this.screen = screen;
         this.font = minecraft.font;
     }
 
-    @Override
-    public void renderWidget(final GuiGraphics graphics,
+    @Override //~ if >=1.20.3 'render(' -> 'renderWidget('
+    public void render(final GuiGraphics graphics,
                                          final int mouseX, final int mouseY, final float a) {
         boolean overPopup = isPopupOpenAt(mouseX, mouseY);
         int hoverX = overPopup ? Integer.MIN_VALUE : mouseX;
         int hoverY = overPopup ? Integer.MIN_VALUE : mouseY;
 
-        super.renderWidget(graphics, hoverX, hoverY, a);
+        //~ if >=1.20.3 'render(' -> 'renderWidget('
+        super.render(graphics, hoverX, hoverY, a);
 
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);

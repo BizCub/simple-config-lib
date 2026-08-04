@@ -275,7 +275,8 @@ public class AutoConfigScreen extends Screen {
 
         @Override
         public void visitChildren(final Consumer<AbstractWidget> consumer) {
-            consumer.accept(this.list);
+            //? >=1.20.3
+            //consumer.accept(this.list);
         }
 
         @Override
@@ -283,9 +284,13 @@ public class AutoConfigScreen extends Screen {
             //? >=1.20.5 {
             /*this.list.updateSizeAndPosition(rectangle.width(), rectangle.height(), rectangle.top());
 
+            *///?} >=1.20.4 {
+            /*this.list.setSize(rectangle.width(), rectangle.height());
+            this.list.setPosition(0, rectangle.top());
+
             *///?} else {
-            this.list.setSize(rectangle.width(), rectangle.height());
-            this.list.setPosition(0, rectangle.top());//?}
+            this.list.updateSize(rectangle.width(), rectangle.height(),
+                    rectangle.top(), rectangle.top() + rectangle.height());//?}
         }
     }
 

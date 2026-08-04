@@ -26,6 +26,7 @@ multiloader {
 //    match("1.21.4", fb)
 //    match("1.21.3", fb)
 //    match("1.21.1", fb)
-    match("1.20.6", fb)
+//    match("1.20.6", fb)
     match("1.20.4", fb)
+    match("1.20.2", fb)
 }
