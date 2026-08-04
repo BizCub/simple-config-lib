@@ -2,7 +2,7 @@ package com.bizcub.lib.autoconfig.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -13,9 +13,9 @@ import java.util.Locale;
 import java.util.function.IntConsumer;
 
 //? >=1.21.9 {
-/*import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;*///?}
+import net.minecraft.client.input.MouseButtonEvent;//?}
 
 public final class ColorWidget extends AbstractWidget {
     private static final int SWATCH = 18;
@@ -155,18 +155,22 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(final GuiGraphics graphics, final int mouseX, final int mouseY, final float partial) {
+    protected void extractWidgetRenderState(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final float partial) {
         int sx = swatchX(), sy = swatchY();
         graphics.fill(sx - 1, sy - 1, sx + SWATCH + 1, sy + SWATCH + 1, 0xFF000000);
         graphics.fill(sx, sy, sx + SWATCH, sy + SWATCH, this.color);
 
         this.box.setPosition(getX() + SWATCH + GAP, getY());
         this.box.setWidth(getWidth() - SWATCH - GAP);
-        this.box.render(graphics, mouseX, mouseY, partial);
+        this.box.extractRenderState(graphics, mouseX, mouseY, partial);
     }
 
-    void renderPicker(final GuiGraphics graphics) {
+    void renderPicker(final GuiGraphicsExtractor graphics) {
         if (!this.pickerOpen) return;
+
+        //? <1.20.5 {
+        /*graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 400);*///?}
 
         graphics.fill(pickerX() - 1, pickerY() - 1,
                 pickerX() + pickerW() + 1, pickerY() + pickerH() + 1, 0xFF000000);
@@ -179,9 +183,12 @@ public final class ColorWidget extends AbstractWidget {
             renderAlphaBar(graphics);
         }
         renderCursors(graphics);
+
+        //? <1.20.5
+        //graphics.pose().popPose();
     }
 
-    private void renderSvSquare(final GuiGraphics graphics) {
+    private void renderSvSquare(final GuiGraphicsExtractor graphics) {
         int x0 = svX(), y0 = svY();
         int colW = Math.max(1, SV_SIZE / SV_STEPS);
         int rowH = Math.max(1, SV_SIZE / SV_STEPS);
@@ -198,7 +205,7 @@ public final class ColorWidget extends AbstractWidget {
         }
     }
 
-    private void renderHueBar(final GuiGraphics graphics) {
+    private void renderHueBar(final GuiGraphicsExtractor graphics) {
         int x0 = hueX(), y0 = hueY();
         int stepH = Math.max(1, SV_SIZE / HUE_STEPS);
         for (int cy = 0; cy < SV_SIZE; cy += stepH) {
@@ -209,7 +216,7 @@ public final class ColorWidget extends AbstractWidget {
         }
     }
 
-    private void renderAlphaBar(final GuiGraphics graphics) {
+    private void renderAlphaBar(final GuiGraphicsExtractor graphics) {
         int x0 = alphaX(), y0 = alphaY();
         int rgb = hsvToRgb(this.hue, this.sat, this.val) & 0xFFFFFF;
 
@@ -235,7 +242,7 @@ public final class ColorWidget extends AbstractWidget {
         return this.draggingSV || this.draggingHue || this.draggingAlpha;
     }
 
-    private void renderCursors(final GuiGraphics graphics) {
+    private void renderCursors(final GuiGraphicsExtractor graphics) {
         int cx = svX() + Math.round(this.sat * SV_SIZE);
         int cy = svY() + Math.round((1f - this.val) * SV_SIZE);
         int r = 3;
@@ -254,9 +261,9 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         //~ mb_event
-        double mx = mouseX, my = mouseY; //~ !mb_event
+        double mx = mouseButtonEvent.x(), my = mouseButtonEvent.y(); //~ !mb_event
         if (this.pickerOpen) {
             if (isOverSV(mx, my)) {
                 this.draggingSV = true;
@@ -282,33 +289,33 @@ public final class ColorWidget extends AbstractWidget {
             return true;
         }
         this.pickerOpen = false;
-        return this.box.mouseClicked(mouseX, mouseY, button);
+        return this.box.mouseClicked(mouseButtonEvent, doubleClick);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
         //~ mb_event
         if (this.draggingSV) {
-            updateSV(mouseX, mouseY);
+            updateSV(mouseButtonEvent.x(), mouseButtonEvent.y());
             return true;
         }
         if (this.draggingHue) {
-            updateHue(mouseY);
+            updateHue(mouseButtonEvent.y());
             return true;
         }
         if (this.draggingAlpha) {
-            updateAlpha(mouseY);
+            updateAlpha(mouseButtonEvent.y());
             return true;
         } //~ !mb_event
-        return this.box.mouseDragged(mouseX, mouseY, button, dx, dy);
+        return this.box.mouseDragged(mouseButtonEvent, dx, dy);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
         this.draggingSV = false;
         this.draggingHue = false;
         this.draggingAlpha = false;
-        return this.box.mouseReleased(mouseX, mouseY, button);
+        return this.box.mouseReleased(mouseButtonEvent);
     }
 
     private void updateSV(final double mx, final double my) {
@@ -334,13 +341,13 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        return this.box.charTyped(codePoint, modifiers) || super.charTyped(codePoint, modifiers);
+    public boolean charTyped(CharacterEvent characterEvent) {
+        return this.box.charTyped(characterEvent) || super.charTyped(characterEvent);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return this.box.keyPressed(keyCode, scanCode, modifiers) || super.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(KeyEvent keyEvent) {
+        return this.box.keyPressed(keyEvent) || super.keyPressed(keyEvent);
     }
 
     @Override

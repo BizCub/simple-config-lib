@@ -14,8 +14,12 @@ multiloader {
             replace("GuiGraphics", "GuiGraphicsExtractor")
             replace("render(", "extractRenderState(")
             replace("renderWidget(", "extractWidgetRenderState(")
-            replace("renderContent(", "extractContent(")
             replace(".drawString(", ".text(")
+            replace("renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)",
+                "extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick)")
+        }
+        string(scp >= "26.1", "render_widget") {
+            replace("renderWidget(", "extractWidgetRenderState(")
         }
         string(scp >= "1.21.9") {
             replace("Screen.hasShiftDown()", "Minecraft.getInstance().hasShiftDown()")
@@ -41,8 +45,11 @@ multiloader {
             replace(".renderTooltip(", ".setTooltipForNextFrame(")
             replace("screen.handleComponentClicked(style);", "Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);")
         }
-        string(scp >= "1.21.5") {
+        string(scp >= "1.21.4") {
             replace("protected int getScrollbarPosition()", "protected int scrollBarX()")
+        }
+        string(scp >= "1.20.3", "render_widget") {
+            replace("render(", "renderWidget(")
         }
     }
 
