@@ -290,7 +290,12 @@ public class AutoConfigScreen extends Screen {
 
             *///?} else {
             this.list.updateSize(rectangle.width(), rectangle.height(),
-                    rectangle.top(), rectangle.top() + rectangle.height());//?}
+                    rectangle.top(), rectangle.top() + rectangle.height());
+
+            for (AutoConfigList l : AutoConfigScreen.this.lists) {
+                AutoConfigScreen.this.removeWidget(l);
+            }
+            AutoConfigScreen.this.addRenderableWidget(this.list);//?}
         }
     }
 
