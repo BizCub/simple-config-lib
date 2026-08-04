@@ -41,6 +41,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         super(minecraft, width, height, y, /*? <1.20.3 >>+ ','*/ y + height, ROW_HEIGHT);
         this.screen = screen;
         this.font = minecraft.font;
+        this.setRenderTopAndBottom(false);
+        this.setRenderBackground(false);
     }
 
     @Override //~ if >=1.20.3 'render(' -> 'renderWidget('
