@@ -151,7 +151,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     void rebuild() {
-        final double scroll = this.scrollAmount();
+        //~ if >=1.21.4 '.getScrollAmount()' -> '.scrollAmount()'
+        final double scroll = this.getScrollAmount();
         commitScalarElements();
         this.clearEntries();
         for (Node n : this.nodes) {
