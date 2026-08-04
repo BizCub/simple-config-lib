@@ -84,7 +84,11 @@ public class AutoConfigScreen extends Screen {
                 .build()
         );
 
-        LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+        //? >=1.20.2 {
+        /*LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+        *///?} else {
+        LinearLayout footer = new LinearLayout(0, 0, LinearLayout.Orientation.HORIZONTAL);//?}
+
         footer.addChild(Button.builder(CommonComponents.GUI_CANCEL, b -> onClose()).build());
         this.doneButton = footer.addChild(Button.builder(CommonComponents.GUI_DONE, b -> {
             for (AutoConfigList l : this.lists) {
