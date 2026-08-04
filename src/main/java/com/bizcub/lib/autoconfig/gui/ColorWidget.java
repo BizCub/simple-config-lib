@@ -6,14 +6,16 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.util.Locale;
 import java.util.function.IntConsumer;
+
+//? >=1.21.9 {
+/*import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;*///?}
 
 public final class ColorWidget extends AbstractWidget {
     private static final int SWATCH = 18;
@@ -153,8 +155,7 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(final GuiGraphics graphics,
-                                            final int mouseX, final int mouseY, final float partial) {
+    protected void renderWidget(final GuiGraphics graphics, final int mouseX, final int mouseY, final float partial) {
         int sx = swatchX(), sy = swatchY();
         graphics.fill(sx - 1, sy - 1, sx + SWATCH + 1, sy + SWATCH + 1, 0xFF000000);
         graphics.fill(sx, sy, sx + SWATCH, sy + SWATCH, this.color);
@@ -253,8 +254,9 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-        double mx = event.x(), my = event.y();
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        //~ mb_event
+        double mx = mouseX, my = mouseY; //~ !mb_event
         if (this.pickerOpen) {
             if (isOverSV(mx, my)) {
                 this.draggingSV = true;
@@ -280,32 +282,33 @@ public final class ColorWidget extends AbstractWidget {
             return true;
         }
         this.pickerOpen = false;
-        return this.box.mouseClicked(event, doubleClick);
+        return this.box.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(final MouseButtonEvent event, final double dragX, final double dragY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        //~ mb_event
         if (this.draggingSV) {
-            updateSV(event.x(), event.y());
+            updateSV(mouseX, mouseY);
             return true;
         }
         if (this.draggingHue) {
-            updateHue(event.y());
+            updateHue(mouseY);
             return true;
         }
         if (this.draggingAlpha) {
-            updateAlpha(event.y());
+            updateAlpha(mouseY);
             return true;
-        }
-        return this.box.mouseDragged(event, dragX, dragY);
+        } //~ !mb_event
+        return this.box.mouseDragged(mouseX, mouseY, button, dx, dy);
     }
 
     @Override
-    public boolean mouseReleased(final MouseButtonEvent event) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         this.draggingSV = false;
         this.draggingHue = false;
         this.draggingAlpha = false;
-        return this.box.mouseReleased(event);
+        return this.box.mouseReleased(mouseX, mouseY, button);
     }
 
     private void updateSV(final double mx, final double my) {
@@ -331,13 +334,13 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean charTyped(CharacterEvent event) {
-        return this.box.charTyped(event) || super.charTyped(event);
+    public boolean charTyped(char codePoint, int modifiers) {
+        return this.box.charTyped(codePoint, modifiers) || super.charTyped(codePoint, modifiers);
     }
 
     @Override
-    public boolean keyPressed(final KeyEvent event) {
-        return this.box.keyPressed(event) || super.keyPressed(event);
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return this.box.keyPressed(keyCode, scanCode, modifiers) || super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

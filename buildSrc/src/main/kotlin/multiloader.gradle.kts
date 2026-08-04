@@ -17,6 +17,26 @@ multiloader {
             replace("renderContent(", "extractContent(")
             replace(".drawString(", ".text(")
         }
+        string(scp >= "1.21.9") {
+            replace("Screen.hasShiftDown()", "Minecraft.getInstance().hasShiftDown()")
+            replace("render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick)",
+                "renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)")
+            replace("int y = this.lastTop;", "int y = this.getContentY();")
+            replace("charTyped(char codePoint, int modifiers)", "charTyped(CharacterEvent characterEvent)")
+            replace(".charTyped(codePoint, modifiers)", ".charTyped(characterEvent)")
+            replace("keyPressed(int keyCode, int scanCode, int modifiers)", "keyPressed(KeyEvent keyEvent)")
+            replace(".keyPressed(keyCode, scanCode, modifiers)", ".keyPressed(keyEvent)")
+            replace("mouseReleased(double mouseX, double mouseY, int button)", "mouseReleased(MouseButtonEvent mouseButtonEvent)")
+            replace(".mouseReleased(mouseX, mouseY, button)", ".mouseReleased(mouseButtonEvent)")
+            replace("mouseClicked(double mouseX, double mouseY, int button)", "mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick)")
+            replace(".mouseClicked(mouseX, mouseY, button)", ".mouseClicked(mouseButtonEvent, doubleClick)")
+            replace("mouseDragged(double mouseX, double mouseY, int button, double dx, double dy)", "mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy)")
+            replace(".mouseDragged(mouseX, mouseY, button, dx, dy)", ".mouseDragged(mouseButtonEvent, dx, dy)")
+        }
+        string(scp >= "1.21.9", "mb_event") {
+            replace("mouseX", "mouseButtonEvent.x()")
+            replace("mouseY", "mouseButtonEvent.y()")
+        }
     }
 
     addSourceSet("testmod")

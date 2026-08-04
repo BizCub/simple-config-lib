@@ -22,8 +22,6 @@ import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -40,6 +38,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+
+//? >=1.21.9 {
+/*import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;*///?}
 
 public class AutoConfigScreen extends Screen {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -110,7 +112,7 @@ public class AutoConfigScreen extends Screen {
                         .size(20, 20)
                         .pos(6, this.height - 20 - 6)
                         .build());
-        this.resetButton.active = Minecraft.getInstance().hasShiftDown();
+        this.resetButton.active = Screen.hasShiftDown();
     }
 
     public void markDirty() {
@@ -154,9 +156,9 @@ public class AutoConfigScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (this.resetButton != null) {
-            boolean shift = Minecraft.getInstance().hasShiftDown();
+            boolean shift = Screen.hasShiftDown();
             this.resetButton.active = shift;
             this.resetButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
                     shift
@@ -166,41 +168,43 @@ public class AutoConfigScreen extends Screen {
                               .append("\n")
                               .append(Component.translatable("config." + holder.name() + ".reset.shift"))));
         }
-        super.render(graphics, mouseX, mouseY, a);
+        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         AutoConfigList list = currentList();
 
-        if (list != null && list.isPopupOpenAt(event.x(), event.y())) {
-            list.mouseClicked(event, doubleClick);
+        //~ mb_event
+        if (list != null && list.isPopupOpenAt(mouseX, mouseY)) { //~ !mb_event
+            list.mouseClicked(mouseX, mouseY, button);
             return true;
         }
 
         if (list != null) {
-            list.closePickersExceptSwatchAt(event.x(), event.y());
+            //~ mb_event
+            list.closePickersExceptSwatchAt(mouseX, mouseY); //~ !mb_event
         }
-        return super.mouseClicked(event, doubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(final MouseButtonEvent event, final double dragX, final double dragY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
         AutoConfigList list = currentList();
         if (list != null && list.isPickerDragging()) {
-            return list.mouseDragged(event, dragX, dragY);
+            return list.mouseDragged(mouseX, mouseY, button, dx, dy);
         }
-        return super.mouseDragged(event, dragX, dragY);
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
     }
 
     @Override
-    public boolean mouseReleased(final MouseButtonEvent event) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         AutoConfigList list = currentList();
         if (list != null && list.isPickerDragging()) {
-            list.mouseReleased(event);
+            list.mouseReleased(mouseX, mouseY, button);
             return true;
         }
-        return super.mouseReleased(event);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
@@ -221,8 +225,8 @@ public class AutoConfigScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(final KeyEvent event) {
-        return (this.tabNavigationBar != null && this.tabNavigationBar.keyPressed(event)) || super.keyPressed(event);
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return (this.tabNavigationBar != null && this.tabNavigationBar.keyPressed(keyCode, scanCode, modifiers)) || super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
