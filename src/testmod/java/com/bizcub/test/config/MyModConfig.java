@@ -3,7 +3,9 @@ package com.bizcub.test.config;
 import com.bizcub.lib.autoconfig.annotation.*;
 import net.minecraft.ChatFormatting;
 //import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 //import net.minecraft.network.chat.HoverEvent;
 
 import java.util.ArrayList;
@@ -54,6 +56,9 @@ public class MyModConfig {
 //                    .withHoverEvent(new HoverEvent.ShowText(
 //                            Component.literal("Changing these may affect FPS")))
 //                    .withClickEvent(new ClickEvent.CopyToClipboard("456"))
+//                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+//                            Component.literal("Changing these may affect FPS")))
+//                    .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, "456"))
             );
 
     @ListConfig(editable = false)
