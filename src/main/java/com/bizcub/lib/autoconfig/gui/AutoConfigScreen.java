@@ -81,10 +81,10 @@ public class AutoConfigScreen extends Screen {
         );
 
         //? >=1.20.2 {
-        LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
-        //?} else {
-        /*LinearLayout footer = this.layout.addToFooter(new LinearLayout(0, 0, LinearLayout.Orientation.HORIZONTAL));
-        footer.defaultChildLayoutSetting().padding(4, 0);*///?}
+        /*LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+        *///?} else {
+        LinearLayout footer = this.layout.addToFooter(new LinearLayout(0, 0, LinearLayout.Orientation.HORIZONTAL));
+        footer.defaultChildLayoutSetting().padding(4, 0);//?}
 
         Button cancelButton = Button.builder(CommonComponents.GUI_CANCEL, b -> onClose()).build();
         this.doneButton = Button.builder(CommonComponents.GUI_DONE, b -> {
@@ -100,7 +100,7 @@ public class AutoConfigScreen extends Screen {
 
         List<Button> buttons = new ArrayList<>(List.of(cancelButton, this.doneButton));
         //? <1.20.2
-        //Collections.reverse(buttons);
+        Collections.reverse(buttons);
         buttons.forEach(footer::addChild);
 
         this.layout.visitWidgets(w -> {
