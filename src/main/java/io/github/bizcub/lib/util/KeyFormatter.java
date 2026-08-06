@@ -16,4 +16,27 @@ public final class KeyFormatter {
         }
         return sb.toString();
     }
+
+    public static String humanize(final String raw) {
+        String spaced = raw
+                .replace('_', ' ')
+                .replaceAll("([a-z])([A-Z])", "$1 $2")
+                .replaceAll("([A-Za-z])([0-9])", "$1 $2")
+                .trim();
+        StringBuilder sb = new StringBuilder(spaced.length());
+        boolean capNext = true;
+        for (int i = 0; i < spaced.length(); i++) {
+            char c = spaced.charAt(i);
+            if (c == ' ') {
+                capNext = true;
+                sb.append(c);
+            } else if (capNext) {
+                sb.append(Character.toUpperCase(c));
+                capNext = false;
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -7,4 +7,5 @@ import java.lang.annotation.*;
 public @interface AutoConfig {
     String name();
     boolean snakeCaseKeys() default false;
+    boolean translate() default false;
 }

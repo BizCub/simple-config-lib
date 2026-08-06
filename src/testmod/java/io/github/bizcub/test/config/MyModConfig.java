@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-@AutoConfig(name = "test", snakeCaseKeys = true)
+@AutoConfig(name = "test")
 public class MyModConfig {
     public boolean enableOptimizations = true;
 

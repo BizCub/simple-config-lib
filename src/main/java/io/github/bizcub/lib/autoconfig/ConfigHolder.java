@@ -51,6 +51,7 @@ public class ConfigHolder<T> {
     private final Class<T> type;
     private final String name;
     private final boolean snakeCaseKeys;
+    private final boolean translate;
     private final List<Consumer<T>> saveListeners = new ArrayList<>();
     private T instance;
 
@@ -62,6 +63,7 @@ public class ConfigHolder<T> {
         }
         this.name = meta.name();
         this.snakeCaseKeys = meta.snakeCaseKeys();
+        this.translate = meta.translate();
         load();
     }
 
@@ -71,6 +73,10 @@ public class ConfigHolder<T> {
 
     public boolean snakeCaseKeys() {
         return this.snakeCaseKeys;
+    }
+
+    public boolean translate() {
+        return this.translate;
     }
 
     public T get() {

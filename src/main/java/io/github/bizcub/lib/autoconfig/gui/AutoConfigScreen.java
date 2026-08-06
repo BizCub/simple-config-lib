@@ -267,7 +267,7 @@ public class AutoConfigScreen extends Screen {
         private final AutoConfigList list;
 
         ConfigTab(final String groupId, final List<Field> fields) {
-            super(Component.translatable("config." + AutoConfigScreen.this.holder.name() + ".group." + groupId));
+            super(AutoConfigScreen.this.groupLabel(groupId));
             this.list = new AutoConfigList(AutoConfigScreen.this.minecraft, AutoConfigScreen.this.width,
                     AutoConfigScreen.this.height, 0, AutoConfigScreen.this);
             AutoConfigScreen.this.lists.add(this.list);
@@ -506,7 +506,7 @@ public class AutoConfigScreen extends Screen {
             Enum initial = (Enum) field.get(config);
             Enum[] values = (Enum[]) t.getEnumConstants();
             EnumConfig cfg = field.getAnnotation(EnumConfig.class);
-            final boolean translate = cfg != null && cfg.translate();
+            final boolean translate = this.holder.translate() && cfg != null && cfg.translate();
             return CycleButton.builder((Enum v) -> enumValueLabel(v, translate) /*? >=1.21.11 >> ')'*/, initial)
                     .withValues(values)
                     //? <1.21.11
@@ -535,8 +535,17 @@ public class AutoConfigScreen extends Screen {
     }
 
     private Component labelFor(final Field field) {
+        if (!this.holder.translate()) {
+            return Component.literal(KeyFormatter.humanize(field.getName()));
+        }
         return Component.translatable(
                 "config." + this.holder.name() + ".option." + key(field.getName()), field.getName());
+    }
+
+    private Component groupLabel(final String groupId) {
+        return this.holder.translate()
+                ? Component.translatable("config." + this.holder.name() + ".group." + groupId)
+                : Component.literal(KeyFormatter.humanize(groupId));
     }
 
     private Component elementLabel(final Field ownerField, final Class<?> element,
