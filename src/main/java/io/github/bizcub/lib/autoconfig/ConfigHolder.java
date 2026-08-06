@@ -49,34 +49,21 @@ public class ConfigHolder<T> {
             .create();
 
     private final Class<T> type;
-    private final String name;
-    private final boolean snakeCaseKeys;
-    private final boolean translate;
+    private final AutoConfig meta;
     private final List<Consumer<T>> saveListeners = new ArrayList<>();
     private T instance;
 
     ConfigHolder(final Class<T> type) {
         this.type = type;
-        AutoConfig meta = type.getAnnotation(AutoConfig.class);
-        if (meta == null) {
+        this.meta = type.getAnnotation(AutoConfig.class);
+        if (this.meta == null) {
             throw new IllegalArgumentException("Class " + type.getName() + " is not marked with @Config");
         }
-        this.name = meta.name();
-        this.snakeCaseKeys = meta.snakeCaseKeys();
-        this.translate = meta.translate();
         load();
     }
 
-    public String name() {
-        return this.name;
-    }
-
-    public boolean snakeCaseKeys() {
-        return this.snakeCaseKeys;
-    }
-
-    public boolean translate() {
-        return this.translate;
+    public AutoConfig getMeta() {
+        return this.meta;
     }
 
     public T get() {
@@ -88,7 +75,7 @@ public class ConfigHolder<T> {
     }
 
     private Path path() {
-        return Main.gameDir().resolve("config").resolve(this.name + ".json");
+        return Main.gameDir().resolve("config").resolve(this.meta.name() + ".json");
     }
 
     public static <T> ConfigHolder<T> register(final Class<T> type) {
@@ -168,7 +155,7 @@ public class ConfigHolder<T> {
             try {
                 listener.accept(this.instance);
             } catch (Exception e) {
-                LOGGER.error("Config save listener failed for {}", this.name, e);
+                LOGGER.error("Config save listener failed for {}", this.meta.name(), e);
             }
         }
     }

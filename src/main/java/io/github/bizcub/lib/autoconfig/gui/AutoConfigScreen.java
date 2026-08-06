@@ -61,7 +61,7 @@ public class AutoConfigScreen extends Screen {
     private boolean dirty;
 
     public AutoConfigScreen(final Screen lastScreen, final ConfigHolder<?> holder) {
-        super(Component.translatable("config." + holder.name() + ".title"));
+        super(Component.translatable("config." + holder.getMeta().name() + ".title"));
         this.lastScreen = lastScreen;
         this.holder = holder;
     }
@@ -136,7 +136,7 @@ public class AutoConfigScreen extends Screen {
     }
 
     private String key(final String raw) {
-        return this.holder.snakeCaseKeys() ? KeyFormatter.toSnakeCase(raw) : raw;
+        return this.holder.getMeta().snakeCaseKeys() ? KeyFormatter.toSnakeCase(raw) : raw;
     }
 
     private Map<String, List<Field>> groupFields() {
@@ -506,7 +506,7 @@ public class AutoConfigScreen extends Screen {
             Enum initial = (Enum) field.get(config);
             Enum[] values = (Enum[]) t.getEnumConstants();
             EnumConfig cfg = field.getAnnotation(EnumConfig.class);
-            final boolean translate = this.holder.translate() && cfg != null && cfg.translate();
+            final boolean translate = this.holder.getMeta().translate() && cfg != null && cfg.translate();
             return CycleButton.builder((Enum v) -> enumValueLabel(v, translate) /*? >=1.21.11 >> ')'*/, initial)
                     .withValues(values)
                     //? <1.21.11
@@ -535,16 +535,16 @@ public class AutoConfigScreen extends Screen {
     }
 
     private Component labelFor(final Field field) {
-        if (!this.holder.translate()) {
+        if (!this.holder.getMeta().translate()) {
             return Component.literal(KeyFormatter.humanize(field.getName()));
         }
         return Component.translatable(
-                "config." + this.holder.name() + ".option." + key(field.getName()), field.getName());
+                "config." + this.holder.getMeta().name() + ".option." + key(field.getName()), field.getName());
     }
 
     private Component groupLabel(final String groupId) {
-        return this.holder.translate()
-                ? Component.translatable("config." + this.holder.name() + ".group." + groupId)
+        return this.holder.getMeta().translate()
+                ? Component.translatable("config." + this.holder.getMeta().name() + ".group." + groupId)
                 : Component.literal(KeyFormatter.humanize(groupId));
     }
 
@@ -554,7 +554,7 @@ public class AutoConfigScreen extends Screen {
             return Component.literal(element.getSimpleName());
         }
         return Component.translatable(
-                "config." + this.holder.name() + ".option." + key(ownerField.getName()) + ".element",
+                "config." + this.holder.getMeta().name() + ".option." + key(ownerField.getName()) + ".element",
                 element.getSimpleName());
     }
 
@@ -563,7 +563,7 @@ public class AutoConfigScreen extends Screen {
         if (tip == null) {
             return null;
         }
-        String key = "config." + this.holder.name() + ".option." + key(field.getName()) + ".tooltip";
+        String key = "config." + this.holder.getMeta().name() + ".option." + key(field.getName()) + ".tooltip";
         return Component.translatable(key);
     }
 
@@ -571,7 +571,7 @@ public class AutoConfigScreen extends Screen {
         if (!translate) {
             return Component.literal(value.name());
         }
-        String key = "config." + this.holder.name()
+        String key = "config." + this.holder.getMeta().name()
                 + ".enum." + key(value.getDeclaringClass().getSimpleName())
                 + "." + key(value.name());
         return Component.translatable(key);
