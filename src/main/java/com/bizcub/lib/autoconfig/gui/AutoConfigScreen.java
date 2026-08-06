@@ -218,7 +218,8 @@ public class AutoConfigScreen extends Screen {
     @Override
     protected void repositionElements() {
         if (this.tabNavigationBar != null) {
-            this.tabNavigationBar.setWidth(this.width);
+            //? <26.1
+            //this.tabNavigationBar.setWidth(this.width);
             //~ if >=26.2 || <=1.21.11 'updateWidth' -> 'arrangeElements'
             this.tabNavigationBar.arrangeElements(/*? >=26.1 >> ')'*/ this.width);
             int tabAreaTop = this.tabNavigationBar.getRectangle().bottom();

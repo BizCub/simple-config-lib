@@ -1,6 +1,5 @@
 plugins {
     multiloader
-    `maven-publish`
     alias(libs.plugins.loom)
 }
 
@@ -29,17 +28,6 @@ multiloader {
             getByName("server") {
                 runDirectory.set(serverRunFile)
             }
-        }
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            groupId = "io.github.bizcub"
-            artifactId = "lib"
-            version = multiloader.mod.version
-            from(components["java"])
         }
     }
 }
