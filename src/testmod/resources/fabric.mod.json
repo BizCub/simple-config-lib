@@ -4,7 +4,7 @@
     "name": "Test Lib",
     "version": "1.0",
     "entrypoints": {
-        "modmenu": ["com.bizcub.test.platform.Fabric$ModMenu"],
-        "main": ["com.bizcub.test.platform.Fabric"]
+        "modmenu": ["io.github.bizcub.test.platform.Fabric$ModMenu"],
+        "main": ["io.github.bizcub.test.platform.Fabric"]
     }
 }
