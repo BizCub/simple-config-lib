@@ -18,10 +18,9 @@ public class BCConfig implements Config {
     private static ConfigHolder<BCConfig> INSTANCE;
 
     public static ConfigHolder<BCConfig> getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = ConfigHolder.register(BCConfig.class).onSave(BCConfig::onConfigSave);
-        }
-        return INSTANCE;
+        return INSTANCE == null
+                ? INSTANCE = ConfigHolder.register(BCConfig.class).onSave(BCConfig::onConfigSave)
+                : INSTANCE;
     }
 
     public static Screen getScreen(Screen parent) {
