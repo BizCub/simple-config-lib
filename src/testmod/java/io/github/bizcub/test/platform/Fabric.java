@@ -2,9 +2,9 @@
 package io.github.bizcub.test.platform;
 
 import io.github.bizcub.test.Main;
-import io.github.bizcub.lib.autoconfig.gui.AutoConfigScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
+import io.github.bizcub.test.config.BCConfig;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
@@ -21,7 +21,7 @@ public class Fabric implements ModInitializer {
 
         @Override
         public ConfigScreenFactory<?> getModConfigScreenFactory() {
-            return screen -> new AutoConfigScreen(screen, Main.CONFIG);
+            return BCConfig::getScreen;
         }
     }
 }//?}

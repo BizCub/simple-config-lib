@@ -1,8 +1,8 @@
 //? neoforge {
 /*package io.github.bizcub.test.platform;
 
-import io.github.bizcub.lib.autoconfig.gui.AutoConfigScreen;
 import io.github.bizcub.test.Main;
+import io.github.bizcub.test.config.BCConfig;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -18,6 +18,6 @@ public class NeoForge {
                 (ClientTickEvent.Post event) -> Main.setTestScreen());
 
         ModLoadingContext.get().registerExtensionPoint(IConfigScreenFactory.class, () ->
-                (container, screen) -> new AutoConfigScreen(screen, Main.CONFIG));
+                (container, screen) -> BCConfig.getScreen(screen));
     }
 }*///?}
