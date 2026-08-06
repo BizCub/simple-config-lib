@@ -1,0 +1,23 @@
+package io.github.bizcub.test.screen;
+
+import io.github.bizcub.lib.util.widget.ScaledItemDisplayWidget;
+import io.github.bizcub.test.Main;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+
+public class TestScreen extends Screen {
+
+    public TestScreen(Component title) {
+        super(title);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        //~ if >=1.19 'addButton' -> 'addRenderableWidget'
+        ScaledItemDisplayWidget widget = addRenderableWidget(new ScaledItemDisplayWidget(this.width / 2, this.height / 2, new ItemStack(Items.DIAMOND_BLOCK), Main.CONFIG.get().entityLodBias));
+        widget.setCentred();
+    }
+}

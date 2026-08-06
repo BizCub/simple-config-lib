@@ -5,21 +5,40 @@ plugins {
 }
 
 multiloader {
+    sc.swaps["render_method"] = when {
+        scp >= "26.1" -> "protected void extractWidgetRenderState(GuiGraphicsExtractor"
+        scp >= "1.20" -> "protected void renderWidget(GuiGraphics"
+        else -> "public void render(PoseStack"
+    }
+
     sc.replacements {
         string(scp >= "26.2") {
             replace("TabNavigationBar", "MenuTabBar")
             replace(".setScreen(", ".gui.setScreen(")
         }
         string(scp >= "26.1") {
-            replace("GuiGraphics", "GuiGraphicsExtractor")
             replace("render(", "extractRenderState(")
             replace("renderWidget(", "extractWidgetRenderState(")
             replace(".drawString(", ".text(")
             replace("renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)",
                 "extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick)")
+            replace("gui.render.state", "renderer.state.gui")
+            replace("gui/render/state", "renderer/state/gui")
+            replace("submitBlitToCurrentLayer", "addBlitToCurrentLayer")
+            replace("KeyBindingHelper", "KeyMappingHelper")
+            replace("registerKeyBinding", "registerKeyMapping")
+            replace("fabric.api.client.keybinding", "fabric.api.client.keymapping")
+            replace("SpecialGuiElementRegistry", "PictureInPictureRendererRegistry")
+            replace(".vertexConsumers()", ".bufferSource()")
         }
         string(scp >= "26.1", "render_widget") {
             replace("renderWidget(", "extractWidgetRenderState(")
+        }
+        string(scp >= "26.1", "!graphics") {
+            replace("GuiGraphics", "GuiGraphicsExtractor")
+        }
+        string(scp >= "1.21.11") {
+            replace("ResourceLocation", "Identifier")
         }
         string(scp >= "1.21.9") {
             replace("Screen.hasShiftDown()", "Minecraft.getInstance().hasShiftDown()")
@@ -45,11 +64,29 @@ multiloader {
             replace(".renderTooltip(", ".setTooltipForNextFrame(")
             replace("screen.handleComponentClicked(style);", "Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);")
         }
+        string(scp >= "1.21.5", "hover_event") {
+            replace("(HoverEvent.Action.SHOW_TEXT, ", ".ShowText(")
+            replace("(HoverEvent.Action.SHOW_ENTITY, ", ".ShowEntity(")
+        }
+        string(scp >= "1.21.5", "click_event") {
+            replace("(ClickEvent.Action.OPEN_URL, ", ".OpenUrl(")
+            replace("(ClickEvent.Action.OPEN_FILE, ", ".OpenFile(")
+            replace("(ClickEvent.Action.RUN_COMMAND, ", ".RunCommand(")
+            replace("(ClickEvent.Action.SUGGEST_COMMAND, ", ".SuggestCommand(")
+            replace("(ClickEvent.Action.CHANGE_PAGE, ", ".ChangePage(")
+            replace("(ClickEvent.Action.COPY_TO_CLIPBOARD, ", ".CopyToClipboard(")
+        }
         string(scp >= "1.21.4") {
             replace("protected int getScrollbarPosition()", "protected int scrollBarX()")
         }
+        string(scp >= "1.21.2") {
+            replace("getDisplayName()", "getItemName()")
+        }
         string(scp >= "1.20.3", "render_widget") {
             replace("render(", "renderWidget(")
+        }
+        string(scp >= "1.20") {
+            replace("public void updateNarration", "protected void updateWidgetNarration")
         }
     }
 
@@ -60,7 +97,8 @@ multiloader {
 
     if (isFabric) {
         addDependency(
-            dependency = "net.fabricmc:fabric-loader:${getDep("fabric")}"
+            dependency = "net.fabricmc:fabric-loader:${getDep("fabric")}",
+            configurations = arrayOf("compileOnly", "testmodImplementation")
         )
         addDependency(
             dependency = "net.fabricmc.fabric-api:fabric-api:${getDep("fabric-api")}",

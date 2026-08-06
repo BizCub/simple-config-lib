@@ -6,12 +6,15 @@ import io.github.bizcub.lib.autoconfig.gui.AutoConfigScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 public class Fabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
         Main.init();
+
+        ClientTickEvents.END_CLIENT_TICK.register(minecraft -> Main.setTestScreen());
     }
 
     public static class ModMenu implements ModMenuApi {
