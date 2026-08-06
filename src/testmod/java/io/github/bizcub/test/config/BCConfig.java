@@ -15,9 +15,13 @@ import java.util.List;
 
 @AutoConfig(name = "test")
 public class BCConfig implements Config {
+    private static ConfigHolder<BCConfig> INSTANCE;
 
     public static ConfigHolder<BCConfig> getInstance() {
-        return ConfigHolder.register(BCConfig.class).onSave(BCConfig::onConfigSave);
+        if (INSTANCE == null) {
+            INSTANCE = ConfigHolder.register(BCConfig.class).onSave(BCConfig::onConfigSave);
+        }
+        return INSTANCE;
     }
 
     public static Screen getScreen(Screen parent) {
