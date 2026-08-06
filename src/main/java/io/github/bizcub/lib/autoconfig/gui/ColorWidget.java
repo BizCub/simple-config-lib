@@ -1,12 +1,12 @@
 package io.github.bizcub.lib.autoconfig.gui;
 
+import io.github.bizcub.lib.util.component.ComponentBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.util.Locale;
@@ -47,11 +47,11 @@ public final class ColorWidget extends AbstractWidget {
     private boolean draggingAlpha;
 
     public ColorWidget(final Font font, final int initial, final boolean alpha, final IntConsumer onChange) {
-        super(0, 0, AutoConfigList.WIDGET_WIDTH, 20, Component.empty());
+        super(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
         this.alpha = alpha;
         this.onChange = onChange;
         setColorFromInt(normalize(initial));
-        this.box = new EditBox(font, 0, 0, AutoConfigList.WIDGET_WIDTH - SWATCH - GAP, 20, Component.empty());
+        this.box = new EditBox(font, 0, 0, AutoConfigList.WIDGET_WIDTH - SWATCH - GAP, 20, ComponentBuilder.empty().build());
         this.box.setMaxLength(9);
         this.box.setValue(format(this.color));
         this.box.setResponder(this::onText);

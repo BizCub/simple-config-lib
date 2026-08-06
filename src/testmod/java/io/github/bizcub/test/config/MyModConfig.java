@@ -1,17 +1,16 @@
 package io.github.bizcub.test.config;
 
 import io.github.bizcub.lib.autoconfig.annotation.*;
-import io.github.bizcub.lib.autoconfig.annotation.*;
-import io.github.bizcub.lib.autoconfig.annotation.*;
+import io.github.bizcub.lib.util.component.ClickEventBuilder;
+import io.github.bizcub.lib.util.component.ComponentBuilder;
+import io.github.bizcub.lib.util.component.HoverEventBuilder;
 import net.minecraft.ChatFormatting;
-//import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-//import net.minecraft.network.chat.HoverEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@AutoConfig(name = "test")
+@AutoConfig(name = "test", snakeCaseKeys = true, translate = true)
 public class MyModConfig {
     public boolean enableOptimizations = true;
 
@@ -40,26 +39,23 @@ public class MyModConfig {
     @ListConfig(editable = false)
     public List<Boolean> perDimensionCulling = new ArrayList<>(List.of(true, false, true));
 
-    public Component headerNote = Component.literal("Performance Settings")
-            .withStyle(style -> style
-                    .withColor(ChatFormatting.GOLD)
-                    .withBold(true))
-            .append(Component.literal(" (beta)")
-                    .withStyle(style -> style
-                            .withColor(ChatFormatting.GRAY)
-                            .withItalic(true)));
-
-    public Component emptyNote = Component.literal("Tweak with care")
-            .withStyle(style -> style
-                    .withColor(ChatFormatting.YELLOW)
-                    .withUnderlined(true)
-//                    .withHoverEvent(new HoverEvent.ShowText(
-//                            Component.literal("Changing these may affect FPS")))
-//                    .withClickEvent(new ClickEvent.CopyToClipboard("456"))
-//                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-//                            Component.literal("Changing these may affect FPS")))
-//                    .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, "456"))
+    public Component headerNote = ComponentBuilder.literal("Performance Settings")
+            .color(ChatFormatting.RED)
+            .bold()
+            .build()
+            .copy()
+            .append(ComponentBuilder.literal(" (beta)")
+                    .color(ChatFormatting.GRAY)
+                    .italic()
+                    .build()
             );
+
+    public Component emptyNote = ComponentBuilder.literal("Tweak with care")
+            .color(ChatFormatting.YELLOW)
+            .underline()
+            .hoverEvent(HoverEventBuilder.create().showText("Changing these may affect FPS").build())
+            .clickEvent(ClickEventBuilder.create().copyToClipboard("456").build())
+            .build();
 
     @ListConfig(editable = false)
     public List<Component> hints = new ArrayList<>(List.of(headerNote, emptyNote));

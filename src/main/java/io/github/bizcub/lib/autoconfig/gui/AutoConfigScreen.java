@@ -15,6 +15,7 @@ import io.github.bizcub.lib.autoconfig.gui.AutoConfigList.ObjectElement;
 import io.github.bizcub.lib.autoconfig.gui.AutoConfigList.ScalarElement;
 import io.github.bizcub.lib.autoconfig.gui.AutoConfigList.WidgetNode;
 import com.mojang.logging.LogUtils;
+import io.github.bizcub.lib.util.component.ComponentBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
@@ -61,7 +62,7 @@ public class AutoConfigScreen extends Screen {
     private boolean dirty;
 
     public AutoConfigScreen(final Screen lastScreen, final ConfigHolder<?> holder) {
-        super(Component.translatable("config." + holder.getMeta().name() + ".title"));
+        super(ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build());
         this.lastScreen = lastScreen;
         this.holder = holder;
     }
@@ -113,7 +114,7 @@ public class AutoConfigScreen extends Screen {
         repositionElements();
 
         this.resetButton = this.addRenderableWidget(
-                Button.builder(Component.literal("\uD83D\uDDD8"), b -> {
+                Button.builder(ComponentBuilder.literal("\uD83D\uDDD8").build(), b -> {
                             onReset();
                             markDirty();
                         })
@@ -170,11 +171,11 @@ public class AutoConfigScreen extends Screen {
         if (this.resetButton != null) {
             boolean shift = Minecraft.getInstance().hasShiftDown();
             this.resetButton.active = shift;
-            Component resetComponent = Component.translatable("config.reset");
+            Component resetComponent = ComponentBuilder.translatable("config.reset").build();
             this.resetButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
                     shift
                             ? resetComponent
-                            : resetComponent.copy().append("\n").append(Component.translatable("config.reset.shift"))));
+                            : resetComponent.copy().append("\n").append(ComponentBuilder.translatable("config.reset.shift").build())));
         }
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
@@ -256,10 +257,10 @@ public class AutoConfigScreen extends Screen {
                         this.minecraft.gui.setScreen(this);
                     }
                 },
-                Component.translatable("config.confirm.title"),
-                Component.translatable("config.confirm.message"),
-                Component.translatable("config.confirm.discard"),
-                Component.translatable("config.confirm.keep")
+                ComponentBuilder.translatable("config.confirm.title").build(),
+                ComponentBuilder.translatable("config.confirm.message").build(),
+                ComponentBuilder.translatable("config.confirm.discard").build(),
+                ComponentBuilder.translatable("config.confirm.keep").build()
         ));
     }
 
@@ -404,7 +405,7 @@ public class AutoConfigScreen extends Screen {
                 for (Element e : model.elements) {
                     if (e instanceof ScalarElement s) {
                         if (element == Component.class) {
-                            result.add(s.component != null ? s.component : Component.literal(s.value));
+                            result.add(s.component != null ? s.component : ComponentBuilder.literal(s.value).build());
                         } else {
                             Object parsed = parseElement(element, s.value);
                             if (parsed != null) {
@@ -479,14 +480,14 @@ public class AutoConfigScreen extends Screen {
         Class<?> t = field.getType();
 
         if (t == Component.class) {
-            return new StringWidget(Component.empty(), font);
+            return new StringWidget(ComponentBuilder.empty().build(), font);
         }
 
         if (t == boolean.class || t == Boolean.class) {
             boolean initial = (Boolean) field.get(config);
             return CycleButton.onOffBuilder(initial)
                     .displayOnlyValue()
-                    .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, Component.empty(),
+                    .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                             (b, v) -> apply(config, field, v));
         }
 
@@ -512,12 +513,12 @@ public class AutoConfigScreen extends Screen {
                     //? <1.21.11
                     //.withInitialValue(initial)
                     .displayOnlyValue()
-                    .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, Component.empty(),
+                    .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                             (b, v) -> apply(config, field, v));
         }
 
         if (t == String.class) {
-            EditBox box = new EditBox(this.font, 0, 0, AutoConfigList.WIDGET_WIDTH, 20, Component.empty());
+            EditBox box = new EditBox(this.font, 0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
             box.setValue((String) field.get(config));
             box.setResponder(v -> apply(config, field, v));
             return box;
@@ -525,7 +526,7 @@ public class AutoConfigScreen extends Screen {
 
         if (t == int.class || t == Integer.class || t == long.class || t == Long.class
                 || t == float.class || t == Float.class || t == double.class || t == Double.class) {
-            EditBox box = new EditBox(this.font, 0, 0, AutoConfigList.WIDGET_WIDTH, 20, Component.empty());
+            EditBox box = new EditBox(this.font, 0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
             box.setValue(String.valueOf(field.get(config)));
             box.setResponder(v -> parseNumber(config, field, v));
             return box;
@@ -536,26 +537,27 @@ public class AutoConfigScreen extends Screen {
 
     private Component labelFor(final Field field) {
         if (!this.holder.getMeta().translate()) {
-            return Component.literal(KeyFormatter.humanize(field.getName()));
+            return ComponentBuilder.literal(KeyFormatter.humanize(field.getName())).build();
         }
-        return Component.translatable(
-                "config." + this.holder.getMeta().name() + ".option." + key(field.getName()), field.getName());
+        return ComponentBuilder.translatable(
+                "text." + this.holder.getMeta().name() + ".option." + key(field.getName()),
+                field.getName()).build();
     }
 
     private Component groupLabel(final String groupId) {
         return this.holder.getMeta().translate()
-                ? Component.translatable("config." + this.holder.getMeta().name() + ".group." + groupId)
-                : Component.literal(KeyFormatter.humanize(groupId));
+                ? ComponentBuilder.translatable("text." + this.holder.getMeta().name() + ".group." + groupId).build()
+                : ComponentBuilder.literal(KeyFormatter.humanize(groupId)).build();
     }
 
     private Component elementLabel(final Field ownerField, final Class<?> element,
                                    final boolean translateElements) {
         if (!translateElements) {
-            return Component.literal(element.getSimpleName());
+            return ComponentBuilder.literal(element.getSimpleName()).build();
         }
-        return Component.translatable(
-                "config." + this.holder.getMeta().name() + ".option." + key(ownerField.getName()) + ".element",
-                element.getSimpleName());
+        return ComponentBuilder.translatable(
+                "text." + this.holder.getMeta().name() + ".option." + key(ownerField.getName()) + ".element",
+                element.getSimpleName()).build();
     }
 
     private Component tooltipFor(final Field field) {
@@ -563,18 +565,18 @@ public class AutoConfigScreen extends Screen {
         if (tip == null) {
             return null;
         }
-        String key = "config." + this.holder.getMeta().name() + ".option." + key(field.getName()) + ".tooltip";
-        return Component.translatable(key);
+        String key = "text." + this.holder.getMeta().name() + ".option." + key(field.getName()) + ".tooltip";
+        return ComponentBuilder.translatable(key).build();
     }
 
     private Component enumValueLabel(final Enum<?> value, final boolean translate) {
         if (!translate) {
-            return Component.literal(value.name());
+            return ComponentBuilder.literal(value.name()).build();
         }
-        String key = "config." + this.holder.getMeta().name()
+        String key = "text." + this.holder.getMeta().name()
                 + ".enum." + key(value.getDeclaringClass().getSimpleName())
                 + "." + key(value.name());
-        return Component.translatable(key);
+        return ComponentBuilder.translatable(key).build();
     }
 
     private static boolean isSupportedListElement(final Class<?> type) {
@@ -681,7 +683,7 @@ public class AutoConfigScreen extends Screen {
         private int current;
 
         IntSlider(final int min, final int max, final int step, final int initial, final IntConsumer onApply) {
-            super(0, 0, AutoConfigList.WIDGET_WIDTH, 20, Component.empty(),
+            super(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                     max == min ? 0.0 : (double) (initial - min) / (max - min));
             this.min = min;
             this.max = max;
@@ -693,7 +695,7 @@ public class AutoConfigScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            setMessage(Component.literal(Integer.toString(this.current)));
+            setMessage(ComponentBuilder.literal(Integer.toString(this.current)).build());
         }
 
         @Override

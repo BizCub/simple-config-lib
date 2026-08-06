@@ -16,8 +16,14 @@ public class TestScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        //~ if >=1.19 'addButton' -> 'addRenderableWidget'
-        ScaledItemDisplayWidget widget = addRenderableWidget(new ScaledItemDisplayWidget(this.width / 2, this.height / 2, new ItemStack(Items.DIAMOND_BLOCK), Main.CONFIG.get().entityLodBias));
+        ScaledItemDisplayWidget widget = addRenderableWidget(
+                new ScaledItemDisplayWidget(
+                        this.width / 2,
+                        this.height / 2,
+                        new ItemStack(Items.DIAMOND_BLOCK),
+                        Main.CONFIG.get().entityLodBias
+                )
+        );
         widget.setCentred();
     }
 }
