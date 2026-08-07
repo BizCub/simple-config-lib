@@ -1,7 +1,7 @@
 package io.github.bizcub.test.config;
 
-import io.github.bizcub.lib.autoconfig.annotation.Color;
-import io.github.bizcub.lib.autoconfig.annotation.Slider;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Color;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Slider;
 
 import java.util.ArrayList;
 import java.util.List;

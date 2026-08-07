@@ -1,6 +1,6 @@
 ### Mod properties
-mod.name="BizCub Lib"
-mod.id="bizcub_lib"
+mod.name="Simple Config Lib"
+mod.id="simple_config_lib"
 mod.version="1.0"
 mod.description="first line\nsecond line"
 

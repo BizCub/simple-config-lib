@@ -1,6 +1,6 @@
 package io.github.bizcub.test.screen;
 
-import io.github.bizcub.lib.util.widget.ScaledItemDisplayWidget;
+import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemDisplayWidget;
 import io.github.bizcub.test.config.Config;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;

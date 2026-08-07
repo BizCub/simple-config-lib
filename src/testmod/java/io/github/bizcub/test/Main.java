@@ -1,9 +1,9 @@
 package io.github.bizcub.test;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import io.github.bizcub.lib.util.Keymapper;
-import io.github.bizcub.lib.util.component.ComponentBuilder;
-import io.github.bizcub.test.config.BCConfig;
+import io.github.bizcub.simpleConfigLib.util.Keymapper;
+import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import io.github.bizcub.test.config.LibConfig;
 import io.github.bizcub.test.config.Config;
 import io.github.bizcub.test.screen.TestScreen;
 import net.minecraft.client.KeyMapping;
@@ -23,7 +23,7 @@ public class Main {
 
     public static void init() {
         if (isModLoaded("bizcub_lib")) {
-            Config.set(BCConfig.getInstance().get());
+            Config.set(LibConfig.getInstance().get());
         }
     }
 
