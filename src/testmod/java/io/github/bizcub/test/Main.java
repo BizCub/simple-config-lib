@@ -16,13 +16,13 @@ import net.minecraft.client.Minecraft;
 public class Main {
     public static final String MOD_ID = "test_lib";
     public static final KeyMapping TOGGLE_VISIBILITY = Keymapper.register(
-            "key." + MOD_ID + ".toggle_frames_visibility",
+            "key." + MOD_ID + ".open_test_screen",
             InputConstants.KEY_H,
             Keymapper.getCategoryId("misc")
     );
 
     public static void init() {
-        if (isModLoaded("bizcub_lib")) {
+        if (isModLoaded("simple_config_lib")) {
             Config.set(LibConfig.getInstance().get());
         }
     }
@@ -35,7 +35,7 @@ public class Main {
 
     public static void setTestScreen() {
         while (Main.TOGGLE_VISIBILITY.consumeClick()) {
-            Minecraft.getInstance().gui.setScreen(new TestScreen(ComponentBuilder.literal("qq").build()));
+            Minecraft.getInstance().gui.setScreen(new TestScreen(ComponentBuilder.literal("test").build()));
         }
     }
 }

@@ -61,6 +61,7 @@ multiloader {
             replace("mouseY", "mouseButtonEvent.y()")
         }
         string(scp >= "1.21.6") {
+            replace("net.minecraftforge.eventbus.api.SubscribeEvent", "net.minecraftforge.eventbus.api.listener.SubscribeEvent")
             replace(".renderTooltip(", ".setTooltipForNextFrame(")
             replace("screen.handleComponentClicked(style);", "Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);")
         }

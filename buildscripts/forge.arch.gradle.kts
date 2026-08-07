@@ -13,10 +13,17 @@ multiloader {
     }
 
     loom {
+        mods {
+            register("testmod") { sourceSet(sourceSets.testmod.get()) }
+        }
+
         if (isMainCTFileExist())
             accessWidenerPath.set(ctForgeArchFile)
 
         runConfigs {
+            configureEach {
+                sourceSet = "testmod"
+            }
             getByName("client") {
                 runDirectory.set(clientRunFile)
             }
