@@ -2,13 +2,16 @@ package io.github.bizcub.test;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.bizcub.lib.util.Keymapper;
-import io.github.bizcub.lib.util.Platform;
 import io.github.bizcub.lib.util.component.ComponentBuilder;
 import io.github.bizcub.test.config.BCConfig;
 import io.github.bizcub.test.config.Config;
 import io.github.bizcub.test.screen.TestScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+
+/*? fabric*/ import net.fabricmc.loader.api.FabricLoader;
+/*? forge*/ //import net.minecraftforge.fml.ModList;
+/*? neoforge*/ //import net.neoforged.fml.ModList;
 
 public class Main {
     public static final String MOD_ID = "test_lib";
@@ -19,9 +22,15 @@ public class Main {
     );
 
     public static void init() {
-        if (Platform.isModLoaded("bizcub_lib")) {
+        if (isModLoaded("bizcub_lib")) {
             Config.set(BCConfig.getInstance().get());
         }
+    }
+
+    public static boolean isModLoaded(String modId) {
+        /*? fabric*/ return FabricLoader.getInstance().isModLoaded(modId);
+        /*? (forge && <26.1) || neoforge*/ //return ModList.get().isLoaded(modId);
+        /*? forge && >=26.1*/ //return ModList.isLoaded(modId);
     }
 
     public static void setTestScreen() {

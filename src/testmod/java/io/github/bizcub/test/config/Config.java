@@ -30,8 +30,8 @@ public interface Config {
         return 12;
     }
 
-    default BCConfig.PerformancePreset preset() {
-        return BCConfig.PerformancePreset.BALANCED;
+    default PerformancePreset preset() {
+        return PerformancePreset.BALANCED;
     }
 
     default int fpsOverlayColor() {
@@ -58,15 +58,15 @@ public interface Config {
         return 50;
     }
 
-    default BCConfig.RenderQuality renderQuality() {
-        return BCConfig.RenderQuality.MEDIUM;
+    default RenderQuality renderQuality() {
+        return RenderQuality.MEDIUM;
     }
 
-    default List<BCConfig.ChunkProfile> chunkProfiles() {
-        return new ArrayList<>(List.of(new BCConfig.ChunkProfile(), new BCConfig.ChunkProfile()));
+    default List<ChunkProfile> chunkProfiles() {
+        return new ArrayList<>(List.of(new ChunkProfile(), new ChunkProfile()));
     }
 
-    default BCConfig.Graphics graphics() {
-        return new BCConfig.Graphics();
+    default Graphics graphics() {
+        return new Graphics();
     }
 }

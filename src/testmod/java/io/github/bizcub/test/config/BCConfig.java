@@ -86,37 +86,6 @@ public class BCConfig implements Config {
     @Category
     public Graphics graphics = Config.super.graphics();
 
-    public static class Graphics {
-        public boolean vsync = true;
-
-        @Slider(min = 0, max = 100)
-        public int brightness = 50;
-
-        @Color(alpha = true)
-        public int overlay = 0x80FF0000;
-
-        public List<String> shaderPacks = new ArrayList<>(List.of("none"));
-    }
-
-    public static class ChunkProfile {
-        public boolean async = true;
-
-        @Slider(min = 1, max = 16)
-        public int workerThreads = 4;
-
-        public String name = "profile";
-
-        public List<Boolean> test = new ArrayList<>(List.of(true));
-    }
-
-    public enum PerformancePreset {
-        POTATO, FAST, BALANCED, QUALITY;
-    }
-
-    public enum RenderQuality {
-        LOW, MEDIUM, HIGH, ULTRA;
-    }
-
     @Override
     public boolean enableOptimizations() {
         return this.enableOptimizations;
@@ -133,7 +102,7 @@ public class BCConfig implements Config {
     }
 
     @Override
-    public BCConfig.PerformancePreset preset() {
+    public PerformancePreset preset() {
         return this.preset;
     }
 
@@ -168,17 +137,17 @@ public class BCConfig implements Config {
     }
 
     @Override
-    public BCConfig.RenderQuality renderQuality() {
+    public RenderQuality renderQuality() {
         return this.renderQuality;
     }
 
     @Override
-    public List<BCConfig.ChunkProfile> chunkProfiles() {
+    public List<ChunkProfile> chunkProfiles() {
         return this.chunkProfiles;
     }
 
     @Override
-    public BCConfig.Graphics graphics() {
+    public Graphics graphics() {
         return this.graphics;
     }
 }
