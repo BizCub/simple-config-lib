@@ -18,6 +18,6 @@ public class NeoForge {
                 (ClientTickEvent.Post event) -> Main.setTestScreen());
 
         ModLoadingContext.get().registerExtensionPoint(IConfigScreenFactory.class, () ->
-                (container, screen) -> BCConfig.getScreen(screen));
+                (container, screen) -> BCConfig.getInstance().createScreen(screen));
     }
 }*///?}

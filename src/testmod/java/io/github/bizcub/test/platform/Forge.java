@@ -19,6 +19,6 @@ public class Forge {
 
         ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () ->
                 new ConfigScreenHandler.ConfigScreenFactory((minecraft, screen) ->
-                        BCConfig.getScreen(screen)));
+                        BCConfig.getInstance().createScreen(screen)));
     }
 }*///?}

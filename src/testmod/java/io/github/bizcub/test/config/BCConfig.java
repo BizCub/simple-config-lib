@@ -2,12 +2,10 @@ package io.github.bizcub.test.config;
 
 import io.github.bizcub.lib.autoconfig.ConfigHolder;
 import io.github.bizcub.lib.autoconfig.annotation.*;
-import io.github.bizcub.lib.autoconfig.gui.AutoConfigScreen;
 import io.github.bizcub.lib.util.component.ClickEventBuilder;
 import io.github.bizcub.lib.util.component.ComponentBuilder;
 import io.github.bizcub.lib.util.component.HoverEventBuilder;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -15,16 +13,8 @@ import java.util.List;
 
 @AutoConfig(name = "test")
 public class BCConfig implements Config {
-    private static ConfigHolder<BCConfig> INSTANCE;
-
     public static ConfigHolder<BCConfig> getInstance() {
-        return INSTANCE == null
-                ? INSTANCE = ConfigHolder.register(BCConfig.class).onSave(BCConfig::onConfigSave)
-                : INSTANCE;
-    }
-
-    public static Screen getScreen(Screen parent) {
-        return new AutoConfigScreen(parent, BCConfig.getInstance());
+        return ConfigHolder.register(BCConfig.class).onSave(BCConfig::onConfigSave);
     }
 
     public static void onConfigSave(Config config) {

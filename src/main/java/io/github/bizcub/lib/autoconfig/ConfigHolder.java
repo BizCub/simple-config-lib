@@ -7,11 +7,15 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
+import io.github.bizcub.lib.autoconfig.gui.AutoConfigScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -19,10 +23,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class ConfigHolder<T> {
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Map<Class<?>, ConfigHolder<?>> REGISTRY = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .setExclusionStrategies(new ExclusionStrategy() {
@@ -78,12 +85,17 @@ public class ConfigHolder<T> {
         return Main.gameDir().resolve("config").resolve(this.meta.name() + ".json");
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> ConfigHolder<T> register(final Class<T> type) {
-        return new ConfigHolder<>(type);
+        return (ConfigHolder<T>) REGISTRY.computeIfAbsent(type, ConfigHolder::new);
+    }
+
+    public Screen createScreen(final Screen parent) {
+        return new AutoConfigScreen(parent, this);
     }
 
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
-        if (listener != null) {
+        if (listener != null && !this.saveListeners.contains(listener)) {
             this.saveListeners.add(listener);
         }
         return this;
@@ -126,9 +138,9 @@ public class ConfigHolder<T> {
     }
 
     private void copyInto(final T source, final T target) {
-        for (java.lang.reflect.Field f : this.type.getDeclaredFields()) {
+        for (Field f : this.type.getDeclaredFields()) {
             int mods = f.getModifiers();
-            if (java.lang.reflect.Modifier.isStatic(mods) || java.lang.reflect.Modifier.isTransient(mods)) {
+            if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
                 continue;
             }
             try {

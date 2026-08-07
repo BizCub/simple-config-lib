@@ -1,15 +1,21 @@
 package io.github.bizcub.test.config;
 
-import io.github.bizcub.test.Main;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public interface Config {
-    Config CONFIG = Main.isModLoaded("bizcub_lib") ? BCConfig.getInstance().get() : new Config() { };
-
     static Config get() {
-        return CONFIG;
+        return Holder.INSTANCE;
+    }
+
+    static void set(final Config config) {
+        if (config != null) {
+            Holder.INSTANCE = config;
+        }
+    }
+
+    class Holder {
+        private static Config INSTANCE = new Config() { };
     }
 
     default boolean enableOptimizations() {

@@ -21,7 +21,7 @@ public class Fabric implements ModInitializer {
 
         @Override
         public ConfigScreenFactory<?> getModConfigScreenFactory() {
-            return BCConfig::getScreen;
+            return BCConfig.getInstance()::createScreen;
         }
     }
 }//?}
