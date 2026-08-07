@@ -1,12 +1,12 @@
 package io.github.bizcub.test.config;
 
-import io.github.bizcub.lib.util.Platform;
+import io.github.bizcub.test.Main;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public interface Config {
-    Config CONFIG = Platform.isModLoaded("bizcub_lib") ? BCConfig.getInstance().get() : new Config() { };
+    Config CONFIG = Main.isModLoaded("bizcub_lib") ? BCConfig.getInstance().get() : new Config() { };
 
     static Config get() {
         return CONFIG;
