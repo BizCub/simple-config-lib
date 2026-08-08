@@ -14,6 +14,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElem
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
 import com.mojang.logging.LogUtils;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
@@ -483,7 +484,12 @@ public class AutoConfigScreen extends Screen {
 
         if (t == boolean.class || t == Boolean.class) {
             boolean initial = (Boolean) field.get(config);
-            return CycleButton.onOffBuilder(initial)
+            BooleanConfig cfg = field.getAnnotation(BooleanConfig.class);
+            final boolean yesNo = cfg == null || cfg.yesNo();
+            return CycleButton.builder((Boolean v) -> booleanLabel(v, yesNo) /*? >=1.21.11 >> ')'*/, initial)
+                    .withValues(true, false)
+                    //? <1.21.11
+                    //.withInitialValue(initial)
                     .displayOnlyValue()
                     .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                             (b, v) -> apply(config, field, v));
@@ -575,6 +581,13 @@ public class AutoConfigScreen extends Screen {
                 + ".enum." + key(value.getDeclaringClass().getSimpleName())
                 + "." + key(value.name());
         return ComponentBuilder.translatable(key).build();
+    }
+
+    private Component booleanLabel(final boolean value, final boolean yesNo) {
+        String text = yesNo ? (value ? "gui.yes" : "gui.no") : (value ? "options.on" : "options.off");
+        return ComponentBuilder.translatable(text)
+                .color(value ? ChatFormatting.GREEN : ChatFormatting.RED)
+                .build();
     }
 
     private static boolean isSupportedListElement(final Class<?> type) {

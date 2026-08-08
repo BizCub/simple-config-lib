@@ -21,6 +21,7 @@ public class LibConfig implements Config {
         System.out.println("Config saved!");
     }
 
+    @BooleanConfig(yesNo = false)
     public boolean enableOptimizations = Config.super.enableOptimizations();
 
     @Tooltip
@@ -55,6 +56,8 @@ public class LibConfig implements Config {
             .copy()
             .append(ComponentBuilder.literal(" (beta)")
                     .color(ChatFormatting.GRAY)
+                    .hoverEvent(HoverEventBuilder.create().showText(" (beta)").build())
+                    .clickEvent(ClickEventBuilder.create().copyToClipboard(" (beta)").build())
                     .italic()
                     .build()
             );

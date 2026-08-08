@@ -22,6 +22,13 @@ import java.util.function.Supplier;
 //? >=1.21.9 {
 import net.minecraft.client.input.MouseButtonEvent;//?}
 
+//? >=1.21.11 {
+import net.minecraft.client.gui.ActiveTextCollector;
+import net.minecraft.client.renderer.state.gui.GuiTextRenderState;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.FormattedCharSequence;
+import org.joml.Matrix3x2f;//?}
+
 public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.Row> {
 
     public static final int WIDGET_WIDTH = 150;
@@ -83,7 +90,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     @Override
     public int getRowWidth() {
-        return 310;
+        return 350;
     }
 
     private void markDirty() {
@@ -220,6 +227,14 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
     }
 
+    //? >=1.21.11 {
+    private static Style styleUnderCursor(Font font, FormattedCharSequence text, int leftX, int topY, int mouseX, int mouseY) {
+        GuiTextRenderState state = new GuiTextRenderState(font, text, new Matrix3x2f(), leftX, topY, ARGB.white(1.0F), 0, true, true, null);
+        Style[] found = new Style[1];
+        ActiveTextCollector.findElementUnderCursor(state, mouseX, mouseY, s -> found[0] = s);
+        return found[0];
+    }//?}
+
     public abstract static class Node {
         public Component label;
         public Component tooltip;
@@ -319,14 +334,21 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     && mouseY >= y && mouseY <= y + 20;
 
             if (overLabel) {
-                Style style = this.node.label.getStyle();
+                //? >=1.21.11 {
+                Style style = styleUnderCursor(AutoConfigList.this.font,
+                        this.node.label.getVisualOrderText(), labelX, y + 6, mouseX, mouseY);
+
+                //?} else {
+                /*Style style = AutoConfigList.this.font.getSplitter()
+                        .componentStyleAtWidth(this.node.label.getVisualOrderText(), mouseX - labelX);*///?}
+
                 //? >=1.21.5 {
-                FormattedText tooltipText = style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
+                FormattedText tooltipText = style != null && style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
                         ? value
                         : this.node.tooltip;
 
                 //?} else {
-                /*HoverEvent hover = style.getHoverEvent();
+                /*HoverEvent hover = style != null ? style.getHoverEvent() : null;
                 Component value = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;
                 FormattedText tooltipText = value != null ? value : this.node.tooltip;*///?}
 
@@ -366,8 +388,16 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     && mouseButtonEvent.y() >= y && mouseButtonEvent.y() <= y + 20; //~ !mb_event
 
             if (overLabel) {
-                Style style = this.node.label.getStyle();
-                if (style.getClickEvent() != null) {
+                //? >=1.21.11 {
+                Style style = styleUnderCursor(AutoConfigList.this.font, this.node.label.getVisualOrderText(),
+                        labelX, y + 6, (int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
+
+                //?} else {
+                /*Style style = AutoConfigList.this.font.getSplitter() //~ mb_event
+                        .componentStyleAtWidth(this.node.label.getVisualOrderText(), (int) mouseButtonEvent.x() - labelX); //~ !mb_event
+                *///?}
+
+                if (style != null && style.getClickEvent() != null) {
                     Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
                     return true;
                 }
@@ -707,15 +737,22 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
                 int labelW = AutoConfigList.this.font.width(this.componentLabel);
                 if (mouseX >= boxX && mouseX <= boxX + labelW && mouseY >= y && mouseY <= y + 20) {
-                    Style style = this.componentLabel.getStyle();
+                    //? >=1.21.11 {
+                    Style style = styleUnderCursor(AutoConfigList.this.font,
+                            this.componentLabel.getVisualOrderText(), boxX, y + 6, mouseX, mouseY);
+
+                    //?} else {
+                    /*int relativeX = mouseX - boxX;
+                    Style style = AutoConfigList.this.font.getSplitter()
+                            .componentStyleAtWidth(this.componentLabel.getVisualOrderText(), relativeX);*///?}
 
                     //? >=1.21.5 {
-                    Component tooltipValue = style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
+                    Component tooltipValue = style != null && style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
                             ? value
                             : null;
 
                     //?} else {
-                    /*HoverEvent hover = style.getHoverEvent();
+                    /*HoverEvent hover = style != null ? style.getHoverEvent() : null;
                     Component tooltipValue = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;*///?}
 
                     if (tooltipValue != null) {
@@ -744,8 +781,18 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 int labelW = AutoConfigList.this.font.width(this.componentLabel);
                 //~ mb_event
                 if (mouseButtonEvent.x() >= boxX && mouseButtonEvent.x() <= boxX + labelW && mouseButtonEvent.y() >= y && mouseButtonEvent.y() <= y + 20) { //~ !mb_event
-                    Style style = this.componentLabel.getStyle();
-                    if (style.getClickEvent() != null) {
+                    //? >=1.21.11 {
+                    Style style = styleUnderCursor(AutoConfigList.this.font, this.componentLabel.getVisualOrderText(),
+                            boxX, y + 6, (int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
+
+                    //?} else {
+                    /*//~ mb_event
+                    int relativeX = (int) mouseButtonEvent.x() - boxX; //~ !mb_event
+                    Style style = AutoConfigList.this.font.getSplitter()
+                            .componentStyleAtWidth(this.componentLabel.getVisualOrderText(), relativeX);
+                    *///?}
+
+                    if (style != null && style.getClickEvent() != null) {
                         Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
                         return true;
                     }
