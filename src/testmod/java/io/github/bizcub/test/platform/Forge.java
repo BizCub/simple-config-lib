@@ -22,8 +22,8 @@ public class Forge {
                         LibConfig.getInstance().createScreen(screen)));
     }
 
-    @SubscribeEvent //~ if >=26.2 'ClientTickEvent.Post' -> 'ClientTickEvent'
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
+    @SubscribeEvent //~ if <=1.20.2 'ClientTickEvent.Post' -> 'ClientTickEvent'
+    public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
         Main.setTestScreen();
     }
 }*///?}

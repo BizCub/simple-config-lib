@@ -1,6 +1,4 @@
 plugins {
-    id("me.modmuss50.mod-publish-plugin")
-    id("dev.kikugie.fletching-table")
     id("io.github.bizcub.multiloader")
 }
 
