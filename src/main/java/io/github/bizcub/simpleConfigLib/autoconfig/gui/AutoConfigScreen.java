@@ -314,13 +314,13 @@ public class AutoConfigScreen extends Screen {
         return buildNode(config, field, null);
     }
 
-    private Node buildNode(final Object config, final Field field, final String classPrefix) {
+    private Node buildNode(final Object config, final Field field, final String fieldPrefix) {
         field.setAccessible(true);
         try {
             Class<?> t = field.getType();
 
             if (List.class.isAssignableFrom(t)) {
-                return buildListNode(config, field, classPrefix);
+                return buildListNode(config, field, fieldPrefix);
             }
 
             AbstractWidget widget = buildWidget(config, field);
@@ -328,9 +328,8 @@ public class AutoConfigScreen extends Screen {
                 WidgetNode n = new WidgetNode();
                 n.label = field.getType() == Component.class
                         ? (Component) field.get(config)
-                        : labelFor(field, classPrefix);
-
-                n.tooltip = tooltipFor(field, classPrefix);
+                        : labelFor(field, fieldPrefix);
+                n.tooltip = tooltipFor(field, fieldPrefix);
                 n.widget = widget;
                 return n;
             }
@@ -344,11 +343,11 @@ public class AutoConfigScreen extends Screen {
                 GroupNode g = new GroupNode();
                 g.label = field.getType() == Component.class
                         ? (Component) field.get(config)
-                        : labelFor(field, classPrefix);
-                g.tooltip = tooltipFor(field, classPrefix);
+                        : labelFor(field, fieldPrefix);
+                g.tooltip = tooltipFor(field, fieldPrefix);
                 g.expanded = false;
                 for (Field cf : instanceFields(t)) {
-                    Node child = buildNode(value, cf, classPrefix);
+                    Node child = buildNode(value, cf, fieldPrefix);
                     if (child != null) {
                         g.children.add(child);
                     }
@@ -368,7 +367,7 @@ public class AutoConfigScreen extends Screen {
         return buildListNode(config, field, null);
     }
 
-    private Node buildListNode(final Object config, final Field field, final String classPrefix)
+    private Node buildListNode(final Object config, final Field field, final String fieldPrefix)
             throws IllegalAccessException {
         final Class<?> element = resolveListElementType(field);
         if (element == null) {
@@ -427,8 +426,8 @@ public class AutoConfigScreen extends Screen {
             });
 
             ListNode n = new ListNode();
-            n.label = labelFor(field, classPrefix);
-            n.tooltip = tooltipFor(field, classPrefix);
+            n.label = labelFor(field, fieldPrefix);
+            n.tooltip = tooltipFor(field, fieldPrefix);
             n.model = model;
             return n;
         }
@@ -474,7 +473,7 @@ public class AutoConfigScreen extends Screen {
         g.tooltip = null;
         g.expanded = false;
         for (Field cf : instanceFields(element)) {
-            Node child = buildNode(obj, cf, element.getSimpleName());
+            Node child = buildNode(obj, cf, ownerField.getName());
             if (child != null) {
                 g.children.add(child);
             }
@@ -553,12 +552,12 @@ public class AutoConfigScreen extends Screen {
         return labelFor(field, null);
     }
 
-    private Component labelFor(final Field field, final String classPrefix) {
+    private Component labelFor(final Field field, final String fieldPrefix) {
         if (!this.holder.getMeta().translate()) {
             return ComponentBuilder.literal(KeyFormatter.humanize(field.getName())).build();
         }
-        String fieldKey = classPrefix != null
-                ? key(classPrefix) + "." + key(field.getName())
+        String fieldKey = fieldPrefix != null
+                ? key(fieldPrefix) + "." + key(field.getName())
                 : key(field.getName());
         return ComponentBuilder.translatable(
                 "text." + this.holder.getMeta().name() + ".option." + fieldKey,
@@ -585,13 +584,13 @@ public class AutoConfigScreen extends Screen {
         return tooltipFor(field, null);
     }
 
-    private Component tooltipFor(final Field field, final String classPrefix) {
+    private Component tooltipFor(final Field field, final String fieldPrefix) {
         Tooltip tip = field.getAnnotation(Tooltip.class);
         if (tip == null) {
             return null;
         }
-        String fieldKey = classPrefix != null
-                ? key(classPrefix) + "." + key(field.getName())
+        String fieldKey = fieldPrefix != null
+                ? key(fieldPrefix) + "." + key(field.getName())
                 : key(field.getName());
         String key = "text." + this.holder.getMeta().name() + ".option." + fieldKey + ".tooltip";
         return ComponentBuilder.translatable(key).build();
