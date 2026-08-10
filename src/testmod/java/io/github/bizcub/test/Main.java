@@ -3,7 +3,7 @@ package io.github.bizcub.test;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
-import io.github.bizcub.test.config.LibConfig;
+import io.github.bizcub.test.config.SimpleConfig;
 import io.github.bizcub.test.config.Config;
 import io.github.bizcub.test.screen.TestScreen;
 import net.minecraft.client.KeyMapping;
@@ -23,7 +23,7 @@ public class Main {
 
     public static void init() {
         if (isModLoaded("simple_config_lib")) {
-            Config.set(LibConfig.getInstance().get());
+            Config.set(SimpleConfig.getInstance().get());
         }
     }
 

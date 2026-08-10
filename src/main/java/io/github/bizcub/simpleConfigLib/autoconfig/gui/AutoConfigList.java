@@ -31,7 +31,8 @@ import org.joml.Matrix3x2f;//?}
 
 public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.Row> {
 
-    public static final int WIDGET_WIDTH = 150;
+    private static final int MAX_ROW_WIDTH = 520;
+    private static final int SIDE_PADDING = 40;
     private static final int ROW_HEIGHT = 25;
     private static final int LABEL_COLOR = -1;
     private static final int SELECTED_BG = 0x80FFFFFF;
@@ -90,7 +91,11 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     @Override
     public int getRowWidth() {
-        return 350;
+        return Math.min(MAX_ROW_WIDTH, this.width - SIDE_PADDING);
+    }
+
+    private int widgetWidth() {
+        return Math.max(80, getRowWidth() * 3 / 7);
     }
 
     private void markDirty() {
@@ -169,7 +174,6 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     void rebuild() {
         //~ if >=1.21.4 '.getScrollAmount()' -> '.scrollAmount()'
         final double scroll = this.scrollAmount();
-        commitScalarElements();
         this.clearEntries();
         for (Node n : this.nodes) {
             addNode(n, 0);
@@ -324,9 +328,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
-            int widgetX = rowLeft + rowWidth - WIDGET_WIDTH;
+            int widgetW = AutoConfigList.this.widgetWidth();
+            int widgetX = rowLeft + rowWidth - widgetW;
             this.node.widget.setPosition(widgetX, y);
-            this.node.widget.setWidth(WIDGET_WIDTH);
+            this.node.widget.setWidth(widgetW);
             this.node.widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
             int labelWidth = AutoConfigList.this.font.width(this.node.label);

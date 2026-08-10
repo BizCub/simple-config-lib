@@ -20,6 +20,7 @@ import net.minecraft.client.input.MouseButtonEvent;//?}
 public final class ColorWidget extends AbstractWidget {
     private static final int SWATCH = 18;
     private static final int GAP = 2;
+    private static final int DEFAULT_WIDTH = 150;
 
     private static final int SV_SIZE = 100;
     private static final int HUE_W = 12;
@@ -47,11 +48,11 @@ public final class ColorWidget extends AbstractWidget {
     private boolean draggingAlpha;
 
     public ColorWidget(final Font font, final int initial, final boolean alpha, final IntConsumer onChange) {
-        super(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
+        super(0, 0, DEFAULT_WIDTH, 20, ComponentBuilder.empty().build());
         this.alpha = alpha;
         this.onChange = onChange;
         setColorFromInt(normalize(initial));
-        this.box = new EditBox(font, 0, 0, AutoConfigList.WIDGET_WIDTH - SWATCH - GAP, 20, ComponentBuilder.empty().build());
+        this.box = new EditBox(font, 0, 0, DEFAULT_WIDTH - SWATCH - GAP, 20, ComponentBuilder.empty().build());
         this.box.setMaxLength(9);
         this.box.setValue(format(this.color));
         this.box.setResponder(this::onText);

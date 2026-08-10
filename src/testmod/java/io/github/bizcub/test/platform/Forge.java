@@ -2,7 +2,7 @@
 /*package io.github.bizcub.test.platform;
 
 import io.github.bizcub.test.Main;
-import io.github.bizcub.test.config.LibConfig;
+import io.github.bizcub.test.config.SimpleConfig;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
@@ -19,7 +19,7 @@ public class Forge {
 
         ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () ->
                 new ConfigScreenHandler.ConfigScreenFactory((minecraft, screen) ->
-                        LibConfig.getInstance().createScreen(screen)));
+                        SimpleConfig.getInstance().createScreen(screen)));
     }
 
     @SubscribeEvent //~ if <=1.20.2 'ClientTickEvent.Post' -> 'ClientTickEvent'

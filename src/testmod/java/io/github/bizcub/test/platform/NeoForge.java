@@ -2,7 +2,7 @@
 /*package io.github.bizcub.test.platform;
 
 import io.github.bizcub.test.Main;
-import io.github.bizcub.test.config.LibConfig;
+import io.github.bizcub.test.config.SimpleConfig;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -18,7 +18,7 @@ public class NeoForge {
         Main.init();
 
         ModLoadingContext.get().registerExtensionPoint(IConfigScreenFactory.class, () ->
-                (container, screen) -> LibConfig.getInstance().createScreen(screen));
+                (container, screen) -> SimpleConfig.getInstance().createScreen(screen));
     }
 
     @SubscribeEvent

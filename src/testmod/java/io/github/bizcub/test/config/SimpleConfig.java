@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @AutoConfig(name = "test")
-public class LibConfig implements Config {
-    public static ConfigHolder<LibConfig> getInstance() {
-        return ConfigHolder.register(LibConfig.class).onSave(LibConfig::onConfigSave);
+public class SimpleConfig implements Config {
+    public static ConfigHolder<SimpleConfig> getInstance() {
+        return ConfigHolder.register(SimpleConfig.class).onSave(SimpleConfig::onConfigSave);
     }
 
     public static void onConfigSave(Config config) {

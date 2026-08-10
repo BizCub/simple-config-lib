@@ -44,6 +44,7 @@ import net.minecraft.client.input.MouseButtonEvent;//?}
 public class AutoConfigScreen extends Screen {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DEFAULT_GROUP = "general";
+    private static final int DEFAULT_WIDGET_WIDTH = 150;
 
     private final Screen lastScreen;
     private final ConfigHolder<?> holder;
@@ -310,12 +311,16 @@ public class AutoConfigScreen extends Screen {
     }
 
     private Node buildNode(final Object config, final Field field) {
+        return buildNode(config, field, null);
+    }
+
+    private Node buildNode(final Object config, final Field field, final String classPrefix) {
         field.setAccessible(true);
         try {
             Class<?> t = field.getType();
 
             if (List.class.isAssignableFrom(t)) {
-                return buildListNode(config, field);
+                return buildListNode(config, field, classPrefix);
             }
 
             AbstractWidget widget = buildWidget(config, field);
@@ -323,9 +328,9 @@ public class AutoConfigScreen extends Screen {
                 WidgetNode n = new WidgetNode();
                 n.label = field.getType() == Component.class
                         ? (Component) field.get(config)
-                        : labelFor(field);
+                        : labelFor(field, classPrefix);
 
-                n.tooltip = tooltipFor(field);
+                n.tooltip = tooltipFor(field, classPrefix);
                 n.widget = widget;
                 return n;
             }
@@ -339,11 +344,11 @@ public class AutoConfigScreen extends Screen {
                 GroupNode g = new GroupNode();
                 g.label = field.getType() == Component.class
                         ? (Component) field.get(config)
-                        : labelFor(field);
-                g.tooltip = tooltipFor(field);
+                        : labelFor(field, classPrefix);
+                g.tooltip = tooltipFor(field, classPrefix);
                 g.expanded = false;
                 for (Field cf : instanceFields(t)) {
-                    Node child = buildNode(value, cf);
+                    Node child = buildNode(value, cf, classPrefix);
                     if (child != null) {
                         g.children.add(child);
                     }
@@ -360,6 +365,11 @@ public class AutoConfigScreen extends Screen {
     }
 
     private Node buildListNode(final Object config, final Field field) throws IllegalAccessException {
+        return buildListNode(config, field, null);
+    }
+
+    private Node buildListNode(final Object config, final Field field, final String classPrefix)
+            throws IllegalAccessException {
         final Class<?> element = resolveListElementType(field);
         if (element == null) {
             LOGGER.warn("Skipping list {}: element type could not be determined", field.getName());
@@ -417,8 +427,8 @@ public class AutoConfigScreen extends Screen {
             });
 
             ListNode n = new ListNode();
-            n.label = labelFor(field);
-            n.tooltip = tooltipFor(field);
+            n.label = labelFor(field, classPrefix);
+            n.tooltip = tooltipFor(field, classPrefix);
             n.model = model;
             return n;
         }
@@ -464,7 +474,7 @@ public class AutoConfigScreen extends Screen {
         g.tooltip = null;
         g.expanded = false;
         for (Field cf : instanceFields(element)) {
-            Node child = buildNode(obj, cf);
+            Node child = buildNode(obj, cf, element.getSimpleName());
             if (child != null) {
                 g.children.add(child);
             }
@@ -491,7 +501,7 @@ public class AutoConfigScreen extends Screen {
                     //? <1.21.11
                     //.withInitialValue(initial)
                     .displayOnlyValue()
-                    .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
+                    .create(0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                             (b, v) -> apply(config, field, v));
         }
 
@@ -517,12 +527,12 @@ public class AutoConfigScreen extends Screen {
                     //? <1.21.11
                     //.withInitialValue(initial)
                     .displayOnlyValue()
-                    .create(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
+                    .create(0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                             (b, v) -> apply(config, field, v));
         }
 
         if (t == String.class) {
-            EditBox box = new EditBox(this.font, 0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
+            EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
             box.setValue((String) field.get(config));
             box.setResponder(v -> apply(config, field, v));
             return box;
@@ -530,7 +540,7 @@ public class AutoConfigScreen extends Screen {
 
         if (t == int.class || t == Integer.class || t == long.class || t == Long.class
                 || t == float.class || t == Float.class || t == double.class || t == Double.class) {
-            EditBox box = new EditBox(this.font, 0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
+            EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
             box.setValue(String.valueOf(field.get(config)));
             box.setResponder(v -> parseNumber(config, field, v));
             return box;
@@ -540,11 +550,18 @@ public class AutoConfigScreen extends Screen {
     }
 
     private Component labelFor(final Field field) {
+        return labelFor(field, null);
+    }
+
+    private Component labelFor(final Field field, final String classPrefix) {
         if (!this.holder.getMeta().translate()) {
             return ComponentBuilder.literal(KeyFormatter.humanize(field.getName())).build();
         }
+        String fieldKey = classPrefix != null
+                ? key(classPrefix) + "." + key(field.getName())
+                : key(field.getName());
         return ComponentBuilder.translatable(
-                "text." + this.holder.getMeta().name() + ".option." + key(field.getName()),
+                "text." + this.holder.getMeta().name() + ".option." + fieldKey,
                 field.getName()).build();
     }
 
@@ -565,11 +582,18 @@ public class AutoConfigScreen extends Screen {
     }
 
     private Component tooltipFor(final Field field) {
+        return tooltipFor(field, null);
+    }
+
+    private Component tooltipFor(final Field field, final String classPrefix) {
         Tooltip tip = field.getAnnotation(Tooltip.class);
         if (tip == null) {
             return null;
         }
-        String key = "text." + this.holder.getMeta().name() + ".option." + key(field.getName()) + ".tooltip";
+        String fieldKey = classPrefix != null
+                ? key(classPrefix) + "." + key(field.getName())
+                : key(field.getName());
+        String key = "text." + this.holder.getMeta().name() + ".option." + fieldKey + ".tooltip";
         return ComponentBuilder.translatable(key).build();
     }
 
@@ -694,7 +718,7 @@ public class AutoConfigScreen extends Screen {
         private int current;
 
         IntSlider(final int min, final int max, final int step, final int initial, final IntConsumer onApply) {
-            super(0, 0, AutoConfigList.WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
+            super(0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                     max == min ? 0.0 : (double) (initial - min) / (max - min));
             this.min = min;
             this.max = max;
