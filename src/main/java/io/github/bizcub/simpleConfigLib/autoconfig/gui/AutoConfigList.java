@@ -326,10 +326,15 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             int y = this.getContentY();
             int labelX = rowLeft + this.depth * INDENT;
 
-            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
-
             int widgetW = AutoConfigList.this.widgetWidth();
             int widgetX = rowLeft + rowWidth - widgetW;
+
+            int LABEL_GAP = 4;
+            int labelRight = widgetX - LABEL_GAP;
+            graphics.enableScissor(labelX, y, labelRight, y + 20);
+            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.disableScissor();
+
             this.node.widget.setPosition(widgetX, y);
             this.node.widget.setWidth(widgetW);
             this.node.widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
