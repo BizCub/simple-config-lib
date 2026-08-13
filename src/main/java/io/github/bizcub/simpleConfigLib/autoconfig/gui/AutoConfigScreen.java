@@ -57,6 +57,7 @@ public class AutoConfigScreen extends Screen {
     private Button resetButton;
     private Button doneButton;
     private boolean dirty;
+    private String initialSnapshot;
 
     public AutoConfigScreen(final Screen lastScreen, final ConfigHolder<?> holder) {
         super(ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build());
@@ -119,12 +120,23 @@ public class AutoConfigScreen extends Screen {
                         .pos(this.layout.getFooterHeight() / 2 - 10, this.height - this.layout.getFooterHeight() / 2 - 10)
                         .build());
         this.resetButton.active = Minecraft.getInstance().hasShiftDown();
+        if (this.initialSnapshot == null) {
+            this.initialSnapshot = this.holder.snapshot();
+        }
+        this.doneButton.active = this.dirty;
     }
 
     public void markDirty() {
-        this.dirty = true;
+        for (AutoConfigList l : this.lists) {
+            l.commitElements();
+        }
+        this.applyActions.forEach(Runnable::run);
+
+        boolean changed = this.initialSnapshot != null
+                && !this.initialSnapshot.equals(this.holder.snapshot());
+        this.dirty = changed;
         if (this.doneButton != null) {
-            this.doneButton.active = true;
+            this.doneButton.active = changed;
         }
     }
 

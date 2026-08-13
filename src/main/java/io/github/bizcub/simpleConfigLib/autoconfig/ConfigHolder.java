@@ -172,6 +172,10 @@ public class ConfigHolder<T> {
         }
     }
 
+    public String snapshot() {
+        return GSON.toJson(this.instance);
+    }
+
     private T newDefault() {
         try {
             return this.type.getDeclaredConstructor().newInstance();
