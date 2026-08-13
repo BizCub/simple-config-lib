@@ -168,6 +168,8 @@ public class AutoConfigScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         //? <1.20.2
         //this.renderBackground(graphics);
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+
         if (this.resetButton != null) {
             boolean shift = Minecraft.getInstance().hasShiftDown();
             this.resetButton.active = shift;
@@ -177,8 +179,22 @@ public class AutoConfigScreen extends Screen {
                             ? resetComponent
                             : resetComponent.copy().append("\n").append(ComponentBuilder.translatable("config.reset.shift").build())));
         }
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
+
+    //? <=1.20.4 {
+    /*//? >=1.20.2 {
+    @Override
+    public void renderBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+
+    //?} else {
+    /^@Override
+    public void renderBackground(GuiGraphicsExtractor guiGraphics) {
+        super.renderBackground(guiGraphics);^///?}
+        guiGraphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+        guiGraphics.blit(Screen.BACKGROUND_LOCATION, 0, 0, 0, 0.0F, 0.0F, this.width, this.height, 32, 32);
+        guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }*///?}
 
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
