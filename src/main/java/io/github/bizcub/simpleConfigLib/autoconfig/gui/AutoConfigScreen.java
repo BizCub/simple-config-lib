@@ -29,10 +29,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.slf4j.Logger;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
@@ -616,10 +613,23 @@ public class AutoConfigScreen extends Screen {
         if (!translate) {
             return ComponentBuilder.literal(value.name()).build();
         }
+        if (isToStringOverridden(value)) {
+            return ComponentBuilder.translatable(value.toString()).build();
+        }
         String key = "text." + this.holder.getMeta().name()
                 + ".enum." + key(value.getDeclaringClass().getSimpleName())
                 + "." + key(value.name());
         return ComponentBuilder.translatable(key).build();
+    }
+
+    private static boolean isToStringOverridden(final Enum<?> value) {
+        try {
+            Method m = value.getDeclaringClass().getMethod("toString");
+            Class<?> declaring = m.getDeclaringClass();
+            return declaring != Enum.class && declaring != Object.class;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
     }
 
     private Component booleanLabel(final boolean value, final boolean yesNo) {
