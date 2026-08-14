@@ -8,7 +8,7 @@ The main goal of the project is to free developers from routinely implementing a
   
 > The library supports the **Fabric**, **Forge**, and **NeoForge** loaders.  
   
-> Detailed documentation is available in the wiki: wiki_link  
+> Detailed documentation is available in the wiki: [Simple Config Lib Wiki](https://github.com/BizCub/simple-config-lib/wiki)  
   
 ![Test configuration screen](https://github.com/user-attachments/assets/390a91ea-a72d-4919-bd19-a7c7ab26b434)
   
