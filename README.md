@@ -10,7 +10,7 @@ The main goal of the project is to free developers from routinely implementing a
   
 > Detailed documentation is available in the wiki: wiki_link  
   
-![Test configuration screen](test_screen.png)  
+![Test configuration screen](https://github.com/user-attachments/assets/390a91ea-a72d-4919-bd19-a7c7ab26b434)
   
 ---  
   
