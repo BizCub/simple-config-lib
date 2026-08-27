@@ -114,6 +114,11 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         return false;
     }
 
+    private void toggleSelect(final ListModel model, final int index) {
+        model.selectedIndex = (model.selectedIndex == index) ? -1 : index;
+        notifySelectionChanged();
+    }
+
     @Override
     public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
         for (Row row : this.children()) {
@@ -780,9 +785,11 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 return cw.mouseClicked(mouseButtonEvent, doubleClick);
             }
 
-            if (this.model.editable) {
-                this.model.selectedIndex = this.index;
-                AutoConfigList.this.notifySelectionChanged();
+            //~ mb_event
+            int button = mouseButtonEvent.button(); //~ !mb_event
+            if (button == 1 && this.model.editable) {
+                AutoConfigList.this.toggleSelect(this.model, this.index);
+                return true;
             }
 
             if (this.componentLabel != null) {
@@ -890,10 +897,18 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             }
 
             //~ mb_event
-            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < toggleLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20 && this.model.editable) { //~ !mb_event
-                this.model.selectedIndex = this.index;
-                AutoConfigList.this.notifySelectionChanged();
-                return true;
+            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < toggleLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
+                //~ mb_event
+                int button = mouseButtonEvent.button(); //~ !mb_event
+                if (button == 1) {
+                    if (this.model.editable) {
+                        AutoConfigList.this.toggleSelect(this.model, this.index);
+                    }
+                    return true;
+                } else if (button == 0) {
+                    this.toggle();
+                    return true;
+                }
             }
             return false;
         }
