@@ -7,8 +7,6 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
-import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
@@ -21,6 +19,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -90,10 +89,6 @@ public class ConfigHolder<T> {
         return (ConfigHolder<T>) REGISTRY.computeIfAbsent(type, ConfigHolder::new);
     }
 
-    public Screen createScreen(final Screen parent) {
-        return new AutoConfigScreen(parent, this);
-    }
-
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
         if (listener != null && !this.saveListeners.contains(listener)) {
             this.saveListeners.add(listener);
@@ -111,20 +106,35 @@ public class ConfigHolder<T> {
                 LOGGER.error("Failed to read config {}", file, e);
             }
         }
+
+        T defaults = newDefault();
+
         if (loaded == null) {
-            loaded = newDefault();
+            if (Files.exists(file)) {
+                backup();
+            }
             if (this.instance == null) {
-                this.instance = loaded;
+                this.instance = defaults;
             } else {
-                copyInto(loaded, this.instance);
+                copyInto(defaults, this.instance);
             }
             save();
             return;
         }
+
+        boolean corrupted = sanitize(loaded, defaults);
+        if (corrupted) {
+            backup();
+        }
+
         if (this.instance == null) {
             this.instance = loaded;
         } else {
             copyInto(loaded, this.instance);
+        }
+
+        if (corrupted) {
+            save();
         }
     }
 
@@ -135,6 +145,54 @@ public class ConfigHolder<T> {
         } else {
             copyInto(defaults, this.instance);
         }
+    }
+
+    private boolean sanitize(final T loaded, final T defaults) {
+        boolean corrupted = false;
+        for (Field f : this.type.getDeclaredFields()) {
+            int mods = f.getModifiers();
+            if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
+                continue;
+            }
+            try {
+                f.setAccessible(true);
+                if (f.get(loaded) == null && f.get(defaults) != null) {
+                    f.set(loaded, f.get(defaults));
+                    corrupted = true;
+                    LOGGER.warn("Config {} field '{}' had an invalid value; reset to default",
+                            this.meta.name(), f.getName());
+                }
+            } catch (IllegalAccessException e) {
+                LOGGER.error("Failed to sanitize config field {}", f.getName(), e);
+            }
+        }
+        return corrupted;
+    }
+
+    private void backup() {
+        Path file = path();
+        if (!Files.exists(file)) {
+            return;
+        }
+        Path bak = nextBackupPath(file);
+        try {
+            Files.copy(file, bak, StandardCopyOption.REPLACE_EXISTING);
+            LOGGER.warn("Config {} contained invalid values; original saved to {}", file, bak);
+        } catch (Exception e) {
+            LOGGER.error("Failed to back up config {}", file, e);
+        }
+    }
+
+    private Path nextBackupPath(final Path file) {
+        Path dir = file.getParent();
+        String base = file.getFileName().toString() + ".bak";
+        int n = 1;
+        Path candidate = dir.resolve(base + n);
+        while (Files.exists(candidate)) {
+            n++;
+            candidate = dir.resolve(base + n);
+        }
+        return candidate;
     }
 
     private void copyInto(final T source, final T target) {

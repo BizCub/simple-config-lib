@@ -5,6 +5,6 @@
     "version": "1.0",
     "entrypoints": {
         "modmenu": ["io.github.bizcub.test.platform.Fabric$ModMenu"],
-        "main": ["io.github.bizcub.test.platform.Fabric"]
+        "client": ["io.github.bizcub.test.platform.Fabric"]
     }
 }

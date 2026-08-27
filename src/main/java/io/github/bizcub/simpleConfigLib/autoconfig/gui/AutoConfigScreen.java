@@ -63,6 +63,11 @@ public class AutoConfigScreen extends Screen {
         super(ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build());
         this.lastScreen = lastScreen;
         this.holder = holder;
+        this.holder.load();
+    }
+
+    public static <T> Screen create(final ConfigHolder<T> holder, final Screen parent) {
+        return new AutoConfigScreen(parent, holder);
     }
 
     @Override

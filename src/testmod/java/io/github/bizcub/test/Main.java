@@ -1,6 +1,7 @@
 package io.github.bizcub.test;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigScreen;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.test.config.SimpleConfig;
@@ -8,6 +9,7 @@ import io.github.bizcub.test.config.Config;
 import io.github.bizcub.test.screen.TestScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 /*? fabric*/ import net.fabricmc.loader.api.FabricLoader;
 /*? forge*/ //import net.minecraftforge.fml.ModList;
@@ -37,5 +39,9 @@ public class Main {
         while (Main.TOGGLE_VISIBILITY.consumeClick()) {
             Minecraft.getInstance().gui.setScreen(new TestScreen(ComponentBuilder.literal("test").build()));
         }
+    }
+
+    public static Screen getConfigScreen(Screen parent) {
+        return AutoConfigScreen.create(SimpleConfig.getInstance(), parent);
     }
 }
