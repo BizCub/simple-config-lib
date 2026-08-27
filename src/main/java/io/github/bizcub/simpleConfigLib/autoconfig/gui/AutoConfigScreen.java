@@ -407,6 +407,7 @@ public class AutoConfigScreen extends Screen {
 
         ListConfig cfg = field.getAnnotation(ListConfig.class);
         final boolean expanded = cfg != null && cfg.expanded();
+        final boolean expandElements = cfg == null || cfg.expandElements();
         final boolean addToFront = cfg != null && cfg.addToFront();
         final boolean editable = cfg == null || cfg.editable();
         final boolean translateElements = cfg != null && cfg.translateElements();
@@ -466,11 +467,11 @@ public class AutoConfigScreen extends Screen {
             List<Element> initial = new ArrayList<>();
             if (current != null) {
                 for (Object o : current) {
-                    initial.add(buildObjectElement(element, o, field, translateElements));
+                    initial.add(buildObjectElement(element, o, field, translateElements, expandElements));
                 }
             }
             final ListModel model = new ListModel(initial, editable, expanded, addToFront, element,
-                    () -> buildObjectElement(element, instantiate(element), field, translateElements));
+                    () -> buildObjectElement(element, instantiate(element), field, translateElements, expandElements));
 
             applyActions.add(() -> {
                 List<Object> result = new ArrayList<>();
@@ -497,11 +498,12 @@ public class AutoConfigScreen extends Screen {
     }
 
     private ObjectElement buildObjectElement(final Class<?> element, final Object obj,
-                                             final Field ownerField, final boolean translateElements) {
+                                             final Field ownerField, final boolean translateElements,
+                                             final boolean expandElements) {
         GroupNode g = new GroupNode();
         g.label = elementLabel(ownerField, element, translateElements);
         g.tooltip = null;
-        g.expanded = false;
+        g.expanded = expandElements;
         for (Field cf : instanceFields(element)) {
             Node child = buildNode(obj, cf, ownerField.getName());
             if (child != null) {

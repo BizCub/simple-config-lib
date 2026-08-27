@@ -6,6 +6,7 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 public @interface ListConfig {
     boolean expanded() default false;
+    boolean expandElements() default true;
     boolean addToFront() default false;
     boolean editable() default true;
     boolean translateElements() default false;
