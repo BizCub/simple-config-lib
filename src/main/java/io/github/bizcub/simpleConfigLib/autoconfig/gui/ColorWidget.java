@@ -46,6 +46,7 @@ public final class ColorWidget extends AbstractWidget {
     private boolean draggingSV;
     private boolean draggingHue;
     private boolean draggingAlpha;
+    private boolean updatingBox;
 
     public ColorWidget(final Font font, final int initial, final boolean alpha, final IntConsumer onChange) {
         super(0, 0, DEFAULT_WIDTH, 20, ComponentBuilder.empty().build());
@@ -86,6 +87,9 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     private void onText(final String v) {
+        if (this.updatingBox) {
+            return;
+        }
         String s = v.trim();
         if (s.startsWith("#")) s = s.substring(1);
         if (s.startsWith("0x") || s.startsWith("0X")) s = s.substring(2);
@@ -98,7 +102,9 @@ public final class ColorWidget extends AbstractWidget {
 
     private void applyHsv() {
         recomputeColor();
+        this.updatingBox = true;
         this.box.setValue(format(this.color));
+        this.updatingBox = false;
         this.onChange.accept(this.color);
     }
 
@@ -169,7 +175,7 @@ public final class ColorWidget extends AbstractWidget {
     void renderPicker(final GuiGraphicsExtractor graphics) {
         if (!this.pickerOpen) return;
 
-        //? <1.20.5 {
+        //? <1.21.6 {
         /*graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 400);*///?}
 
@@ -185,7 +191,7 @@ public final class ColorWidget extends AbstractWidget {
         }
         renderCursors(graphics);
 
-        //? <1.20.5
+        //? <1.21.6
         //graphics.pose().popPose();
     }
 
