@@ -50,19 +50,18 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         super(minecraft, width, height, y, /*? <1.20.3 >>+ ','*/ /*y + height,*/ ROW_HEIGHT);
         this.screen = screen;
         this.font = minecraft.font;
-        //? <1.20.2 {
-        /*this.setRenderTopAndBottom(false);*///?}
+        //? <1.20.2
+        //this.setRenderTopAndBottom(false);
     }
 
-    @Override //~ render_widget
-    public void extractWidgetRenderState(final GuiGraphicsExtractor graphics, //~ !render_widget
-                                         final int mouseX, final int mouseY, final float a) {
+    @Override //$ render_asl >> ' graphics'
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         boolean overPopup = isPopupOpenAt(mouseX, mouseY);
         int hoverX = overPopup ? Integer.MIN_VALUE : mouseX;
         int hoverY = overPopup ? Integer.MIN_VALUE : mouseY;
 
-        //~ render_widget
-        super.extractWidgetRenderState(graphics, hoverX, hoverY, a); //~ !render_widget
+        //$ render_asl_method >>+ '('
+        super.extractWidgetRenderState(graphics, hoverX, hoverY, a);
 
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
@@ -785,8 +784,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 return cw.mouseClicked(mouseButtonEvent, doubleClick);
             }
 
-            //~ mb_event
-            int button = mouseButtonEvent.button(); //~ !mb_event
+            //? >=1.21.9
+            int button = mouseButtonEvent.button();
             if (button == 1 && this.model.editable) {
                 AutoConfigList.this.toggleSelect(this.model, this.index);
                 return true;
@@ -898,8 +897,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             //~ mb_event
             if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < toggleLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
-                //~ mb_event
-                int button = mouseButtonEvent.button(); //~ !mb_event
+                //? >=1.21.9
+                int button = mouseButtonEvent.button();
                 if (button == 1) {
                     if (this.model.editable) {
                         AutoConfigList.this.toggleSelect(this.model, this.index);

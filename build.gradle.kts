@@ -3,10 +3,20 @@ plugins {
 }
 
 multiloader {
-    sc.swaps["render_method"] = when {
+    sc.swaps["render_asl"] = when {
+        scp >= "26.1" -> "public void extractWidgetRenderState(GuiGraphicsExtractor"
+        scp >= "1.20.3" -> "public void renderWidget(GuiGraphics"
+        else -> "public void render(GuiGraphics"
+    }
+    sc.swaps["render_asl_method"] = when {
+        scp >= "26.1" -> "super.extractWidgetRenderState("
+        scp >= "1.20.3" -> "super.renderWidget("
+        else -> "super.render("
+    }
+    sc.swaps["render_aw"] = when {
         scp >= "26.1" -> "protected void extractWidgetRenderState(GuiGraphicsExtractor"
-        scp >= "1.20" -> "protected void renderWidget(GuiGraphics"
-        else -> "public void render(PoseStack"
+        scp >= "1.20.1" -> "protected void renderWidget(GuiGraphics"
+        else -> "public void renderWidget(GuiGraphics"
     }
 
     sc.replacements {
@@ -16,7 +26,6 @@ multiloader {
         }
         string(scp >= "26.1") {
             replace("render(", "extractRenderState(")
-            replace("renderWidget(", "extractWidgetRenderState(")
             replace(".drawString(", ".text(")
             replace("renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick)",
                 "extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick)")
@@ -28,9 +37,6 @@ multiloader {
             replace("fabric.api.client.keybinding", "fabric.api.client.keymapping")
             replace("SpecialGuiElementRegistry", "PictureInPictureRendererRegistry")
             replace(".vertexConsumers()", ".bufferSource()")
-        }
-        string(scp >= "26.1", "render_widget") {
-            replace("renderWidget(", "extractWidgetRenderState(")
         }
         string(scp >= "26.1", "!graphics") {
             replace("GuiGraphics", "GuiGraphicsExtractor")
@@ -80,9 +86,6 @@ multiloader {
         }
         string(scp >= "1.21.2") {
             replace("getDisplayName()", "getItemName()")
-        }
-        string(scp >= "1.20.3", "render_widget") {
-            replace("render(", "renderWidget(")
         }
         string(scp >= "1.20") {
             replace("public void updateNarration", "protected void updateWidgetNarration")

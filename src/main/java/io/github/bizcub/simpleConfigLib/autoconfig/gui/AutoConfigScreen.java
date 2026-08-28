@@ -325,7 +325,7 @@ public class AutoConfigScreen extends Screen {
             //? >=1.20.5 {
             this.list.updateSizeAndPosition(rectangle.width(), rectangle.height(), rectangle.top());
 
-            //?} >=1.20.4 {
+            //?} >=1.20.3 {
             /*this.list.setSize(rectangle.width(), rectangle.height());
             this.list.setPosition(0, rectangle.top());
 

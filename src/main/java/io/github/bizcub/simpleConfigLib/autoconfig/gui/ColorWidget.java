@@ -161,8 +161,8 @@ public final class ColorWidget extends AbstractWidget {
                 && my >= alphaY() && my < alphaY() + SV_SIZE;
     }
 
-    @Override
-    protected void extractWidgetRenderState(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final float partial) {
+    @Override //$ render_aw >> ' graphics'
+    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         int sx = swatchX(), sy = swatchY();
         graphics.fill(sx - 1, sy - 1, sx + SWATCH + 1, sy + SWATCH + 1, 0xFF000000);
         graphics.fill(sx, sy, sx + SWATCH, sy + SWATCH, this.color);

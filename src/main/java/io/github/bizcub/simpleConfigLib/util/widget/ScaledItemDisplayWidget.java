@@ -67,8 +67,8 @@ public class ScaledItemDisplayWidget extends AbstractWidget {
         return this.y;
     }*///?}
 
-    @Override //$ render_method {
-    protected void extractWidgetRenderState(GuiGraphicsExtractor/*$}*/ graphics, int mouseX, int mouseY, float partialTick) {
+    @Override //$ render_aw >> ' graphics'
+    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         //? >=1.21.6 {
         var itemStackRenderState = new ItemStackRenderState();
         Minecraft mc = Minecraft.getInstance();
