@@ -94,8 +94,8 @@ multiloader {
 
     addSourceSet("testmod")
 
-    setMREnvironment(mrEnvs.clientOnly)
-    setCFEnvironment(cfEnvs.client)
+    setMREnvironment(mrEnvs.clientOrServer)
+    setCFEnvironment(cfEnvs.both)
 
     if (isFabric) {
         addDependency(
