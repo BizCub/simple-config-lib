@@ -44,6 +44,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     protected final Screen screen;
     private final Font font;
 
+    private FormattedText pendingTooltip;
+    private int pendingTooltipX;
+    private int pendingTooltipY;
+
     private final List<Node> nodes = new ArrayList<>();
 
     public AutoConfigList(final Minecraft minecraft, final int width, final int height, final int y, final Screen screen) {
@@ -60,6 +64,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         int hoverX = overPopup ? Integer.MIN_VALUE : mouseX;
         int hoverY = overPopup ? Integer.MIN_VALUE : mouseY;
 
+        this.pendingTooltip = null;
+
         //$ render_asl_method >>+ '('
         super.renderWidget(graphics, hoverX, hoverY, a);
 
@@ -68,6 +74,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             if (picker != null && picker.pickerOpen()) {
                 picker.renderPicker(graphics);
             }
+        }
+
+        if (this.pendingTooltip != null) {
+            graphics.renderTooltip(this.font,
+                    this.font.split(this.pendingTooltip, 200),
+                    this.pendingTooltipX, this.pendingTooltipY);
         }
     }
 
@@ -373,12 +385,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 FormattedText tooltipText = value != null ? value : this.node.tooltip;//?}
 
                 if (tooltipText != null) {
-                    graphics.renderTooltip(
-                            AutoConfigList.this.font,
-                            AutoConfigList.this.font.split(tooltipText, 200),
-                            mouseX,
-                            mouseY
-                    );
+                    AutoConfigList.this.pendingTooltip = tooltipText;
+                    AutoConfigList.this.pendingTooltipX = mouseX;
+                    AutoConfigList.this.pendingTooltipY = mouseY;
                 }
             }
         }
@@ -776,8 +785,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     Component tooltipValue = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;//?}
 
                     if (tooltipValue != null) {
-                        graphics.renderTooltip(AutoConfigList.this.font,
-                                AutoConfigList.this.font.split(tooltipValue, 200), mouseX, mouseY);
+                        AutoConfigList.this.pendingTooltip = tooltipValue;
+                        AutoConfigList.this.pendingTooltipX = mouseX;
+                        AutoConfigList.this.pendingTooltipY = mouseY;
                     }
                 }
             }
