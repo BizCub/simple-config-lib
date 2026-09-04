@@ -6,7 +6,7 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 //~ if >=26.1 'ItemStack' -> 'ItemStackTemplate'
-import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,7 +22,7 @@ public final class HoverEventBuilder {
     }
 
     public HoverEventBuilder showText(Component value) {
-        this.event = new HoverEvent.ShowText(value);
+        this.event = new HoverEvent(HoverEvent.Action.SHOW_TEXT, value);
         return this;
     }
 
@@ -32,17 +32,17 @@ public final class HoverEventBuilder {
 
     public HoverEventBuilder showItem(Item item) {
         //? >=26.1 {
-        this.event = new HoverEvent.ShowItem(new ItemStackTemplate(item));
-        //?} >=1.21.5 {
+        /*this.event = new HoverEvent.ShowItem(new ItemStackTemplate(item));
+        *///?} >=1.21.5 {
         /*this.event = new HoverEvent.ShowItem(new ItemStack(item));
          *///?} else
-        //this.event = new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackInfo(new ItemStack(item)));
+        this.event = new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackInfo(new ItemStack(item)));
         return this;
     }
 
     public HoverEventBuilder showEntity(EntityType<?> type, UUID uuid, Component name) {
         //~ if >=1.21.1 'name' -> 'Optional.ofNullable(name)'
-        this.event = new HoverEvent.ShowEntity(new HoverEvent.EntityTooltipInfo(type, uuid, Optional.ofNullable(name)));
+        this.event = new HoverEvent(HoverEvent.Action.SHOW_ENTITY, new HoverEvent.EntityTooltipInfo(type, uuid, name));
         return this;
     }
 

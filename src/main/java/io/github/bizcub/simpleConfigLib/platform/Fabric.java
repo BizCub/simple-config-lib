@@ -5,9 +5,9 @@ import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import net.fabricmc.api.ClientModInitializer;
 
 //? >=1.21.6 {
-import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemPIPRenderer;
-import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry;
-//?}
+/*import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemPIPRenderer;
+import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry;
+*///?}
 
 public class Fabric implements ClientModInitializer {
 
@@ -16,7 +16,7 @@ public class Fabric implements ClientModInitializer {
         Keymapper.onRegisterKeyMappings();
 
         //? >=1.21.6 {
-        PictureInPictureRendererRegistry.register(ctx ->
-                new ScaledItemPIPRenderer(/*? <26.2 >>+ ')'*/ /*ctx.bufferSource()*/));//?}
+        /*SpecialGuiElementRegistry.register(ctx ->
+                new ScaledItemPIPRenderer(/^? <26.2 >>+ ')'^/ ctx.vertexConsumers()));*///?}
     }
 }//?}

@@ -7,10 +7,10 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.world.item.ItemStack;
 
 //? >=1.21.6 {
-import net.minecraft.client.renderer.item.ItemStackRenderState;
-import net.minecraft.world.item.ItemDisplayContext;//?}
+/*import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.world.item.ItemDisplayContext;*///?}
 //? >=1.20 {
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 //?} else {
 /*import net.minecraft.client.renderer.entity.ItemRenderer;
  *///?}
@@ -26,7 +26,7 @@ public class ScaledItemDisplayWidget extends AbstractWidget {
     private int size;
 
     public ScaledItemDisplayWidget(int offsetX, int offsetY, ItemStack itemStack, int size) {
-        super(offsetX, offsetY, size, size, itemStack.getItemName());
+        super(offsetX, offsetY, size, size, itemStack.getDisplayName());
         this.itemStack = itemStack;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
@@ -68,9 +68,9 @@ public class ScaledItemDisplayWidget extends AbstractWidget {
     }*///?}
 
     @Override //$ render_aw >> ' graphics'
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         //? >=1.21.6 {
-        var itemStackRenderState = new ItemStackRenderState();
+        /*var itemStackRenderState = new ItemStackRenderState();
         Minecraft mc = Minecraft.getInstance();
 
         mc.getItemModelResolver().updateForTopItem(itemStackRenderState, itemStack, ItemDisplayContext.GUI, mc.level, mc.player, 0);
@@ -87,10 +87,10 @@ public class ScaledItemDisplayWidget extends AbstractWidget {
         );
 
         //~ if >=26.1 'submitPicturesInPictureState' -> 'addPicturesInPictureState'
-        graphics.guiRenderState.addPicturesInPictureState(state);
+        graphics.guiRenderState.submitPicturesInPictureState(state);
 
-        //?} >=1.20 {
-        /*var pose = graphics.pose();
+        *///?} >=1.20 {
+        var pose = graphics.pose();
         int scale = size / 16;
 
         pose.pushPose();
@@ -98,7 +98,7 @@ public class ScaledItemDisplayWidget extends AbstractWidget {
         graphics.renderItem(itemStack, offsetX / scale, offsetY / scale);
         pose.popPose();
 
-        *///?} >=1.19 {
+        //?} >=1.19 {
         /*if (this.itemStack == null || this.itemStack.isEmpty()) {
             return;
         }
