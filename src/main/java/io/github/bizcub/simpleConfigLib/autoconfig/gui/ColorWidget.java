@@ -1,5 +1,6 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
+import io.github.bizcub.simpleConfigLib.util.GuiSounds;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -138,6 +139,7 @@ public final class ColorWidget extends AbstractWidget {
     void closePicker() { this.pickerOpen = false; }
 
     boolean isOverSwatch(final double mx, final double my) {
+        GuiSounds.playClick();
         return mx >= swatchX() && mx < swatchX() + SWATCH
                 && my >= swatchY() && my < swatchY() + SWATCH;
     }
@@ -149,14 +151,17 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     private boolean isOverSV(final double mx, final double my) {
+        GuiSounds.playClick();
         return mx >= svX() && mx < svX() + SV_SIZE && my >= svY() && my < svY() + SV_SIZE;
     }
 
     private boolean isOverHue(final double mx, final double my) {
+        GuiSounds.playClick();
         return mx >= hueX() && mx < hueX() + HUE_W && my >= hueY() && my < hueY() + SV_SIZE;
     }
 
     private boolean isOverAlpha(final double mx, final double my) {
+        GuiSounds.playClick();
         return alpha && mx >= alphaX() && mx < alphaX() + HUE_W
                 && my >= alphaY() && my < alphaY() + SV_SIZE;
     }

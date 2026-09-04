@@ -2,6 +2,7 @@ package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Color;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Slider;
+import io.github.bizcub.simpleConfigLib.util.GuiSounds;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -427,6 +428,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 *///?}
 
                 if (style != null && style.getClickEvent() != null) {
+                    GuiSounds.playClick();
                     Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
                     return true;
                 }
@@ -502,6 +504,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             int buttonsLeft = rowLeft + rowWidth - HEADER_BTN;
             //~ mb_event
             if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
+                GuiSounds.playClick();
                 toggle();
                 return true;
             }
@@ -630,6 +633,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             int buttonsLeft = rowLeft + rowWidth - (buttonCount * HEADER_BTN + (buttonCount - 1) * HEADER_BTN_GAP);
             //~ mb_event
             if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
+                GuiSounds.playClick();
                 toggle();
                 return true;
             }
@@ -825,6 +829,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     *///?}
 
                     if (style != null && style.getClickEvent() != null) {
+                        GuiSounds.playClick();
                         Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
                         return true;
                     }
@@ -921,6 +926,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     }
                     return true;
                 } else if (button == 0) {
+                    GuiSounds.playClick();
                     this.toggle();
                     return true;
                 }
