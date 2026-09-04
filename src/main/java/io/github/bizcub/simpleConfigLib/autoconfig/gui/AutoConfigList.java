@@ -546,8 +546,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     }
                     model.expanded = true;
                     refreshButtons();
-                    AutoConfigList.this.markDirty();
                     AutoConfigList.this.rebuild();
+                    AutoConfigList.this.markDirty();
                 }).size(HEADER_BTN, HEADER_BTN).build();
 
                 this.removeButton = Button.builder(ComponentBuilder.literal("−").build(), b -> {
@@ -556,8 +556,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                         model.elements.remove(model.selectedIndex);
                         model.selectedIndex = -1;
                         refreshButtons();
-                        AutoConfigList.this.markDirty();
                         AutoConfigList.this.rebuild();
+                        AutoConfigList.this.markDirty();
                     }
                 }).size(HEADER_BTN, HEADER_BTN).build();
             } else {
