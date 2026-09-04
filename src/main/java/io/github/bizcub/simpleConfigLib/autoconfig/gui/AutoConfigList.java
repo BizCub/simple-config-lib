@@ -5,7 +5,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Slider;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.function.Supplier;
 
 //? >=1.21.9 {
-import net.minecraft.client.input.MouseButtonEvent;//?}
+/*import net.minecraft.client.input.MouseButtonEvent;*///?}
 
 //? >=1.21.11 {
-import net.minecraft.client.gui.ActiveTextCollector;
-import net.minecraft.client.renderer.state.gui.GuiTextRenderState;
+/*import net.minecraft.client.gui.ActiveTextCollector;
+import net.minecraft.client.gui.render.state.GuiTextRenderState;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
-import org.joml.Matrix3x2f;//?}
+import org.joml.Matrix3x2f;*///?}
 
 public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.Row> {
 
@@ -44,6 +44,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     protected final Screen screen;
     private final Font font;
 
+    private FormattedText pendingTooltip;
+    private int pendingTooltipX;
+    private int pendingTooltipY;
+
     private final List<Node> nodes = new ArrayList<>();
 
     public AutoConfigList(final Minecraft minecraft, final int width, final int height, final int y, final Screen screen) {
@@ -55,13 +59,15 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     @Override //$ render_asl >> ' graphics'
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         boolean overPopup = isPopupOpenAt(mouseX, mouseY);
         int hoverX = overPopup ? Integer.MIN_VALUE : mouseX;
         int hoverY = overPopup ? Integer.MIN_VALUE : mouseY;
 
+        this.pendingTooltip = null;
+
         //$ render_asl_method >>+ '('
-        super.extractWidgetRenderState(graphics, hoverX, hoverY, a);
+        super.renderWidget(graphics, hoverX, hoverY, a);
 
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
@@ -69,28 +75,34 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 picker.renderPicker(graphics);
             }
         }
+
+        if (this.pendingTooltip != null) {
+            graphics.renderTooltip(this.font,
+                    this.font.split(this.pendingTooltip, 200),
+                    this.pendingTooltipX, this.pendingTooltipY);
+        }
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
             //~ mb_event
-            if (picker != null && picker.isOverPicker(mouseButtonEvent.x(), mouseButtonEvent.y())) { //~ !mb_event
-                return row.mouseClicked(mouseButtonEvent, doubleClick);
+            if (picker != null && picker.isOverPicker(mouseX, mouseY)) { //~ !mb_event
+                return row.mouseClicked(mouseX, mouseY, button);
             }
         }
-        return super.mouseClicked(mouseButtonEvent, doubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     //? >=1.20.2 && <=1.21.3 {
-    /*@Override
+    @Override
     protected boolean isValidMouseClick(int button) {
         return button == 0 || button == 1;
-    }*///?}
+    }//?}
 
     @Override
-    protected int scrollBarX() {
+    protected int getScrollbarPosition() {
         return this.getRowLeft() + this.getRowWidth() + 8;
     }
 
@@ -125,26 +137,26 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
             if (picker != null && picker.isDraggingPicker()) {
-                return picker.mouseDragged(mouseButtonEvent, dx, dy);
+                return picker.mouseDragged(mouseX, mouseY, button, dx, dy);
             }
         }
-        return super.mouseDragged(mouseButtonEvent, dx, dy);
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         boolean handled = false;
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
             if (picker != null && picker.isDraggingPicker()) {
-                handled |= picker.mouseReleased(mouseButtonEvent);
+                handled |= picker.mouseReleased(mouseX, mouseY, button);
             }
         }
-        return handled || super.mouseReleased(mouseButtonEvent);
+        return handled || super.mouseReleased(mouseX, mouseY, button);
     }
 
     public boolean isPopupOpenAt(final double x, final double y) {
@@ -183,7 +195,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     void rebuild() {
         //~ if >=1.21.4 '.getScrollAmount()' -> '.scrollAmount()'
-        final double scroll = this.scrollAmount();
+        final double scroll = this.getScrollAmount();
         this.clearEntries();
         for (Node n : this.nodes) {
             addNode(n, 0);
@@ -242,12 +254,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     //? >=1.21.11 {
-    private static Style styleUnderCursor(Font font, FormattedCharSequence text, int leftX, int topY, int mouseX, int mouseY) {
+    /*private static Style styleUnderCursor(Font font, FormattedCharSequence text, int leftX, int topY, int mouseX, int mouseY) {
         GuiTextRenderState state = new GuiTextRenderState(font, text, new Matrix3x2f(), leftX, topY, ARGB.white(1.0F), 0, true, true, null);
         Style[] found = new Style[1];
         ActiveTextCollector.findElementUnderCursor(state, mouseX, mouseY, s -> found[0] = s);
         return found[0];
-    }//?}
+    }*///?}
 
     public abstract static class Node {
         public Component label;
@@ -328,12 +340,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
             //? <=1.21.8
-            //this.lastTop = top;
+            this.lastTop = top;
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int labelX = rowLeft + this.depth * INDENT;
 
             int widgetW = AutoConfigList.this.widgetWidth();
@@ -342,12 +354,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             int LABEL_GAP = 4;
             int labelRight = widgetX - LABEL_GAP;
             graphics.enableScissor(labelX, y, labelRight, y + 20);
-            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
             graphics.disableScissor();
 
             this.node.widget.setPosition(widgetX, y);
             this.node.widget.setWidth(widgetW);
-            this.node.widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            this.node.widget.render(graphics, mouseX, mouseY, partialTick);
 
             int labelWidth = AutoConfigList.this.font.width(this.node.label);
             boolean overLabel = mouseX >= labelX && mouseX <= labelX + labelWidth
@@ -355,30 +367,27 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             if (overLabel) {
                 //? >=1.21.11 {
-                Style style = styleUnderCursor(AutoConfigList.this.font,
+                /*Style style = styleUnderCursor(AutoConfigList.this.font,
                         this.node.label.getVisualOrderText(), labelX, y + 6, mouseX, mouseY);
 
-                //?} else {
-                /*Style style = AutoConfigList.this.font.getSplitter()
-                        .componentStyleAtWidth(this.node.label.getVisualOrderText(), mouseX - labelX);*///?}
+                *///?} else {
+                Style style = AutoConfigList.this.font.getSplitter()
+                        .componentStyleAtWidth(this.node.label.getVisualOrderText(), mouseX - labelX);//?}
 
                 //? >=1.21.5 {
-                FormattedText tooltipText = style != null && style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
+                /*FormattedText tooltipText = style != null && style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
                         ? value
                         : this.node.tooltip;
 
-                //?} else {
-                /*HoverEvent hover = style != null ? style.getHoverEvent() : null;
+                *///?} else {
+                HoverEvent hover = style != null ? style.getHoverEvent() : null;
                 Component value = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;
-                FormattedText tooltipText = value != null ? value : this.node.tooltip;*///?}
+                FormattedText tooltipText = value != null ? value : this.node.tooltip;//?}
 
                 if (tooltipText != null) {
-                    graphics.setTooltipForNextFrame(
-                            AutoConfigList.this.font,
-                            AutoConfigList.this.font.split(tooltipText, 200),
-                            mouseX,
-                            mouseY
-                    );
+                    AutoConfigList.this.pendingTooltip = tooltipText;
+                    AutoConfigList.this.pendingTooltipX = mouseX;
+                    AutoConfigList.this.pendingTooltipY = mouseY;
                 }
             }
         }
@@ -392,38 +401,38 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
             //~ mb_event
-            if (this.node.widget instanceof ColorWidget cw && cw.isOverPicker(mouseButtonEvent.x(), mouseButtonEvent.y())) { //~ !mb_event
-                return cw.mouseClicked(mouseButtonEvent, doubleClick);
+            if (this.node.widget instanceof ColorWidget cw && cw.isOverPicker(mouseX, mouseY)) { //~ !mb_event
+                return cw.mouseClicked(mouseX, mouseY, button);
             }
 
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int labelX = rowLeft + this.depth * INDENT;
             int labelWidth = AutoConfigList.this.font.width(this.node.label);
 
             //~ mb_event
-            boolean overLabel = mouseButtonEvent.x() >= labelX && mouseButtonEvent.x() <= labelX + labelWidth
-                    && mouseButtonEvent.y() >= y && mouseButtonEvent.y() <= y + 20; //~ !mb_event
+            boolean overLabel = mouseX >= labelX && mouseX <= labelX + labelWidth
+                    && mouseY >= y && mouseY <= y + 20; //~ !mb_event
 
             if (overLabel) {
                 //? >=1.21.11 {
-                Style style = styleUnderCursor(AutoConfigList.this.font, this.node.label.getVisualOrderText(),
+                /*Style style = styleUnderCursor(AutoConfigList.this.font, this.node.label.getVisualOrderText(),
                         labelX, y + 6, (int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
 
-                //?} else {
-                /*Style style = AutoConfigList.this.font.getSplitter() //~ mb_event
-                        .componentStyleAtWidth(this.node.label.getVisualOrderText(), (int) mouseButtonEvent.x() - labelX); //~ !mb_event
-                *///?}
+                *///?} else {
+                Style style = AutoConfigList.this.font.getSplitter() //~ mb_event
+                        .componentStyleAtWidth(this.node.label.getVisualOrderText(), (int) mouseX - labelX); //~ !mb_event
+                //?}
 
                 if (style != null && style.getClickEvent() != null) {
-                    Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
+                    screen.handleComponentClicked(style);
                     return true;
                 }
             }
 
-            return super.mouseClicked(mouseButtonEvent, doubleClick);
+            return super.mouseClicked(mouseX, mouseY, button);
         }
 
         @Override
@@ -457,24 +466,24 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
             //? <=1.21.8
-            //this.lastTop = top;
+            this.lastTop = top;
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int labelX = rowLeft + this.depth * INDENT;
 
-            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
             int toggleX = rowLeft + rowWidth - HEADER_BTN;
             this.toggleButton.setPosition(toggleX, y);
-            this.toggleButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            this.toggleButton.render(graphics, mouseX, mouseY, partialTick);
 
             if (this.node.tooltip != null) {
                 int labelWidth = AutoConfigList.this.font.width(this.node.label);
                 if (mouseX >= labelX && mouseX <= labelX + labelWidth && mouseY >= y && mouseY <= y + 20) {
-                    graphics.setTooltipForNextFrame(
+                    graphics.renderTooltip(
                             AutoConfigList.this.font,
                             AutoConfigList.this.font.split(this.node.tooltip, 200),
                             mouseX, mouseY);
@@ -483,16 +492,16 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
-            if (super.mouseClicked(mouseButtonEvent, doubleClick)) {
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (super.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int buttonsLeft = rowLeft + rowWidth - HEADER_BTN;
             //~ mb_event
-            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
+            if (mouseX >= rowLeft && mouseX < buttonsLeft && mouseY >= y && mouseY < y + 20) { //~ !mb_event
                 toggle();
                 return true;
             }
@@ -574,34 +583,34 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
             //? <=1.21.8
-            //this.lastTop = top;
+            this.lastTop = top;
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int labelX = rowLeft + this.depth * INDENT;
 
-            graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
             int right = rowLeft + rowWidth;
             int toggleX = right - HEADER_BTN;
             this.toggleButton.setPosition(toggleX, y);
-            this.toggleButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            this.toggleButton.render(graphics, mouseX, mouseY, partialTick);
 
             if (this.node.model.editable) {
                 int removeX = toggleX - HEADER_BTN - HEADER_BTN_GAP;
                 int addX = removeX - HEADER_BTN - HEADER_BTN_GAP;
                 this.addButton.setPosition(addX, y);
                 this.removeButton.setPosition(removeX, y);
-                this.addButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
-                this.removeButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+                this.addButton.render(graphics, mouseX, mouseY, partialTick);
+                this.removeButton.render(graphics, mouseX, mouseY, partialTick);
             }
 
             if (this.node.tooltip != null) {
                 int labelWidth = AutoConfigList.this.font.width(this.node.label);
                 if (mouseX >= labelX && mouseX <= labelX + labelWidth && mouseY >= y && mouseY <= y + 20) {
-                    graphics.setTooltipForNextFrame(
+                    graphics.renderTooltip(
                             AutoConfigList.this.font,
                             AutoConfigList.this.font.split(this.node.tooltip, 200),
                             mouseX, mouseY);
@@ -610,17 +619,17 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
-            if (super.mouseClicked(mouseButtonEvent, doubleClick)) {
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (super.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int buttonCount = this.node.model.editable ? 3 : 1;
             int buttonsLeft = rowLeft + rowWidth - (buttonCount * HEADER_BTN + (buttonCount - 1) * HEADER_BTN_GAP);
             //~ mb_event
-            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
+            if (mouseX >= rowLeft && mouseX < buttonsLeft && mouseY >= y && mouseY < y + 20) { //~ !mb_event
                 toggle();
                 return true;
             }
@@ -733,12 +742,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
             //? <=1.21.8
-            //this.lastTop = top;
+            this.lastTop = top;
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
 
             if (this.model.selectedIndex == this.index) {
                 graphics.fill(rowLeft, y - 2, rowLeft + rowWidth, y + 22, SELECTED_BG);
@@ -749,49 +758,50 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             this.widget.setPosition(boxX, y);
             this.widget.setWidth(boxW);
-            this.widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            this.widget.render(graphics, mouseX, mouseY, partialTick);
 
             if (this.componentLabel != null) {
-                graphics.text(AutoConfigList.this.font,
+                graphics.drawString(AutoConfigList.this.font,
                         this.componentLabel.getVisualOrderText(), boxX, y + 6, LABEL_COLOR);
 
                 int labelW = AutoConfigList.this.font.width(this.componentLabel);
                 if (mouseX >= boxX && mouseX <= boxX + labelW && mouseY >= y && mouseY <= y + 20) {
                     //? >=1.21.11 {
-                    Style style = styleUnderCursor(AutoConfigList.this.font,
+                    /*Style style = styleUnderCursor(AutoConfigList.this.font,
                             this.componentLabel.getVisualOrderText(), boxX, y + 6, mouseX, mouseY);
 
-                    //?} else {
-                    /*int relativeX = mouseX - boxX;
+                    *///?} else {
+                    int relativeX = mouseX - boxX;
                     Style style = AutoConfigList.this.font.getSplitter()
-                            .componentStyleAtWidth(this.componentLabel.getVisualOrderText(), relativeX);*///?}
+                            .componentStyleAtWidth(this.componentLabel.getVisualOrderText(), relativeX);//?}
 
                     //? >=1.21.5 {
-                    Component tooltipValue = style != null && style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
+                    /*Component tooltipValue = style != null && style.getHoverEvent() instanceof HoverEvent.ShowText(Component value)
                             ? value
                             : null;
 
-                    //?} else {
-                    /*HoverEvent hover = style != null ? style.getHoverEvent() : null;
-                    Component tooltipValue = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;*///?}
+                    *///?} else {
+                    HoverEvent hover = style != null ? style.getHoverEvent() : null;
+                    Component tooltipValue = hover != null ? hover.getValue(HoverEvent.Action.SHOW_TEXT) : null;//?}
 
                     if (tooltipValue != null) {
-                        graphics.setTooltipForNextFrame(AutoConfigList.this.font,
-                                AutoConfigList.this.font.split(tooltipValue, 200), mouseX, mouseY);
+                        AutoConfigList.this.pendingTooltip = tooltipValue;
+                        AutoConfigList.this.pendingTooltipX = mouseX;
+                        AutoConfigList.this.pendingTooltipY = mouseY;
                     }
                 }
             }
         }
 
         @Override
-        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
             //~ mb_event
-            if (this.widget instanceof ColorWidget cw && cw.isOverPicker(mouseButtonEvent.x(), mouseButtonEvent.y())) { //~ !mb_event
-                return cw.mouseClicked(mouseButtonEvent, doubleClick);
+            if (this.widget instanceof ColorWidget cw && cw.isOverPicker(mouseX, mouseY)) { //~ !mb_event
+                return cw.mouseClicked(mouseX, mouseY, button);
             }
 
             //? >=1.21.9
-            int button = mouseButtonEvent.button();
+            //int button = mouseButtonEvent.button();
             if (button == 1 && this.model.editable) {
                 AutoConfigList.this.toggleSelect(this.model, this.index);
                 return true;
@@ -799,29 +809,29 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             if (this.componentLabel != null) {
                 int boxX = AutoConfigList.this.getRowLeft() + this.depth * INDENT;
-                int y = this.getContentY();
+                int y = this.lastTop;
                 int labelW = AutoConfigList.this.font.width(this.componentLabel);
                 //~ mb_event
-                if (mouseButtonEvent.x() >= boxX && mouseButtonEvent.x() <= boxX + labelW && mouseButtonEvent.y() >= y && mouseButtonEvent.y() <= y + 20) { //~ !mb_event
+                if (mouseX >= boxX && mouseX <= boxX + labelW && mouseY >= y && mouseY <= y + 20) { //~ !mb_event
                     //? >=1.21.11 {
-                    Style style = styleUnderCursor(AutoConfigList.this.font, this.componentLabel.getVisualOrderText(),
+                    /*Style style = styleUnderCursor(AutoConfigList.this.font, this.componentLabel.getVisualOrderText(),
                             boxX, y + 6, (int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
 
-                    //?} else {
-                    /*//~ mb_event
-                    int relativeX = (int) mouseButtonEvent.x() - boxX; //~ !mb_event
+                    *///?} else {
+                    //~ mb_event
+                    int relativeX = (int) mouseX - boxX; //~ !mb_event
                     Style style = AutoConfigList.this.font.getSplitter()
                             .componentStyleAtWidth(this.componentLabel.getVisualOrderText(), relativeX);
-                    *///?}
+                    //?}
 
                     if (style != null && style.getClickEvent() != null) {
-                        Screen.defaultHandleClickEvent(style.getClickEvent(), Minecraft.getInstance(), screen);
+                        screen.handleComponentClicked(style);
                         return true;
                     }
                 }
             }
 
-            return super.mouseClicked(mouseButtonEvent, doubleClick);
+            return super.mouseClicked(mouseX, mouseY, button);
         }
 
         @Override
@@ -870,12 +880,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
             //? <=1.21.8
-            //this.lastTop = top;
+            this.lastTop = top;
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int labelX = rowLeft + this.depth * INDENT;
 
             if (this.model.selectedIndex == this.index) {
@@ -883,28 +893,28 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             }
 
             GroupNode g = group();
-            graphics.text(AutoConfigList.this.font, g.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
+            graphics.drawString(AutoConfigList.this.font, g.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
             int toggleX = rowLeft + rowWidth - HEADER_BTN;
             this.toggleButton.setPosition(toggleX, y);
-            this.toggleButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            this.toggleButton.render(graphics, mouseX, mouseY, partialTick);
         }
 
         @Override
-        public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
             int rowLeft = AutoConfigList.this.getRowLeft();
             int rowWidth = AutoConfigList.this.getRowWidth();
-            int y = this.getContentY();
+            int y = this.lastTop;
             int toggleLeft = rowLeft + rowWidth - HEADER_BTN;
 
-            if (super.mouseClicked(mouseButtonEvent, doubleClick)) {
+            if (super.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
 
             //~ mb_event
-            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < toggleLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
+            if (mouseX >= rowLeft && mouseX < toggleLeft && mouseY >= y && mouseY < y + 20) { //~ !mb_event
                 //? >=1.21.9
-                int button = mouseButtonEvent.button();
+                //int button = mouseButtonEvent.button();
                 if (button == 1) {
                     if (this.model.editable) {
                         AutoConfigList.this.toggleSelect(this.model, this.index);
