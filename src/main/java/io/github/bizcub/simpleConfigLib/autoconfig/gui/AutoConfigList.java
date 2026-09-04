@@ -83,6 +83,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         return super.mouseClicked(mouseButtonEvent, doubleClick);
     }
 
+    //? >=1.20.2 && <=1.21.3 {
+    /*@Override
+    protected boolean isValidMouseClick(int button) {
+        return button == 0 || button == 1;
+    }*///?}
+
     @Override
     protected int scrollBarX() {
         return this.getRowLeft() + this.getRowWidth() + 8;
