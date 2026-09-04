@@ -4,7 +4,7 @@
 import io.github.bizcub.simpleConfigLib.Main;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 

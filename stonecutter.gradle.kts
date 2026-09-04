@@ -3,4 +3,4 @@ plugins {
     id("io.github.bizcub.multiloader")
 }
 
-stonecutter active "1.20.6-fabric"
+stonecutter active "26.2-fabric"

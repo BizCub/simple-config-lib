@@ -16,7 +16,7 @@ import com.mojang.logging.LogUtils;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.tabs.*;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
@@ -35,8 +35,8 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 //? >=1.21.9 {
-/*import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;*///?}
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;//?}
 
 public class AutoConfigScreen extends Screen {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -52,7 +52,7 @@ public class AutoConfigScreen extends Screen {
 
     private final Map<ObjectElement, Object> objectBacking = new IdentityHashMap<>();
 
-    private TabNavigationBar tabNavigationBar;
+    private MenuTabBar tabNavigationBar;
 
     private Button resetButton;
     private Button doneButton;
@@ -81,7 +81,7 @@ public class AutoConfigScreen extends Screen {
                 tabs.add(new ConfigTab(key, value))
         );
 
-        this.tabNavigationBar = this.addRenderableWidget(TabNavigationBar.builder(this.tabManager, this.width)
+        this.tabNavigationBar = this.addRenderableWidget(MenuTabBar.builder(this.tabManager, this.width)
                 .addTabs(tabs.toArray(new Tab[0]))
                 .build()
         );
@@ -100,7 +100,7 @@ public class AutoConfigScreen extends Screen {
             this.applyActions.forEach(Runnable::run);
             this.holder.save();
             this.dirty = false;
-            this.minecraft.setScreen(this.lastScreen);
+            this.minecraft.gui.setScreen(this.lastScreen);
         }).build();
         this.doneButton.active = false;
 
@@ -124,7 +124,7 @@ public class AutoConfigScreen extends Screen {
                         .size(20, 20)
                         .pos(this.layout.getFooterHeight() / 2 - 10, this.height - this.layout.getFooterHeight() / 2 - 10)
                         .build());
-        this.resetButton.active = Screen.hasShiftDown();
+        this.resetButton.active = Minecraft.getInstance().hasShiftDown();
         if (this.initialSnapshot == null) {
             this.initialSnapshot = this.holder.snapshot();
         }
@@ -179,13 +179,13 @@ public class AutoConfigScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         //? <1.20.2
         //this.renderBackground(graphics);
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
         if (this.resetButton != null) {
-            boolean shift = Screen.hasShiftDown();
+            boolean shift = Minecraft.getInstance().hasShiftDown();
             this.resetButton.active = shift;
             Component resetComponent = ComponentBuilder.translatable("config.reset").build();
             this.resetButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
@@ -198,12 +198,12 @@ public class AutoConfigScreen extends Screen {
     //? <=1.20.4 {
     /*//? >=1.20.2 {
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
 
     //?} else {
     /^@Override
-    public void renderBackground(GuiGraphics guiGraphics) {
+    public void renderBackground(GuiGraphicsExtractor guiGraphics) {
         super.renderBackground(guiGraphics);^///?}
         guiGraphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
         guiGraphics.blit(Screen.BACKGROUND_LOCATION, 0, 0, 0, 0.0F, 0.0F, this.width, this.height, 32, 32);
@@ -211,48 +211,48 @@ public class AutoConfigScreen extends Screen {
     }*///?}
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         AutoConfigList list = currentList();
 
         //~ mb_event
-        if (list != null && list.isPopupOpenAt(mouseX, mouseY)) { //~ !mb_event
-            list.mouseClicked(mouseX, mouseY, button);
+        if (list != null && list.isPopupOpenAt(mouseButtonEvent.x(), mouseButtonEvent.y())) { //~ !mb_event
+            list.mouseClicked(mouseButtonEvent, doubleClick);
             return true;
         }
 
         if (list != null) {
             //~ mb_event
-            list.closePickersExceptSwatchAt(mouseX, mouseY); //~ !mb_event
+            list.closePickersExceptSwatchAt(mouseButtonEvent.x(), mouseButtonEvent.y()); //~ !mb_event
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(mouseButtonEvent, doubleClick);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
         AutoConfigList list = currentList();
         if (list != null && list.isPickerDragging()) {
-            return list.mouseDragged(mouseX, mouseY, button, dx, dy);
+            return list.mouseDragged(mouseButtonEvent, dx, dy);
         }
-        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+        return super.mouseDragged(mouseButtonEvent, dx, dy);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
         AutoConfigList list = currentList();
         if (list != null && list.isPickerDragging()) {
-            list.mouseReleased(mouseX, mouseY, button);
+            list.mouseReleased(mouseButtonEvent);
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(mouseButtonEvent);
     }
 
     @Override
     protected void repositionElements() {
         if (this.tabNavigationBar != null) {
             //? <26.1
-            this.tabNavigationBar.setWidth(this.width);
+            //this.tabNavigationBar.setWidth(this.width);
             //~ if >=26.2 || <=1.21.11 'updateWidth' -> 'arrangeElements'
-            this.tabNavigationBar.arrangeElements(/*? >=26.1 >> ')'*/ /*this.width*/);
+            this.tabNavigationBar.arrangeElements(/*? >=26.1 >> ')'*/ this.width);
             int tabAreaTop = this.tabNavigationBar.getRectangle().bottom();
             ScreenRectangle tabArea = new ScreenRectangle(0, tabAreaTop, this.width,
                     this.height - this.layout.getFooterHeight() - tabAreaTop);
@@ -266,25 +266,25 @@ public class AutoConfigScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return (this.tabNavigationBar != null && this.tabNavigationBar.keyPressed(keyCode, scanCode, modifiers)) || super.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(KeyEvent keyEvent) {
+        return (this.tabNavigationBar != null && this.tabNavigationBar.keyPressed(keyEvent)) || super.keyPressed(keyEvent);
     }
 
     @Override
     public void onClose() {
         if (!this.dirty) {
             this.holder.load();
-            this.minecraft.setScreen(this.lastScreen);
+            this.minecraft.gui.setScreen(this.lastScreen);
             return;
         }
 
-        this.minecraft.setScreen(new ConfirmScreen(
+        this.minecraft.gui.setScreen(new ConfirmScreen(
                 yes -> {
                     if (yes) {
                         this.holder.load();
-                        this.minecraft.setScreen(this.lastScreen);
+                        this.minecraft.gui.setScreen(this.lastScreen);
                     } else {
-                        this.minecraft.setScreen(this);
+                        this.minecraft.gui.setScreen(this);
                     }
                 },
                 ComponentBuilder.translatable("config.confirm.title").build(),
@@ -527,10 +527,10 @@ public class AutoConfigScreen extends Screen {
             boolean initial = (Boolean) field.get(config);
             BooleanConfig cfg = field.getAnnotation(BooleanConfig.class);
             final boolean yesNo = cfg == null || cfg.yesNo();
-            return CycleButton.builder((Boolean v) -> booleanLabel(v, yesNo) /*? >=1.21.11 >> ')'*//*, initial*/)
+            return CycleButton.builder((Boolean v) -> booleanLabel(v, yesNo) /*? >=1.21.11 >> ')'*/, initial)
                     .withValues(true, false)
                     //? <1.21.11
-                    .withInitialValue(initial)
+                    //.withInitialValue(initial)
                     .displayOnlyValue()
                     .create(0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                             (b, v) -> apply(config, field, v));
@@ -553,10 +553,10 @@ public class AutoConfigScreen extends Screen {
             Enum[] values = (Enum[]) t.getEnumConstants();
             EnumConfig cfg = field.getAnnotation(EnumConfig.class);
             final boolean translate = this.holder.getMeta().translate() && cfg != null && cfg.translate();
-            return CycleButton.builder((Enum v) -> enumValueLabel(v, translate) /*? >=1.21.11 >> ')'*//*, initial*/)
+            return CycleButton.builder((Enum v) -> enumValueLabel(v, translate) /*? >=1.21.11 >> ')'*/, initial)
                     .withValues(values)
                     //? <1.21.11
-                    .withInitialValue(initial)
+                    //.withInitialValue(initial)
                     .displayOnlyValue()
                     .create(0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build(),
                             (b, v) -> apply(config, field, v));
@@ -780,7 +780,7 @@ public class AutoConfigScreen extends Screen {
         @Override
         protected void applyValue() {
             //~ if >=1.21.11 'this.min, this.max, this.value' -> 'this.value, this.min, this.max'
-            int raw = Mth.floor(Mth.clampedLerp(this.min, this.max, this.value));
+            int raw = Mth.floor(Mth.clampedLerp(this.value, this.min, this.max));
             int snapped = this.min + Math.round((raw - this.min) / (float) this.step) * this.step;
             this.current = Mth.clamp(snapped, this.min, this.max);
             this.onApply.accept(this.current);

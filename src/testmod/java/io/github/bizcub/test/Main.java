@@ -37,7 +37,7 @@ public class Main {
 
     public static void setTestScreen() {
         while (Main.TOGGLE_VISIBILITY.consumeClick()) {
-            Minecraft.getInstance().setScreen(new TestScreen(ComponentBuilder.literal("test").build()));
+            Minecraft.getInstance().gui.setScreen(new TestScreen(ComponentBuilder.literal("test").build()));
         }
     }
 
