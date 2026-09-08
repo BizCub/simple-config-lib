@@ -1,7 +1,7 @@
 //? neoforge {
 /*package io.github.bizcub.test.platform;
 
-import io.github.bizcub.test.Main;
+import io.github.bizcub.test.main.Main;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;

@@ -1,7 +1,7 @@
-package io.github.bizcub.test.screen;
+package io.github.bizcub.test.client.screen;
 
 import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemDisplayWidget;
-import io.github.bizcub.test.config.Config;
+import io.github.bizcub.test.client.config.ConfigClient;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ public class TestScreen extends Screen {
                         this.width / 2,
                         this.height / 2,
                         new ItemStack(Items.DIAMOND_BLOCK),
-                        Config.get().entityLodBias()
+                        ConfigClient.get().entityLodBias()
                 )
         );
         widget.setCentred();

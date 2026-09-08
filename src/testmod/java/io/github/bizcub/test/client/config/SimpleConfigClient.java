@@ -1,4 +1,4 @@
-package io.github.bizcub.test.config;
+package io.github.bizcub.test.client.config;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
@@ -11,43 +11,43 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-@AutoConfig(name = "test")
-public class SimpleConfig implements Config {
-    public static ConfigHolder<SimpleConfig> getInstance() {
-        return ConfigHolder.register(SimpleConfig.class).onSave(SimpleConfig::onConfigSave);
+@AutoConfig(name = "test_client")
+public class SimpleConfigClient implements ConfigClient {
+    public static ConfigHolder<SimpleConfigClient> getInstance() {
+        return ConfigHolder.register(SimpleConfigClient.class).onSave(SimpleConfigClient::onConfigSave);
     }
 
-    public static void onConfigSave(Config config) {
+    public static void onConfigSave(ConfigClient config) {
         System.out.println("Config saved!");
     }
 
     @BooleanConfig(yesNo = false)
-    public boolean enableOptimizations = Config.super.enableOptimizations();
+    public boolean enableOptimizations = ConfigClient.super.enableOptimizations();
 
     @Tooltip
     @Slider(min = 30, max = 240, step = 10)
-    public int fpsLimit = Config.super.fpsLimit();
+    public int fpsLimit = ConfigClient.super.fpsLimit();
 
     @Tooltip
     @Slider(min = 2, max = 32)
-    public int renderDistance = Config.super.renderDistance();
+    public int renderDistance = ConfigClient.super.renderDistance();
 
     @Tooltip
     @EnumConfig(translate = true)
-    public PerformancePreset preset = Config.super.preset();
+    public PerformancePreset preset = ConfigClient.super.preset();
 
     @Color
-    public int fpsOverlayColor = Config.super.fpsOverlayColor();
+    public int fpsOverlayColor = ConfigClient.super.fpsOverlayColor();
 
     @Color(alpha = true)
-    public int profilerBackground = Config.super.profilerBackground();
+    public int profilerBackground = ConfigClient.super.profilerBackground();
 
     @Tooltip
     @ListConfig(expanded = true, addToFront = true)
-    public List<String> ignoredMods = Config.super.ignoredMods();
+    public List<String> ignoredMods = ConfigClient.super.ignoredMods();
 
     @ListConfig(editable = false)
-    public List<Boolean> perDimensionCulling = Config.super.perDimensionCulling();
+    public List<Boolean> perDimensionCulling = ConfigClient.super.perDimensionCulling();
 
     public Component headerNote = ComponentBuilder.literal("Performance Settings")
             .color(ChatFormatting.GOLD)
@@ -74,20 +74,20 @@ public class SimpleConfig implements Config {
 
     @Tooltip
     @ConfigGroup("gameplay")
-    public String worldProfile = Config.super.worldProfile();
+    public String worldProfile = ConfigClient.super.worldProfile();
 
     @ConfigGroup("gameplay")
     @Slider(min = 0, max = 100)
-    public int entityLodBias = Config.super.entityLodBias();
+    public int entityLodBias = ConfigClient.super.entityLodBias();
 
     @ConfigGroup("gameplay")
-    public RenderQuality renderQuality = Config.super.renderQuality();
+    public RenderQuality renderQuality = ConfigClient.super.renderQuality();
 
     @ConfigGroup("gameplay")
-    public List<ChunkProfile> chunkProfiles = Config.super.chunkProfiles();
+    public List<ChunkProfile> chunkProfiles = ConfigClient.super.chunkProfiles();
 
     @Category
-    public Graphics graphics = Config.super.graphics();
+    public Graphics graphics = ConfigClient.super.graphics();
 
     @Override
     public boolean enableOptimizations() {

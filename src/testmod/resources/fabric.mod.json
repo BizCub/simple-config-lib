@@ -4,8 +4,8 @@
     "name": "Test Lib",
     "version": "1.0",
     "entrypoints": {
-        "modmenu": ["io.github.bizcub.test.platform.Fabric$ModMenu"],
-        "client": ["io.github.bizcub.test.platform.Fabric"],
-        "main": ["io.github.bizcub.test.platformServer.Fabric"]
+        "modmenu": ["io.github.bizcub.test.client.platform.FabricClient$ModMenu"],
+        "client": ["io.github.bizcub.test.client.platform.FabricClient"],
+        "main": ["io.github.bizcub.test.main.platform.FabricMain"]
     }
 }

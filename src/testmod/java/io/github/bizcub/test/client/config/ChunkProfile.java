@@ -1,4 +1,4 @@
-package io.github.bizcub.test.config;
+package io.github.bizcub.test.client.config;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Slider;
 

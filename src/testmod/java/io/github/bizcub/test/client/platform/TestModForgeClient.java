@@ -1,7 +1,7 @@
 //? forge {
 /*package io.github.bizcub.test.platform;
 
-import io.github.bizcub.test.Main;
+import io.github.bizcub.test.main.Main;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
