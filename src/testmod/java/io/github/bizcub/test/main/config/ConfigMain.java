@@ -1,18 +1,13 @@
 package io.github.bizcub.test.main.config;
 
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigProvider;
+
 public interface ConfigMain {
     static ConfigMain get() {
-        return Holder.INSTANCE;
+        return ConfigProvider.get(ConfigMain.class);
     }
-
-    static void set(final ConfigMain config) {
-        if (config != null) {
-            Holder.INSTANCE = config;
-        }
-    }
-
-    class Holder {
-        private static ConfigMain INSTANCE = new ConfigMain() { };
+    static void set(ConfigMain instance) {
+        ConfigProvider.set(ConfigMain.class, instance);
     }
 
     default boolean testBoolean() {

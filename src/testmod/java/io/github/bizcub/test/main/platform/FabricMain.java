@@ -2,7 +2,8 @@
 package io.github.bizcub.test.main.platform;
 
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
-import io.github.bizcub.test.main.TestModMain;import io.github.bizcub.test.main.config.SimpleConfigMain;
+import io.github.bizcub.test.main.TestModMain;
+import io.github.bizcub.test.main.config.SimpleConfigMain;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 
