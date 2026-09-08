@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
-public class Fabric implements ModInitializer {
+public class FabricMain implements ModInitializer {
 
     @Override
     public void onInitialize() {

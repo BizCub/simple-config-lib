@@ -13,7 +13,7 @@ import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemPIPRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry;
 //?}
 
-public class Fabric implements ClientModInitializer {
+public class FabricClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {

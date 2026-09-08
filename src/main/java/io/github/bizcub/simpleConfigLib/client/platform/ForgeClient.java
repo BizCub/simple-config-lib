@@ -15,7 +15,7 @@ import net.minecraftforge.client.event.RegisterPictureInPictureRendererEvent;
 
 @Mod(SimpleConfigLibMain.MOD_ID)
 @EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID)
-public class Forge {
+public class ForgeClient {
 
     @SubscribeEvent
     public static void registerKeymappings(RegisterKeyMappingsEvent event) {

@@ -1,5 +1,5 @@
 //? neoforge {
-/*package io.github.bizcub.simpleConfigLib.platform;
+/*package io.github.bizcub.simpleConfigLib.client.platform;
 
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
@@ -16,7 +16,7 @@ import net.neoforged.neoforge.client.event.RegisterPictureInPictureRenderersEven
 
 @Mod(SimpleConfigLibMain.MOD_ID)
 @EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID)
-public class NeoForge {
+public class NeoForgeClient {
 
     @SubscribeEvent
     public static void registerKeymappings(RegisterKeyMappingsEvent event) {

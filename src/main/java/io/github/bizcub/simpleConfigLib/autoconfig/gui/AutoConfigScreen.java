@@ -15,7 +15,6 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElem
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
 import com.mojang.logging.LogUtils;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -35,6 +34,12 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+
+//? fabric
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+
+//? neoforge
+//import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 //? >=1.21.9 {
 import net.minecraft.client.input.KeyEvent;
@@ -117,8 +122,8 @@ public class AutoConfigScreen extends Screen {
             this.applyActions.forEach(Runnable::run);
 
             if (this.viewEnv == Side.Env.SERVER && !this.readOnly) {
-                ClientPlayNetworking.send(
-                        new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
+                /*? fabric*/ ClientPlayNetworking.send(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
+                /*? neoforge*/ //ClientPacketDistributor.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
             } else {
                 this.holder.save();
             }
