@@ -43,6 +43,9 @@ public class ConfigHubScreen extends Screen {
         if (mc.hasSingleplayerServer()) {
             return true;
         }
+        if (mc.player == null) {
+            return false;
+        }
         //? >=26.2 {
         return mc.player.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
         //?} else
@@ -64,7 +67,7 @@ public class ConfigHubScreen extends Screen {
 
             Button b = Button.builder(
                             ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build(),
-                            btn -> this.minecraft.gui.setScreen(
+                            button -> this.minecraft.gui.setScreen(
                                     AutoConfigScreen.create(holder, this, env, readOnly)))
                     .width(200)
                     .build();

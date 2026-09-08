@@ -43,10 +43,9 @@ public class Main {
     }
 
     public static Screen getConfigScreen(Screen parent) {
-        SimpleConfig.getInstance();
         SimpleConfigServer.getInstance();
+        SimpleConfig.getInstance();
 
         return ConfigHubScreen.open(parent);
-        //return AutoConfigScreen.create(SimpleConfig.getInstance(), parent);
     }
 }

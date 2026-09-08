@@ -21,15 +21,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class ConfigHolder<T> {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Map<Class<?>, ConfigHolder<?>> REGISTRY = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, ConfigHolder<?>> REGISTRY = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .setExclusionStrategies(new ExclusionStrategy() {
@@ -156,7 +153,9 @@ public class ConfigHolder<T> {
     }
 
     public static List<ConfigHolder<?>> registered() {
-        return List.copyOf(REGISTRY.values());
+        synchronized (REGISTRY) {
+            return new ArrayList<>(REGISTRY.values());
+        }
     }
 
     public Side.Env envOf(Field field) {
