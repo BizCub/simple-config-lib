@@ -1,6 +1,6 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
-import io.github.bizcub.simpleConfigLib.autoconfig.ConfigApplyPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Tooltip;
@@ -74,7 +74,9 @@ public class AutoConfigScreen extends Screen {
         this.holder = holder;
         this.viewEnv = viewEnv;
         this.readOnly = readOnly;
-        this.holder.load();
+        if (viewEnv != Side.Env.SERVER) {
+            this.holder.load();
+        }
     }
 
     public static <T> Screen create(ConfigHolder<T> holder, Screen parent) {

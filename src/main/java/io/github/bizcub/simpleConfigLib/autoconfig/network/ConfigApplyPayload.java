@@ -1,4 +1,4 @@
-package io.github.bizcub.simpleConfigLib.autoconfig;
+package io.github.bizcub.simpleConfigLib.autoconfig.network;
 
 import io.github.bizcub.simpleConfigLib.Main;
 import io.github.bizcub.simpleConfigLib.util.Id;
