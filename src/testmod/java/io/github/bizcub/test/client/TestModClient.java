@@ -1,7 +1,7 @@
 package io.github.bizcub.test.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigHubScreen;
+import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreenFactory;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.test.client.config.ConfigClient;
@@ -32,6 +32,6 @@ public class TestModClient {
     }
 
     public static Screen getConfigScreen(Screen parent) {
-        return ConfigHubScreen.open(parent);
+        return ConfigScreenFactory.open(parent);
     }
 }

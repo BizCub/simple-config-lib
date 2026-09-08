@@ -2,14 +2,13 @@ package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side.Env;
+import io.github.bizcub.simpleConfigLib.util.KeyFormatter;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.FrameLayout;
 import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.server.permissions.Permissions;
 
 import java.util.List;
 
@@ -23,39 +22,6 @@ public class ConfigHubScreen extends Screen {
         this.holders = holders;
     }
 
-    public static Screen open(Screen parent) {
-        List<ConfigHolder<?>> holders = ConfigHolder.registered();
-
-        if (holders.size() == 1) {
-            return screenFor(holders.get(0), parent);
-        }
-        return new ConfigHubScreen(parent, holders);
-    }
-
-    static Screen screenFor(ConfigHolder<?> holder, Screen parent) {
-        Env env = holder.getMeta().env();
-        boolean readOnly = env == Env.SERVER && !hasServerAccess();
-        return AutoConfigScreen.create(holder, parent, env, readOnly);
-    }
-
-    private static boolean hasServerAccess() {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.hasSingleplayerServer()) {
-            return true;
-        }
-        if (mc.player == null) {
-            return false;
-        }
-        //? >=26.2 {
-        return mc.player.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
-        //?} else
-        //return mc.player.hasPermissions(2);
-    }
-
-    static boolean readOnlyFor(final ConfigHolder<?> holder) {
-        return holder.getMeta().env() == Env.SERVER && !hasServerAccess();
-    }
-
     @Override
     protected void init() {
         GridLayout grid = new GridLayout().spacing(8);
@@ -63,10 +29,13 @@ public class ConfigHubScreen extends Screen {
 
         for (ConfigHolder<?> holder : this.holders) {
             Env env = holder.getMeta().env();
-            boolean readOnly = readOnlyFor(holder);
+            boolean readOnly = ConfigScreenFactory.readOnlyFor(holder);
+
+            String pretty = KeyFormatter.humanize(holder.getMeta().name());
+            String envLabel = env.name().charAt(0) + env.name().substring(1).toLowerCase(); // CLIENT -> Client
 
             Button b = Button.builder(
-                            ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build(),
+                            ComponentBuilder.literal(pretty + " (" + envLabel + ")").build(),
                             button -> this.minecraft.gui.setScreen(
                                     AutoConfigScreen.create(holder, this, env, readOnly)))
                     .width(200)
