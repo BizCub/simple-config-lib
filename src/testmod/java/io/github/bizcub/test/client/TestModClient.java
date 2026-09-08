@@ -1,6 +1,7 @@
 package io.github.bizcub.test.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigProvider;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigHubScreen;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
@@ -21,7 +22,7 @@ public class TestModClient {
 
     public static void init() {
         if (TestModMain.isModLoaded("simple_config_lib")) {
-            ConfigClient.set(SimpleConfigClient.getInstance().get());
+            ConfigProvider.set(ConfigClient.class, SimpleConfigClient.getInstance().get());
         }
     }
 
