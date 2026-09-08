@@ -1,11 +1,12 @@
 package io.github.bizcub.test;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigScreen;
+import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigHubScreen;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.test.config.SimpleConfig;
 import io.github.bizcub.test.config.Config;
+import io.github.bizcub.test.config.SimpleConfigServer;
 import io.github.bizcub.test.screen.TestScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -42,6 +43,10 @@ public class Main {
     }
 
     public static Screen getConfigScreen(Screen parent) {
-        return AutoConfigScreen.create(SimpleConfig.getInstance(), parent);
+        SimpleConfig.getInstance();
+        SimpleConfigServer.getInstance();
+
+        return ConfigHubScreen.open(parent);
+        //return AutoConfigScreen.create(SimpleConfig.getInstance(), parent);
     }
 }

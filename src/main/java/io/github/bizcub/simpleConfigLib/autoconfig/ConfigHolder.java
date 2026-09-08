@@ -2,6 +2,7 @@ package io.github.bizcub.simpleConfigLib.autoconfig;
 
 import io.github.bizcub.simpleConfigLib.Main;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -89,6 +90,13 @@ public class ConfigHolder<T> {
         return (ConfigHolder<T>) REGISTRY.computeIfAbsent(type, ConfigHolder::new);
     }
 
+    public static ConfigHolder<?> byName(final String name) {
+        for (ConfigHolder<?> holder : REGISTRY.values()) {
+            if (holder.meta.name().equals(name)) return holder;
+        }
+        return null;
+    }
+
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
         if (listener != null && !this.saveListeners.contains(listener)) {
             this.saveListeners.add(listener);
@@ -147,6 +155,15 @@ public class ConfigHolder<T> {
         }
     }
 
+    public static List<ConfigHolder<?>> registered() {
+        return List.copyOf(REGISTRY.values());
+    }
+
+    public Side.Env envOf(Field field) {
+        Side side = field.getAnnotation(Side.class);
+        return side != null ? side.value() : this.meta.env();
+    }
+
     private boolean sanitize(final T loaded, final T defaults) {
         boolean corrupted = false;
         for (Field f : this.type.getDeclaredFields()) {
@@ -167,6 +184,23 @@ public class ConfigHolder<T> {
             }
         }
         return corrupted;
+    }
+
+    public void applySnapshot(final String json) {
+        T loaded;
+        try {
+            loaded = GSON.fromJson(json, this.type);
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse config snapshot for {}", this.meta.name(), e);
+            return;
+        }
+        if (loaded == null) return;
+
+        T defaults = newDefault();
+        sanitize(loaded, defaults);
+
+        if (this.instance == null) this.instance = loaded;
+        else copyInto(loaded, this.instance);
     }
 
     private void backup() {

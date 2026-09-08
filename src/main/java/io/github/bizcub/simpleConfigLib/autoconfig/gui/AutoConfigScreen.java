@@ -1,5 +1,6 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Tooltip;
@@ -14,6 +15,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElem
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
 import com.mojang.logging.LogUtils;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -59,15 +61,28 @@ public class AutoConfigScreen extends Screen {
     private boolean dirty;
     private String initialSnapshot;
 
-    public AutoConfigScreen(final Screen lastScreen, final ConfigHolder<?> holder) {
+    private final Side.Env viewEnv;
+    private final boolean readOnly;
+
+    public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder) {
+        this(lastScreen, holder, holder.getMeta().env(), false);
+    }
+
+    public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder, Side.Env viewEnv, boolean readOnly) {
         super(ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build());
         this.lastScreen = lastScreen;
         this.holder = holder;
+        this.viewEnv = viewEnv;
+        this.readOnly = readOnly;
         this.holder.load();
     }
 
-    public static <T> Screen create(final ConfigHolder<T> holder, final Screen parent) {
+    public static <T> Screen create(ConfigHolder<T> holder, Screen parent) {
         return new AutoConfigScreen(parent, holder);
+    }
+
+    public static <T> Screen create(ConfigHolder<T> holder, Screen parent, Side.Env viewEnv, boolean readOnly) {
+        return new AutoConfigScreen(parent, holder, viewEnv, readOnly);
     }
 
     @Override
@@ -98,7 +113,14 @@ public class AutoConfigScreen extends Screen {
                 l.commitElements();
             }
             this.applyActions.forEach(Runnable::run);
-            this.holder.save();
+
+            if (this.viewEnv == Side.Env.SERVER && !this.readOnly) {
+                ClientPlayNetworking.send(
+                        new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
+            } else {
+                this.holder.save();
+            }
+
             this.dirty = false;
             this.minecraft.gui.setScreen(this.lastScreen);
         }).build();
@@ -129,6 +151,16 @@ public class AutoConfigScreen extends Screen {
             this.initialSnapshot = this.holder.snapshot();
         }
         this.doneButton.active = this.dirty;
+
+        if (this.readOnly) {
+            this.doneButton.active = false;
+            this.doneButton.visible = false;
+            this.resetButton.active = false;
+            this.resetButton.visible = false;
+            for (AutoConfigList l : this.lists) {
+                l.setReadOnly(true);
+            }
+        }
     }
 
     public void markDirty() {
@@ -154,12 +186,19 @@ public class AutoConfigScreen extends Screen {
         return this.holder.getMeta().snakeCaseKeys() ? KeyFormatter.toSnakeCase(raw) : raw;
     }
 
+    private boolean matchesCurrentView(final Side.Env fieldEnv) {
+        return fieldEnv == this.viewEnv;
+    }
+
     private Map<String, List<Field>> groupFields() {
         Map<String, List<Field>> groups = new LinkedHashMap<>();
         groups.put(DEFAULT_GROUP, new ArrayList<>());
         for (Field field : this.holder.type().getDeclaredFields()) {
             int mods = field.getModifiers();
             if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
+                continue;
+            }
+            if (!matchesCurrentView(this.holder.envOf(field))) {
                 continue;
             }
             ConfigGroup g = field.getAnnotation(ConfigGroup.class);
