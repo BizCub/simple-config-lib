@@ -1,7 +1,7 @@
 //? forge {
 /*package io.github.bizcub.simpleConfigLib.platform;
 
-import io.github.bizcub.simpleConfigLib.Main;
+import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
@@ -13,8 +13,8 @@ import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemPIPRenderer;
 import net.minecraftforge.client.event.RegisterPictureInPictureRendererEvent;
 //?}
 
-@Mod(Main.MOD_ID)
-@EventBusSubscriber(modid = Main.MOD_ID)
+@Mod(SimpleConfigLibMain.MOD_ID)
+@EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID)
 public class Forge {
 
     @SubscribeEvent

@@ -1,5 +1,5 @@
 //? fabric {
-package io.github.bizcub.simpleConfigLib.platformServer;
+package io.github.bizcub.simpleConfigLib.main.platform;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;

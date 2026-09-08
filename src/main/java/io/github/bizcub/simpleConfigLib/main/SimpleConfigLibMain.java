@@ -1,4 +1,4 @@
-package io.github.bizcub.simpleConfigLib;
+package io.github.bizcub.simpleConfigLib.main;
 
 /*? fabric*/ import net.fabricmc.loader.api.FabricLoader;
 /*? forge*/ //import net.minecraftforge.fml.loading.FMLPaths;
@@ -6,7 +6,7 @@ package io.github.bizcub.simpleConfigLib;
 
 import java.nio.file.Path;
 
-public class Main {
+public class SimpleConfigLibMain {
     public static final String MOD_ID = /*$ mod_id*/ "simple_config_lib";
 
     public static Path gameDir() {

@@ -1,6 +1,6 @@
 package io.github.bizcub.simpleConfigLib.autoconfig;
 
-import io.github.bizcub.simpleConfigLib.Main;
+import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 import com.google.gson.ExclusionStrategy;
@@ -79,7 +79,7 @@ public class ConfigHolder<T> {
     }
 
     private Path path() {
-        return Main.gameDir().resolve("config").resolve(this.meta.name() + ".json");
+        return SimpleConfigLibMain.gameDir().resolve("config").resolve(this.meta.name() + ".json");
     }
 
     @SuppressWarnings("unchecked")

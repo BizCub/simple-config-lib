@@ -1,5 +1,5 @@
 //? fabric {
-package io.github.bizcub.simpleConfigLib.platform;
+package io.github.bizcub.simpleConfigLib.client.platform;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;

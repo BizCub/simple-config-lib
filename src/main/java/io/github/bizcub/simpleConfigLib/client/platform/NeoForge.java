@@ -1,7 +1,7 @@
 //? neoforge {
 /*package io.github.bizcub.simpleConfigLib.platform;
 
-import io.github.bizcub.simpleConfigLib.Main;
+import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -14,8 +14,8 @@ import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemRenderState;
 import net.neoforged.neoforge.client.event.RegisterPictureInPictureRenderersEvent;
 //?}
 
-@Mod(Main.MOD_ID)
-@EventBusSubscriber(modid = Main.MOD_ID)
+@Mod(SimpleConfigLibMain.MOD_ID)
+@EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID)
 public class NeoForge {
 
     @SubscribeEvent
