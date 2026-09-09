@@ -2,7 +2,6 @@
 package io.github.bizcub.simpleConfigLib.client.platform;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import net.fabricmc.api.ClientModInitializer;
@@ -24,11 +23,6 @@ public class FabricClient implements ClientModInitializer {
                 new ScaledItemPIPRenderer(/*? <26.2 >>+ ')'*/ /*ctx.bufferSource()*/));//?}
 
         ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPayload.TYPE, (payload, context) ->
-                context.client().execute(() -> {
-                    ConfigHolder<?> holder = ConfigHolder.byName(payload.name());
-                    if (holder != null && holder.getMeta().env() == Side.Env.SERVER) {
-                        holder.applySnapshot(payload.json());
-                    }
-                }));
+                context.client().execute(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json())));
     }
 }//?}

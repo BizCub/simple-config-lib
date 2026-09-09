@@ -94,6 +94,13 @@ public class ConfigHolder<T> {
         return null;
     }
 
+    public static void applyServerSnapshot(String name, String json) {
+        ConfigHolder<?> holder = byName(name);
+        if (holder != null && holder.getMeta().env() == Side.Env.SERVER) {
+            holder.applySnapshot(json);
+        }
+    }
+
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
         if (listener != null && !this.saveListeners.contains(listener)) {
             this.saveListeners.add(listener);
