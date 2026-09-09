@@ -12,7 +12,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 @Mod(value = TestModMain.MOD_ID, dist = Dist.CLIENT)
-@EventBusSubscriber(modid = TestModMain.MOD_ID)
+@EventBusSubscriber(modid = TestModMain.MOD_ID, value = Dist.CLIENT)
 public class NeoForgeClient {
 
     public NeoForgeClient() {
