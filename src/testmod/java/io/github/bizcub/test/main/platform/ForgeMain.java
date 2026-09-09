@@ -1,12 +1,10 @@
 //? forge {
 /*package io.github.bizcub.test.main.platform;
 
-import io.github.bizcub.test.client.TestModClient;
+import io.github.bizcub.test.client.platform.ForgeClient;
 import io.github.bizcub.test.main.TestModMain;
-import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -19,10 +17,7 @@ public class ForgeMain {
         TestModMain.init();
 
         if (FMLEnvironment.dist.isClient()) {
-            TestModClient.init();
-
-            ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () ->
-                    new ConfigScreenHandler.ConfigScreenFactory((minecraft, parent) -> TestModClient.getConfigScreen(parent)));
+            ForgeClient.init();
         }
     }
 
