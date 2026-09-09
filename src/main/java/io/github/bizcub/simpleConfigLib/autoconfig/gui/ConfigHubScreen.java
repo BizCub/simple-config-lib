@@ -4,6 +4,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side.Env;
 import io.github.bizcub.simpleConfigLib.util.KeyFormatter;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.FrameLayout;
 import net.minecraft.client.gui.layouts.GridLayout;
@@ -50,6 +51,13 @@ public class ConfigHubScreen extends Screen {
         FrameLayout.centerInRectangle(grid, 0, 0, this.width, this.height);
         grid.visitWidgets(this::addRenderableWidget);
     }
+
+    //? <1.20.2 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(guiGraphics);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+    }*///?}
 
     @Override
     public void onClose() {
