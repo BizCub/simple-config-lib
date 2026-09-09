@@ -4,7 +4,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side.Env;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.server.permissions.Permissions;
+/*? >=1.21.11*/ import net.minecraft.server.permissions.Permissions;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ public class ConfigScreenFactory {
         if (mc.player == null) {
             return false;
         }
-        //? >=26.2 {
+        //? >=1.21.11 {
         return mc.player.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
         //?} else
         //return mc.player.hasPermissions(2);

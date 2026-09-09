@@ -22,7 +22,14 @@ public class FabricClient implements ClientModInitializer {
         PictureInPictureRendererRegistry.register(ctx ->
                 new ScaledItemPIPRenderer(/*? <26.2 >>+ ')'*/ /*ctx.bufferSource()*/));//?}
 
+        //? >=1.20.5 {
         ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPayload.TYPE, (payload, context) ->
                 context.client().execute(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json())));
+
+        //?} else {
+        /*ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPayload.ID, (client, listener, buf, sender) -> {
+            ConfigSyncPayload payload = ConfigSyncPayload.read(buf);
+            client.execute(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
+        });*///?}
     }
 }//?}

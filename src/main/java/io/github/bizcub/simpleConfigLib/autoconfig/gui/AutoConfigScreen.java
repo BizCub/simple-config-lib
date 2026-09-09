@@ -41,8 +41,9 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 //? forge
 //import static io.github.bizcub.simpleConfigLib.main.platform.ForgeMain.CHANNEL;
 
-//? neoforge
-//import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+//? neoforge {
+/*/^? >=1.21.7^/ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import net.neoforged.neoforge.network.PacketDistributor;*///?}
 
 //? >=1.21.9 {
 import net.minecraft.client.input.KeyEvent;
@@ -125,9 +126,12 @@ public class AutoConfigScreen extends Screen {
             this.applyActions.forEach(Runnable::run);
 
             if (this.viewEnv == Side.Env.SERVER && !this.readOnly) {
-                /*? fabric*/ ClientPlayNetworking.send(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
-                /*? forge*/  //CHANNEL.send(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()), Minecraft.getInstance().getConnection().getConnection());
-                /*? neoforge*/ //ClientPacketDistributor.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
+                ConfigApplyPayload payload = new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot());
+                /*? fabric*/ ClientPlayNetworking.send(/*? <1.20.5 {*/ /*ConfigApplyPayload.ID, payload.toBuffer() *//*?} else >> ')'*/ payload);
+                /*? forge && >=1.20.2*/ //CHANNEL.send(payload, Minecraft.getInstance().getConnection().getConnection());
+                /*? forge && 1.20.1*/ //CHANNEL.sendToServer(payload);
+                //~ if >=1.21.7 'PacketDistributor' -> 'ClientPacketDistributor'
+                /*? neoforge*/ //ClientPacketDistributor.sendToServer(payload);
             } else {
                 this.holder.save();
             }

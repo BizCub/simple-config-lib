@@ -23,6 +23,7 @@ public class ForgeMain {
 
     @SubscribeEvent //~ if >=1.20.3 'ServerTickEvent' -> 'ServerTickEvent.Post'
     public static void onServerTick(TickEvent.ServerTickEvent.Post event) {
+        //~ if >=1.21.6 'getServer' -> 'server'
         TestModMain.onServerTick(event.server());
     }
 }*///?}
