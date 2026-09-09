@@ -1,11 +1,11 @@
 //? forge {
-/*package io.github.bizcub.simpleConfigLib.platform;
+/*package io.github.bizcub.simpleConfigLib.client.platform;
 
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 //? >=1.21.6 {
@@ -13,8 +13,7 @@ import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemPIPRenderer;
 import net.minecraftforge.client.event.RegisterPictureInPictureRendererEvent;
 //?}
 
-@Mod(SimpleConfigLibMain.MOD_ID)
-@EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID)
+@EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID, value = Dist.CLIENT)
 public class ForgeClient {
 
     @SubscribeEvent
