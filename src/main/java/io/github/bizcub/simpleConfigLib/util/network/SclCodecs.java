@@ -14,9 +14,21 @@ public final class SclCodecs {
         BY_TYPE.put(type, codec);
     }
 
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_BOXED = Map.of(
+            int.class, Integer.class,
+            boolean.class, Boolean.class,
+            long.class, Long.class,
+            float.class, Float.class,
+            double.class, Double.class,
+            byte.class, Byte.class,
+            short.class, Short.class,
+            char.class, Character.class
+    );
+
     @SuppressWarnings("unchecked")
     public static <T> SclStreamCodec<T> byType(Class<T> type) {
-        SclStreamCodec<T> codec = (SclStreamCodec<T>) BY_TYPE.get(type);
+        Class<?> lookupType = type.isPrimitive() ? PRIMITIVE_TO_BOXED.get(type) : type;
+        SclStreamCodec<T> codec = (SclStreamCodec<T>) BY_TYPE.get(lookupType);
         if (codec == null) {
             throw new IllegalArgumentException("No SclStreamCodec registered for type " + type.getName());
         }

@@ -20,6 +20,8 @@ import java.nio.file.Path;
 public class SimpleConfigLibMain {
     public static final String MOD_ID = /*$ mod_id*/ "simple_config_lib";
 
+    private static boolean payloadsRegistered = false;
+
     public static Path gameDir() {
         return
                 /*? fabric*/ FabricLoader.getInstance().getGameDir();
@@ -27,6 +29,9 @@ public class SimpleConfigLibMain {
     }
 
     public static void registerPayloads() {
+        if (payloadsRegistered) return;
+        payloadsRegistered = true;
+
         Network.registerServerbound(ConfigApplyPayload.class, SimpleConfigLibMain::handleApply);
         Network.registerClientbound(ConfigSyncPayload.class,
                 payload -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
