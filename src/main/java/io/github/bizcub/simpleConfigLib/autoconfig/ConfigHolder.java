@@ -1,7 +1,8 @@
 package io.github.bizcub.simpleConfigLib.autoconfig;
 
-import io.github.bizcub.simpleConfigLib.Main;
+import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -20,15 +21,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class ConfigHolder<T> {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Map<Class<?>, ConfigHolder<?>> REGISTRY = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, ConfigHolder<?>> REGISTRY = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .setExclusionStrategies(new ExclusionStrategy() {
@@ -81,12 +79,26 @@ public class ConfigHolder<T> {
     }
 
     private Path path() {
-        return Main.gameDir().resolve("config").resolve(this.meta.name() + ".json");
+        return SimpleConfigLibMain.gameDir().resolve("config").resolve(this.meta.name() + ".json");
     }
 
     @SuppressWarnings("unchecked")
     public static <T> ConfigHolder<T> register(final Class<T> type) {
         return (ConfigHolder<T>) REGISTRY.computeIfAbsent(type, ConfigHolder::new);
+    }
+
+    public static ConfigHolder<?> byName(final String name) {
+        for (ConfigHolder<?> holder : REGISTRY.values()) {
+            if (holder.meta.name().equals(name)) return holder;
+        }
+        return null;
+    }
+
+    public static void applyServerSnapshot(String name, String json) {
+        ConfigHolder<?> holder = byName(name);
+        if (holder != null && holder.getMeta().env() == Side.Env.SERVER) {
+            holder.applySnapshot(json);
+        }
     }
 
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
@@ -147,6 +159,17 @@ public class ConfigHolder<T> {
         }
     }
 
+    public static List<ConfigHolder<?>> registered() {
+        synchronized (REGISTRY) {
+            return new ArrayList<>(REGISTRY.values());
+        }
+    }
+
+    public Side.Env envOf(Field field) {
+        Side side = field.getAnnotation(Side.class);
+        return side != null ? side.value() : this.meta.env();
+    }
+
     private boolean sanitize(final T loaded, final T defaults) {
         boolean corrupted = false;
         for (Field f : this.type.getDeclaredFields()) {
@@ -167,6 +190,23 @@ public class ConfigHolder<T> {
             }
         }
         return corrupted;
+    }
+
+    public void applySnapshot(final String json) {
+        T loaded;
+        try {
+            loaded = GSON.fromJson(json, this.type);
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse config snapshot for {}", this.meta.name(), e);
+            return;
+        }
+        if (loaded == null) return;
+
+        T defaults = newDefault();
+        sanitize(loaded, defaults);
+
+        if (this.instance == null) this.instance = loaded;
+        else copyInto(loaded, this.instance);
     }
 
     private void backup() {

@@ -51,12 +51,37 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     private final List<Node> nodes = new ArrayList<>();
 
+    private boolean readOnly;
+
     public AutoConfigList(final Minecraft minecraft, final int width, final int height, final int y, final Screen screen) {
         super(minecraft, width, height, y, /*? <1.20.3 >>+ ','*/ /*y + height,*/ ROW_HEIGHT);
         this.screen = screen;
         this.font = minecraft.font;
         //? <1.20.2
         //this.setRenderTopAndBottom(false);
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+        for (Node n : this.nodes) {
+            applyReadOnly(n);
+        }
+        rebuild();
+    }
+
+    private void applyReadOnly(Node node) {
+        if (node instanceof WidgetNode w) {
+            w.widget.active = false;
+        } else if (node instanceof GroupNode g) {
+            for (Node c : g.children) applyReadOnly(c);
+        } else if (node instanceof ListNode l) {
+            l.model.editable = false;
+            for (Element e : l.model.elements) {
+                if (e instanceof ObjectElement oe) {
+                    for (Node c : oe.group.children) applyReadOnly(c);
+                }
+            }
+        }
     }
 
     @Override //$ render_asl >> ' graphics'
@@ -360,6 +385,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             this.node.widget.setPosition(widgetX, y);
             this.node.widget.setWidth(widgetW);
+            if (AutoConfigList.this.readOnly) {
+                this.node.widget.active = false;
+            }
             this.node.widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
             int labelWidth = AutoConfigList.this.font.width(this.node.label);
@@ -762,6 +790,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             this.widget.setPosition(boxX, y);
             this.widget.setWidth(boxW);
+            if (AutoConfigList.this.readOnly) {
+                this.widget.active = false;
+            }
             this.widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
             if (this.componentLabel != null) {

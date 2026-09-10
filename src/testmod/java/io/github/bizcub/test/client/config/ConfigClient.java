@@ -1,21 +1,16 @@
-package io.github.bizcub.test.config;
+package io.github.bizcub.test.client.config;
+
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public interface Config {
-    static Config get() {
-        return Holder.INSTANCE;
+public interface ConfigClient {
+    static ConfigClient get() {
+        return ConfigProvider.get(ConfigClient.class);
     }
-
-    static void set(final Config config) {
-        if (config != null) {
-            Holder.INSTANCE = config;
-        }
-    }
-
-    class Holder {
-        private static Config INSTANCE = new Config() { };
+    static void set(ConfigClient instance) {
+        ConfigProvider.set(ConfigClient.class, instance);
     }
 
     default boolean enableOptimizations() {
