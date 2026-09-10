@@ -97,16 +97,16 @@ public final class PayloadRegistryForge {
 
             for (Clientbound<?> reg : clientbound) {
                 Clientbound<SclPayload> r = (Clientbound<SclPayload>) reg;
-                mb = mb.messageBuilder((Class<SclPayload>) r.type(), NetworkDirection.PLAY_TO_CLIENT)
-                        .encoder((payload, buf) -> PayloadRegistry.write(payload, buf))
+                mb = mb.messageBuilder(r.type(), NetworkDirection.PLAY_TO_CLIENT)
+                        .encoder(PayloadRegistry::write)
                         .decoder(buf -> PayloadRegistry.read(r.type(), buf))
                         .consumerMainThread((payload, ctx) -> r.handler().accept(payload))
                         .add();
             }
             for (Serverbound<?> reg : serverbound) {
                 Serverbound<SclPayload> r = (Serverbound<SclPayload>) reg;
-                mb = mb.messageBuilder((Class<SclPayload>) r.type(), NetworkDirection.PLAY_TO_SERVER)
-                        .encoder((payload, buf) -> PayloadRegistry.write(payload, buf))
+                mb = mb.messageBuilder(r.type(), NetworkDirection.PLAY_TO_SERVER)
+                        .encoder(PayloadRegistry::write)
                         .decoder(buf -> PayloadRegistry.read(r.type(), buf))
                         .consumerMainThread((payload, ctx) -> {
                             ServerPlayer player = ctx.getSender();
@@ -115,7 +115,7 @@ public final class PayloadRegistryForge {
                         })
                         .add();
             }
-            return mb.build();
+            return mb;
         }
         ^///?} else {
         /^private static final String PROTO = "1";
@@ -129,16 +129,16 @@ public final class PayloadRegistryForge {
             int id = 0;
             for (Clientbound<?> reg : clientbound) {
                 Clientbound<SclPayload> r = (Clientbound<SclPayload>) reg;
-                channel.registerMessage(id++, (Class<SclPayload>) r.type(),
-                        (payload, buf) -> PayloadRegistry.write(payload, buf),
+                channel.registerMessage(id++, r.type(),
+                        PayloadRegistry::write,
                         buf -> PayloadRegistry.read(r.type(), buf),
                         (payload, ctx) -> r.handler().accept(payload),
                         Optional.of(NetworkDirection.PLAY_TO_CLIENT));
             }
             for (Serverbound<?> reg : serverbound) {
                 Serverbound<SclPayload> r = (Serverbound<SclPayload>) reg;
-                channel.registerMessage(id++, (Class<SclPayload>) r.type(),
-                        (payload, buf) -> PayloadRegistry.write(payload, buf),
+                channel.registerMessage(id++, r.type(),
+                        PayloadRegistry::write,
                         buf -> PayloadRegistry.read(r.type(), buf),
                         (payload, ctx) -> {
                             ServerPlayer player = ctx.get().getSender();

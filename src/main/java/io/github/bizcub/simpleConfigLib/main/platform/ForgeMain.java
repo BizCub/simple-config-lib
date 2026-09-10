@@ -15,8 +15,10 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 //? >=1.20.5 {
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraftforge.network.Channel;
-//?} else {
+//?} >=1.20.2 {
 /^import net.minecraftforge.network.SimpleChannel;
+^///?} else {
+/^import net.minecraftforge.network.simple.SimpleChannel;
 ^///?}
 
 @Mod(SimpleConfigLibMain.MOD_ID)

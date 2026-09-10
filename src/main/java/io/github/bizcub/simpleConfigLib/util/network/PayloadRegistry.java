@@ -1,6 +1,12 @@
 package io.github.bizcub.simpleConfigLib.util.network;
 
+import io.netty.buffer.Unpooled;
 import net.minecraft.resources.Identifier;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.RecordComponent;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 //? >=1.20.5 {
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -8,11 +14,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 //?} else
 //import net.minecraft.network.FriendlyByteBuf;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.RecordComponent;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class PayloadRegistry {
     private static final Map<Class<?>, Identifier> ID_CACHE = new ConcurrentHashMap<>();
@@ -94,6 +95,12 @@ public final class PayloadRegistry {
             args[i] = SclCodecs.byType(comps[i].getType()).read(buf);
         }
         return construct(type, comps, args);
+    }
+
+    public static FriendlyByteBuf toBuffer(Object payload) {
+        FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+        write(payload, buffer);
+        return buffer;
     }*///?}
 
     private static <T> T construct(Class<T> type, RecordComponent[] comps, Object[] args) {

@@ -4,6 +4,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
+import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistry;
 import net.minecraft.server.level.ServerPlayer;
 /*? >=1.21.11*/ import net.minecraft.server.permissions.Permissions;
 
@@ -59,7 +60,7 @@ public class SimpleConfigLibMain {
     }
 
     public static void sendPayloadS2C(ServerPlayer player, ConfigSyncPayload payload) {
-        /*? fabric*/ ServerPlayNetworking.send(player, /*? <1.20.5 {*/ /*ConfigSyncPayload.ID, payload.toBuffer() *//*?} else >> ')'*/ payload);
+        /*? fabric*/ ServerPlayNetworking.send(player, /*? <1.20.5 {*/ /*ConfigApplyPayload.ID, PayloadRegistry.toBuffer(payload) *//*?} else >> ')'*/ payload);
         /*? forge && >=1.20.2*/ //CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
         /*? forge && 1.20.1*/ //CHANNEL.sendTo(payload, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
         /*? neoforge*/ //PacketDistributor.sendToPlayer(player, payload);

@@ -15,6 +15,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ObjectElem
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -127,7 +128,7 @@ public class AutoConfigScreen extends Screen {
 
             if (this.viewEnv == Side.Env.SERVER && !this.readOnly) {
                 ConfigApplyPayload payload = new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot());
-                /*? fabric*/ ClientPlayNetworking.send(/*? <1.20.5 {*/ /*ConfigApplyPayload.ID, payload.toBuffer() *//*?} else >> ')'*/ payload);
+                /*? fabric*/ ClientPlayNetworking.send(/*? <1.20.5 {*/ /*ConfigApplyPayload.ID, PayloadRegistry.toBuffer(payload) *//*?} else >> ')'*/ payload);
                 /*? forge && >=1.20.2*/ //CHANNEL.send(payload, Minecraft.getInstance().getConnection().getConnection());
                 /*? forge && 1.20.1*/ //CHANNEL.sendToServer(payload);
                 //~ if >=1.21.7 'PacketDistributor' -> 'ClientPacketDistributor'
