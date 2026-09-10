@@ -24,6 +24,6 @@ public class NeoForgeClient {
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
-        TestModClient.setTestScreen();
+        TestModClient.onClientTick();
     }
 }*///?}

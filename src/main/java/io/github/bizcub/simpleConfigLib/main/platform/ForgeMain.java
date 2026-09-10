@@ -2,10 +2,9 @@
 /*package io.github.bizcub.simpleConfigLib.main.platform;
 
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
+import io.github.bizcub.simpleConfigLib.util.network.Network;
 import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistryForge;
+import io.github.bizcub.simpleConfigLib.util.network.SclPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
@@ -17,25 +16,36 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraftforge.network.Channel;
 //?} >=1.20.2 {
 /^import net.minecraftforge.network.SimpleChannel;
-^///?} else {
-/^import net.minecraftforge.network.simple.SimpleChannel;
-^///?}
+^///?} else
+//import net.minecraftforge.network.simple.SimpleChannel;
 
 @Mod(SimpleConfigLibMain.MOD_ID)
 @EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID)
 public class ForgeMain {
 
     //? >=1.20.5 {
-    public static final Channel<CustomPacketPayload> CHANNEL =
-    //?} else {
-    /^public static final SimpleChannel CHANNEL =
-    ^///?}
-            PayloadRegistryForge.builder("config")
-                    .clientbound(ConfigSyncPayload.class,
-                            payload -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()))
-                    .serverbound(ConfigApplyPayload.class,
-                            SimpleConfigLibMain::handleApply)
-                    .build();
+    public static final Channel<CustomPacketPayload> CHANNEL = buildChannel();
+    //?} else
+    //public static final SimpleChannel CHANNEL = buildChannel();
+
+    @SuppressWarnings("unchecked")
+    private static /^? >=1.20.5 {^/ Channel<CustomPacketPayload> /^?} else >> ^//^SimpleChannel^/ buildChannel() {
+    SimpleConfigLibMain.registerPayloads();
+
+    PayloadRegistryForge.Builder builder = PayloadRegistryForge.builder("config");
+
+        for (Network.Serverbound<?> entry : Network.serverbound()) {
+            Network.Serverbound<SclPayload> serverboundEntry = (Network.Serverbound<SclPayload>) entry;
+            builder.serverbound(serverboundEntry.type(), serverboundEntry.handler());
+        }
+
+    for (Network.Clientbound<?> entry : Network.clientbound()) {
+        Network.Clientbound<SclPayload> clientboundEntry = (Network.Clientbound<SclPayload>) entry;
+        builder.clientbound(clientboundEntry.type(), clientboundEntry.handler());
+    }
+
+    return builder.build();
+}
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {

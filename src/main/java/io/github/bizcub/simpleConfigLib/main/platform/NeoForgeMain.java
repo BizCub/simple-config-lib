@@ -2,10 +2,9 @@
 /*package io.github.bizcub.simpleConfigLib.main.platform;
 
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
+import io.github.bizcub.simpleConfigLib.util.network.Network;
 import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistryNeoForge;
+import io.github.bizcub.simpleConfigLib.util.network.SclPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -19,18 +18,21 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 public class NeoForgeMain {
 
     @SubscribeEvent
+    @SuppressWarnings("unchecked")
     public static void register(RegisterPayloadHandlersEvent event) {
+        SimpleConfigLibMain.registerPayloads();
+
         PayloadRegistrar registrar = event.registrar("1");
 
-        PayloadRegistryNeoForge.registerServerbound(
-                registrar,
-                ConfigApplyPayload.class,
-                (SimpleConfigLibMain::handleApply));
+        for (Network.Serverbound<?> entry : Network.serverbound()) {
+            Network.Serverbound<SclPayload> serverboundEntry = (Network.Serverbound<SclPayload>) entry;
+            PayloadRegistryNeoForge.registerServerbound(registrar, serverboundEntry.type(), serverboundEntry.handler());
+        }
 
-        PayloadRegistryNeoForge.registerClientbound(
-                registrar,
-                ConfigSyncPayload.class,
-                payload -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
+        for (Network.Clientbound<?> entry : Network.clientbound()) {
+            Network.Clientbound<SclPayload> clientboundEntry = (Network.Clientbound<SclPayload>) entry;
+            PayloadRegistryNeoForge.registerClientbound(registrar, clientboundEntry.type(), clientboundEntry.handler());
+        }
     }
 
     @SubscribeEvent

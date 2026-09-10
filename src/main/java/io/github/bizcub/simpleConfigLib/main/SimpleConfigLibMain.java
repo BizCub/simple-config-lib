@@ -4,22 +4,16 @@ import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistry;
+import io.github.bizcub.simpleConfigLib.util.network.Network;
 import net.minecraft.server.level.ServerPlayer;
 /*? >=1.21.11*/ import net.minecraft.server.permissions.Permissions;
 
 //? fabric {
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 //?} forge {
 /*import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.PacketDistributor;
-import static io.github.bizcub.simpleConfigLib.main.platform.ForgeMain.CHANNEL;
-*///?} neoforge {
-/*import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.network.PacketDistributor;
-*///?}
+*///?} neoforge
+//import net.neoforged.fml.loading.FMLPaths;
 
 import java.nio.file.Path;
 
@@ -30,6 +24,12 @@ public class SimpleConfigLibMain {
         return
                 /*? fabric*/ FabricLoader.getInstance().getGameDir();
                 /*? forge || neoforge*/ //FMLPaths.GAMEDIR.get();
+    }
+
+    public static void registerPayloads() {
+        Network.registerServerbound(ConfigApplyPayload.class, SimpleConfigLibMain::handleApply);
+        Network.registerClientbound(ConfigSyncPayload.class,
+                payload -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
     }
 
     public static void handleApply(ConfigApplyPayload payload, ServerPlayer player) {
@@ -45,24 +45,16 @@ public class SimpleConfigLibMain {
         holder.applySnapshot(payload.json());
         holder.save();
 
-        ConfigSyncPayload sync = new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot());
         for (ServerPlayer p : player.level().getServer().getPlayerList().getPlayers()) {
-            sendPayloadS2C(p, sync);
+            Network.sendToPlayer(p, new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot()));
         }
     }
 
     public static void onPlayerJoin(ServerPlayer player) {
         for (ConfigHolder<?> holder : ConfigHolder.registered()) {
             if (holder.getMeta().env() == Side.Env.SERVER) {
-                sendPayloadS2C(player, new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot()));
+                Network.sendToPlayer(player, new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot()));
             }
         }
-    }
-
-    public static void sendPayloadS2C(ServerPlayer player, ConfigSyncPayload payload) {
-        /*? fabric*/ ServerPlayNetworking.send(player, /*? <1.20.5 {*/ /*ConfigApplyPayload.ID, PayloadRegistry.toBuffer(payload) *//*?} else >> ')'*/ payload);
-        /*? forge && >=1.20.2*/ //CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
-        /*? forge && 1.20.1*/ //CHANNEL.sendTo(payload, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
-        /*? neoforge*/ //PacketDistributor.sendToPlayer(player, payload);
     }
 }

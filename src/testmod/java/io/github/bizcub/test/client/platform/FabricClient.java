@@ -13,7 +13,7 @@ public class FabricClient implements ClientModInitializer {
     public void onInitializeClient() {
         TestModClient.init();
 
-        ClientTickEvents.END_CLIENT_TICK.register(minecraft -> TestModClient.setTestScreen());
+        ClientTickEvents.END_CLIENT_TICK.register(minecraft -> TestModClient.onClientTick());
     }
 
     public static class ModMenu implements ModMenuApi {
