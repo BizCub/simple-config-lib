@@ -31,7 +31,7 @@ public final class SclCodecs {
                 //? >=1.20.5 {
                 SclStreamCodec.of(ItemStack.OPTIONAL_STREAM_CODEC::encode, ItemStack.OPTIONAL_STREAM_CODEC::decode)
                 //?} else
-                //SclStreamCodec.of((buf, v) -> buf.writeItem(v), buf -> buf.readItem())
+                //SclStreamCodec.of((buffer, value) -> buffer.writeItem(value), buffer -> buffer.readItem())
         );
     }
 }

@@ -24,12 +24,12 @@ public final class PayloadRegistry {
     //?}
 
     public static Identifier idOf(Class<?> type) {
-        return ID_CACHE.computeIfAbsent(type, t -> {
+        return ID_CACHE.computeIfAbsent(type, payloadClass -> {
             try {
-                return (Identifier) t.getField("ID").get(null);
+                return (Identifier) payloadClass.getField("ID").get(null);
             } catch (ReflectiveOperationException e) {
                 throw new IllegalStateException(
-                        "Payload " + t.getName() + " must declare public static final Identifier ID", e);
+                        "Payload " + payloadClass.getName() + " must declare public static final Identifier ID", e);
             }
         });
     }
@@ -43,58 +43,58 @@ public final class PayloadRegistry {
 
     @SuppressWarnings("unchecked")
     public static <T> StreamCodec<RegistryFriendlyByteBuf, T> codecOf(Class<T> type) {
-        return (StreamCodec<RegistryFriendlyByteBuf, T>) CODEC_CACHE.computeIfAbsent(type, t -> {
-            RecordComponent[] comps = t.getRecordComponents();
+        return (StreamCodec<RegistryFriendlyByteBuf, T>) CODEC_CACHE.computeIfAbsent(type, payloadClass -> {
+            RecordComponent[] components = payloadClass.getRecordComponents();
             return new StreamCodec<RegistryFriendlyByteBuf, T>() {
                 @Override
-                public T decode(RegistryFriendlyByteBuf buf) {
-                    Object[] args = new Object[comps.length];
-                    for (int i = 0; i < comps.length; i++) {
-                        args[i] = SclCodecs.byType(comps[i].getType()).read(buf);
+                public T decode(RegistryFriendlyByteBuf buffer) {
+                    Object[] args = new Object[components.length];
+                    for (int i = 0; i < components.length; i++) {
+                        args[i] = SclCodecs.byType(components[i].getType()).read(buffer);
                     }
-                    return construct(type, comps, args);
+                    return construct(type, components, args);
                 }
 
                 @Override
-                public void encode(RegistryFriendlyByteBuf buf, T value) {
-                    writeComponents(comps, value, buf);
+                public void encode(RegistryFriendlyByteBuf buffer, T value) {
+                    writeComponents(components, value, buffer);
                 }
             };
         });
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> void writeComponents(RecordComponent[] comps, T value, RegistryFriendlyByteBuf buf) {
-        for (RecordComponent comp : comps) {
+    private static <T> void writeComponents(RecordComponent[] components, T value, RegistryFriendlyByteBuf buffer) {
+        for (RecordComponent component : components) {
             try {
-                Object field = comp.getAccessor().invoke(value);
-                ((SclStreamCodec<Object>) SclCodecs.byType(comp.getType())).write(buf, field);
+                Object field = component.getAccessor().invoke(value);
+                ((SclStreamCodec<Object>) SclCodecs.byType(component.getType())).write(buffer, field);
             } catch (ReflectiveOperationException e) {
-                throw new RuntimeException("Serialization error " + comp.getName(), e);
+                throw new RuntimeException("Serialization error " + component.getName(), e);
             }
         }
     }
 
     //?} else {
     /*@SuppressWarnings("unchecked")
-    public static void write(Object payload, FriendlyByteBuf buf) {
-        for (RecordComponent comp : payload.getClass().getRecordComponents()) {
+    public static void write(Object payload, FriendlyByteBuf buffer) {
+        for (RecordComponent component : payload.getClass().getRecordComponents()) {
             try {
-                Object field = comp.getAccessor().invoke(payload);
-                ((SclStreamCodec<Object>) SclCodecs.byType(comp.getType())).write(buf, field);
+                Object field = component.getAccessor().invoke(payload);
+                ((SclStreamCodec<Object>) SclCodecs.byType(component.getType())).write(buffer, field);
             } catch (ReflectiveOperationException e) {
-                throw new RuntimeException("Serialization error " + comp.getName(), e);
+                throw new RuntimeException("Serialization error " + component.getName(), e);
             }
         }
     }
 
-    public static <T> T read(Class<T> type, FriendlyByteBuf buf) {
-        RecordComponent[] comps = type.getRecordComponents();
-        Object[] args = new Object[comps.length];
-        for (int i = 0; i < comps.length; i++) {
-            args[i] = SclCodecs.byType(comps[i].getType()).read(buf);
+    public static <T> T read(Class<T> type, FriendlyByteBuf buffer) {
+        RecordComponent[] components = type.getRecordComponents();
+        Object[] args = new Object[components.length];
+        for (int i = 0; i < components.length; i++) {
+            args[i] = SclCodecs.byType(components[i].getType()).read(buffer);
         }
-        return construct(type, comps, args);
+        return construct(type, components, args);
     }
 
     public static FriendlyByteBuf toBuffer(Object payload) {
@@ -103,13 +103,13 @@ public final class PayloadRegistry {
         return buffer;
     }*///?}
 
-    private static <T> T construct(Class<T> type, RecordComponent[] comps, Object[] args) {
+    private static <T> T construct(Class<T> type, RecordComponent[] components, Object[] args) {
         try {
-            Class<?>[] paramTypes = new Class<?>[comps.length];
-            for (int i = 0; i < comps.length; i++) paramTypes[i] = comps[i].getType();
-            Constructor<T> ctor = type.getDeclaredConstructor(paramTypes);
-            ctor.setAccessible(true);
-            return ctor.newInstance(args);
+            Class<?>[] paramTypes = new Class<?>[components.length];
+            for (int i = 0; i < components.length; i++) paramTypes[i] = components[i].getType();
+            Constructor<T> constructor = type.getDeclaredConstructor(paramTypes);
+            constructor.setAccessible(true);
+            return constructor.newInstance(args);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to create " + type.getName(), e);
         }
@@ -117,8 +117,8 @@ public final class PayloadRegistry {
 
     public static void validate(Class<?> type) {
         idOf(type);
-        for (RecordComponent comp : type.getRecordComponents()) {
-            SclCodecs.byType(comp.getType());
+        for (RecordComponent component : type.getRecordComponents()) {
+            SclCodecs.byType(component.getType());
         }
     }
 }

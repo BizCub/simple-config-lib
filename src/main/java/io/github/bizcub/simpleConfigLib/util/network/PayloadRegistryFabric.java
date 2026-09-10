@@ -1,4 +1,4 @@
-//? fabric {  
+//? fabric {
 package io.github.bizcub.simpleConfigLib.util.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -35,9 +35,9 @@ public final class PayloadRegistryFabric {
         });
 
         //?} else {
-        /*ServerPlayNetworking.registerGlobalReceiver(id, (server, player, listener, buf, sender) -> {  
-            T payload = PayloadRegistry.read(type, buf);
-            server.execute(() -> handler.accept(payload, player));  
+        /*ServerPlayNetworking.registerGlobalReceiver(id, (server, player, listener, buffer, sender) -> {
+            T payload = PayloadRegistry.read(type, buffer);
+            server.execute(() -> handler.accept(payload, player));
         });*///?}
     }
 

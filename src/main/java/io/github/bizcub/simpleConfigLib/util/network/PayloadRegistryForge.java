@@ -36,7 +36,9 @@ public final class PayloadRegistryForge {
         private final List<Serverbound<?>> serverbound = new ArrayList<>();
         private final List<Clientbound<?>> clientbound = new ArrayList<>();
 
-        private Builder(String channelPath) { this.channelPath = channelPath; }
+        private Builder(String channelPath) {
+            this.channelPath = channelPath;
+        }
 
         public <T extends SclPayload> Builder serverbound(Class<T> type, BiConsumer<T, ServerPlayer> handler) {
             serverbound.add(new Serverbound<>(type, handler));
@@ -58,64 +60,64 @@ public final class PayloadRegistryForge {
                     .payloadChannel()
                     .play();
 
-            var cb = play.clientbound();
-            for (Clientbound<?> reg : clientbound) {
-                Clientbound<SclPayload> r = (Clientbound<SclPayload>) reg;
-                cb = cb.add(
-                        PayloadRegistry.typeOf(r.type()),
-                        PayloadRegistry.codecOf(r.type()),
+            var clientboundBuilder = play.clientbound();
+            for (Clientbound<?> registration : clientbound) {
+                Clientbound<SclPayload> typedRegistration = (Clientbound<SclPayload>) registration;
+                clientboundBuilder = clientboundBuilder.add(
+                        PayloadRegistry.typeOf(typedRegistration.type()),
+                        PayloadRegistry.codecOf(typedRegistration.type()),
                         (payload, ctx) -> {
-                            ctx.enqueueWork(() -> r.handler().accept(payload));
+                            ctx.enqueueWork(() -> typedRegistration.handler().accept(payload));
                             ctx.setPacketHandled(true);
                         });
             }
 
-            var sb = cb.serverbound();
-            for (Serverbound<?> reg : serverbound) {
-                Serverbound<SclPayload> r = (Serverbound<SclPayload>) reg;
-                sb = sb.add(
-                        PayloadRegistry.typeOf(r.type()),
-                        PayloadRegistry.codecOf(r.type()),
+            var serverboundBuilder = clientboundBuilder.serverbound();
+            for (Serverbound<?> registration : serverbound) {
+                Serverbound<SclPayload> typedRegistration = (Serverbound<SclPayload>) registration;
+                serverboundBuilder = serverboundBuilder.add(
+                        PayloadRegistry.typeOf(typedRegistration.type()),
+                        PayloadRegistry.codecOf(typedRegistration.type()),
                         (payload, ctx) -> {
                             ctx.enqueueWork(() -> {
                                 if (!(ctx.getSender() instanceof ServerPlayer player)) return;
-                                r.handler().accept(payload, player);
+                                typedRegistration.handler().accept(payload, player);
                             });
                             ctx.setPacketHandled(true);
                         });
             }
-            return sb.build();
+            return serverboundBuilder.build();
         }
         //?} >=1.20.2 {
         /^@SuppressWarnings("unchecked")
         public SimpleChannel build() {
-            var mb = ChannelBuilder
+            var messageBuilder = ChannelBuilder
                     .named(Id.withDefaultNamespace(channelPath))
                     .networkProtocolVersion(1)
                     .acceptedVersions((status, ver) -> true)
                     .simpleChannel();
 
-            for (Clientbound<?> reg : clientbound) {
-                Clientbound<SclPayload> r = (Clientbound<SclPayload>) reg;
-                mb = mb.messageBuilder(r.type(), NetworkDirection.PLAY_TO_CLIENT)
+            for (Clientbound<?> registration : clientbound) {
+                Clientbound<SclPayload> typedRegistration = (Clientbound<SclPayload>) registration;
+                messageBuilder = messageBuilder.messageBuilder(typedRegistration.type(), NetworkDirection.PLAY_TO_CLIENT)
                         .encoder(PayloadRegistry::write)
-                        .decoder(buf -> PayloadRegistry.read(r.type(), buf))
-                        .consumerMainThread((payload, ctx) -> r.handler().accept(payload))
+                        .decoder(buffer -> PayloadRegistry.read(typedRegistration.type(), buffer))
+                        .consumerMainThread((payload, ctx) -> typedRegistration.handler().accept(payload))
                         .add();
             }
-            for (Serverbound<?> reg : serverbound) {
-                Serverbound<SclPayload> r = (Serverbound<SclPayload>) reg;
-                mb = mb.messageBuilder(r.type(), NetworkDirection.PLAY_TO_SERVER)
+            for (Serverbound<?> registration : serverbound) {
+                Serverbound<SclPayload> typedRegistration = (Serverbound<SclPayload>) registration;
+                messageBuilder = messageBuilder.messageBuilder(typedRegistration.type(), NetworkDirection.PLAY_TO_SERVER)
                         .encoder(PayloadRegistry::write)
-                        .decoder(buf -> PayloadRegistry.read(r.type(), buf))
+                        .decoder(buffer -> PayloadRegistry.read(typedRegistration.type(), buffer))
                         .consumerMainThread((payload, ctx) -> {
                             ServerPlayer player = ctx.getSender();
                             if (player == null) return;
-                            r.handler().accept(payload, player);
+                            typedRegistration.handler().accept(payload, player);
                         })
                         .add();
             }
-            return mb;
+            return messageBuilder;
         }
         ^///?} else {
         /^private static final String PROTO = "1";
@@ -127,23 +129,23 @@ public final class PayloadRegistryForge {
                     () -> PROTO, PROTO::equals, PROTO::equals);
 
             int id = 0;
-            for (Clientbound<?> reg : clientbound) {
-                Clientbound<SclPayload> r = (Clientbound<SclPayload>) reg;
-                channel.registerMessage(id++, r.type(),
+            for (Clientbound<?> registration : clientbound) {
+                Clientbound<SclPayload> typedRegistration = (Clientbound<SclPayload>) registration;
+                channel.registerMessage(id++, typedRegistration.type(),
                         PayloadRegistry::write,
-                        buf -> PayloadRegistry.read(r.type(), buf),
-                        (payload, ctx) -> r.handler().accept(payload),
+                        buffer -> PayloadRegistry.read(typedRegistration.type(), buffer),
+                        (payload, ctx) -> typedRegistration.handler().accept(payload),
                         Optional.of(NetworkDirection.PLAY_TO_CLIENT));
             }
-            for (Serverbound<?> reg : serverbound) {
-                Serverbound<SclPayload> r = (Serverbound<SclPayload>) reg;
-                channel.registerMessage(id++, r.type(),
+            for (Serverbound<?> registration : serverbound) {
+                Serverbound<SclPayload> typedRegistration = (Serverbound<SclPayload>) registration;
+                channel.registerMessage(id++, typedRegistration.type(),
                         PayloadRegistry::write,
-                        buf -> PayloadRegistry.read(r.type(), buf),
+                        buffer -> PayloadRegistry.read(typedRegistration.type(), buffer),
                         (payload, ctx) -> {
                             ServerPlayer player = ctx.get().getSender();
                             if (player == null) return;
-                            r.handler().accept(payload, player);
+                            typedRegistration.handler().accept(payload, player);
                         },
                         Optional.of(NetworkDirection.PLAY_TO_SERVER));
             }

@@ -6,7 +6,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 public interface SclPayload extends CustomPacketPayload {
 
     @Override
-    @SuppressWarnings("unchecked")
     default CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
         return PayloadRegistry.typeOf(getClass());
     }
