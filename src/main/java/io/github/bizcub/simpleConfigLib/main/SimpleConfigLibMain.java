@@ -31,7 +31,7 @@ public class SimpleConfigLibMain {
                 /*? forge || neoforge*/ //FMLPaths.GAMEDIR.get();
     }
 
-    public static void handleApply(ServerPlayer player, ConfigApplyPayload payload) {
+    public static void handleApply(ConfigApplyPayload payload, ServerPlayer player) {
         //? >=1.21.11 {
         boolean allowed = player.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
         //?} else
