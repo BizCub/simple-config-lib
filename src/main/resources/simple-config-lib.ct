@@ -1,8 +1,9 @@
-classTweaker v1 official
+classTweaker v2 official
 #? >=1.21.6 {
 accessible method net/minecraft/client/gui/screens/Screen defaultHandleClickEvent (Lnet/minecraft/network/chat/ClickEvent;Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/Screen;)V
 accessible field net/minecraft/client/gui/GuiGraphicsExtractor guiRenderState Lnet/minecraft/client/renderer/state/gui/GuiRenderState;
-accessible field net/minecraft/client/gui/render/pip/PictureInPictureRenderer textureView Lcom/mojang/blaze3d/textures/GpuTextureView;
+#~ if >=26.3 'blaze3d' -> 'renderpearl/api'
+accessible field net/minecraft/client/gui/render/pip/PictureInPictureRenderer textureView Lcom/mojang/renderpearl/api/textures/GpuTextureView;
 #?}
 
 #? >=1.21.9

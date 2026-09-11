@@ -3,8 +3,13 @@ package io.github.bizcub.simpleConfigLib.util.widget;
 
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+//? if >=26.3 {
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+//?} else {
+/*import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTextureView;
+*///?}
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -47,11 +52,14 @@ public class ScaledItemPIPRenderer extends PictureInPictureRenderer<ScaledItemRe
             Minecraft.getInstance().gameRenderer.lighting().setupFor(Lighting.Entry.ITEMS_FLAT);
         }//~}
 
-        //? >=26.2 {
+        //? >=26.3 {
         itemState.submit(poseStack, submitNodeCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
+
+        //?} >=26.2 {
+        /*itemState.submit(poseStack, submitNodeCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
         Minecraft.getInstance().gameRenderer.featureRenderDispatcher().renderAllFeatures(new SubmitNodeStorage());
 
-        //?} >=1.21.9 {
+        *///?} >=1.21.9 {
         /*SubmitNodeCollector submitNodeCollector = Minecraft.getInstance().gameRenderer.getSubmitNodeStorage();
         FeatureRenderDispatcher featureRenderDispatcher = Minecraft.getInstance().gameRenderer.getFeatureRenderDispatcher();
 
