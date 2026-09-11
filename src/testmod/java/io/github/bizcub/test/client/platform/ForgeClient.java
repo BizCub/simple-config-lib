@@ -20,7 +20,7 @@ public class ForgeClient {
                 new ConfigScreenHandler.ConfigScreenFactory((minecraft, parent) -> TestModClient.getConfigScreen(parent)));
     }
 
-    @SubscribeEvent //~ if <=1.20.2 'ClientTickEvent.Post' -> 'ClientTickEvent'
+    @SubscribeEvent //~ if >=1.20.4 'ClientTickEvent' -> 'ClientTickEvent.Post'
     public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
         TestModClient.onClientTick();
     }
