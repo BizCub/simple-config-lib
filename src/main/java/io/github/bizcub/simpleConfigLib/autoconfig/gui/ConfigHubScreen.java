@@ -52,10 +52,16 @@ public class ConfigHubScreen extends Screen {
         grid.visitWidgets(this::addRenderableWidget);
     }
 
-    //? <1.20.2 {
+    //? >=1.20.2 && <=1.20.4 {
+    /*@Override
+    public void renderBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.renderDirtBackground(guiGraphics);
+    }
+
+    *///?} 1.20.1 {
     /*@Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderDirtBackground(guiGraphics);
         super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
     }*///?}
 

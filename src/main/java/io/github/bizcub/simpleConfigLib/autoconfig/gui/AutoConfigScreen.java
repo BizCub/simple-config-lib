@@ -15,6 +15,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ObjectElem
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import io.github.bizcub.simpleConfigLib.util.network.NetworkClient;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -34,16 +35,6 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-
-//? fabric
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-
-//? forge
-//import static io.github.bizcub.simpleConfigLib.main.platform.ForgeMain.CHANNEL;
-
-//? neoforge {
-/*/^? >=1.21.7^/ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-import net.neoforged.neoforge.network.PacketDistributor;*///?}
 
 //? >=1.21.9 {
 import net.minecraft.client.input.KeyEvent;
@@ -126,12 +117,7 @@ public class AutoConfigScreen extends Screen {
             this.applyActions.forEach(Runnable::run);
 
             if (this.viewEnv == Side.Env.SERVER && !this.readOnly) {
-                ConfigApplyPayload payload = new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot());
-                /*? fabric*/ ClientPlayNetworking.send(/*? <1.20.5 {*/ /*ConfigApplyPayload.ID, payload.toBuffer() *//*?} else >> ')'*/ payload);
-                /*? forge && >=1.20.2*/ //CHANNEL.send(payload, Minecraft.getInstance().getConnection().getConnection());
-                /*? forge && 1.20.1*/ //CHANNEL.sendToServer(payload);
-                //~ if >=1.21.7 'PacketDistributor' -> 'ClientPacketDistributor'
-                /*? neoforge*/ //ClientPacketDistributor.sendToServer(payload);
+                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
             } else {
                 this.holder.save();
             }
@@ -259,9 +245,7 @@ public class AutoConfigScreen extends Screen {
     /^@Override
     public void renderBackground(GuiGraphicsExtractor guiGraphics) {
         super.renderBackground(guiGraphics);^///?}
-        guiGraphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-        guiGraphics.blit(Screen.BACKGROUND_LOCATION, 0, 0, 0, 0.0F, 0.0F, this.width, this.height, 32, 32);
-        guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        this.renderDirtBackground(guiGraphics);
     }*///?}
 
     @Override

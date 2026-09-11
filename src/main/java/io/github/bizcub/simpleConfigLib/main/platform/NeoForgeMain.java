@@ -2,9 +2,9 @@
 /*package io.github.bizcub.simpleConfigLib.main.platform;
 
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
+import io.github.bizcub.simpleConfigLib.util.network.Network;
+import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistryNeoForge;
+import io.github.bizcub.simpleConfigLib.util.network.SclPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -12,36 +12,27 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 @Mod(SimpleConfigLibMain.MOD_ID)
 @EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID)
 public class NeoForgeMain {
 
     @SubscribeEvent
+    @SuppressWarnings("unchecked")
     public static void register(RegisterPayloadHandlersEvent event) {
+        SimpleConfigLibMain.registerPayloads();
+
         PayloadRegistrar registrar = event.registrar("1");
 
-        registrar.playToServer(
-                ConfigApplyPayload.TYPE,
-                ConfigApplyPayload.CODEC,
-                NeoForgeMain::handleApply);
+        for (Network.Serverbound<?> entry : Network.serverbound()) {
+            Network.Serverbound<SclPayload> serverboundEntry = (Network.Serverbound<SclPayload>) entry;
+            PayloadRegistryNeoForge.registerServerbound(registrar, serverboundEntry.type(), serverboundEntry.handler());
+        }
 
-        registrar.playToClient(
-                ConfigSyncPayload.TYPE,
-                ConfigSyncPayload.CODEC,
-                NeoForgeMain::handleSync);
-    }
-
-    private static void handleApply(ConfigApplyPayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (!(context.player() instanceof ServerPlayer player)) return;
-            SimpleConfigLibMain.handleApply(player, payload);
-        });
-    }
-
-    private static void handleSync(ConfigSyncPayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
+        for (Network.Clientbound<?> entry : Network.clientbound()) {
+            Network.Clientbound<SclPayload> clientboundEntry = (Network.Clientbound<SclPayload>) entry;
+            PayloadRegistryNeoForge.registerClientbound(registrar, clientboundEntry.type(), clientboundEntry.handler());
+        }
     }
 
     @SubscribeEvent

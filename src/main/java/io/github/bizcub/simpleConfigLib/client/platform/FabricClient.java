@@ -4,8 +4,8 @@ package io.github.bizcub.simpleConfigLib.client.platform;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
+import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistryFabricClient;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 //? >=1.21.6 {
 import io.github.bizcub.simpleConfigLib.util.widget.ScaledItemPIPRenderer;
@@ -22,14 +22,9 @@ public class FabricClient implements ClientModInitializer {
         PictureInPictureRendererRegistry.register(ctx ->
                 new ScaledItemPIPRenderer(/*? <26.2 >>+ ')'*/ /*ctx.bufferSource()*/));//?}
 
-        //? >=1.20.5 {
-        ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPayload.TYPE, (payload, context) ->
-                context.client().execute(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json())));
-
-        //?} else {
-        /*ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPayload.ID, (client, listener, buf, sender) -> {
-            ConfigSyncPayload payload = ConfigSyncPayload.read(buf);
-            client.execute(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
-        });*///?}
+        PayloadRegistryFabricClient.registerClientboundReceiver(
+                ConfigSyncPayload.class,
+                (payload, client) ->
+                        ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
     }
 }//?}

@@ -22,6 +22,6 @@ public class ForgeClient {
 
     @SubscribeEvent //~ if <=1.20.2 'ClientTickEvent.Post' -> 'ClientTickEvent'
     public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
-        TestModClient.setTestScreen();
+        TestModClient.onClientTick();
     }
 }*///?}
