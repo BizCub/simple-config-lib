@@ -245,9 +245,7 @@ public class AutoConfigScreen extends Screen {
     /^@Override
     public void renderBackground(GuiGraphicsExtractor guiGraphics) {
         super.renderBackground(guiGraphics);^///?}
-        guiGraphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-        guiGraphics.blit(Screen.BACKGROUND_LOCATION, 0, 0, 0, 0.0F, 0.0F, this.width, this.height, 32, 32);
-        guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        this.renderDirtBackground(guiGraphics);
     }*///?}
 
     @Override
