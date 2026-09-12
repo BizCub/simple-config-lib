@@ -1,7 +1,7 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side.Env;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Env;
 import io.github.bizcub.simpleConfigLib.util.KeyFormatter;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

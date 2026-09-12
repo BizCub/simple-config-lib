@@ -6,8 +6,4 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 public @interface Side {
     Env value() default Env.SERVER;
-
-    enum Env {
-        CLIENT, SERVER
-    }
 }

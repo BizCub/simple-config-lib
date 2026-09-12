@@ -61,20 +61,20 @@ public class AutoConfigScreen extends Screen {
     private boolean dirty;
     private String initialSnapshot;
 
-    private final Side.Env viewEnv;
+    private final Env viewEnv;
     private final boolean readOnly;
 
     public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder) {
         this(lastScreen, holder, holder.getMeta().env(), false);
     }
 
-    public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder, Side.Env viewEnv, boolean readOnly) {
+    public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder, Env viewEnv, boolean readOnly) {
         super(ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build());
         this.lastScreen = lastScreen;
         this.holder = holder;
         this.viewEnv = viewEnv;
         this.readOnly = readOnly;
-        if (viewEnv != Side.Env.SERVER) {
+        if (viewEnv != Env.SERVER) {
             this.holder.load();
         }
     }
@@ -83,7 +83,7 @@ public class AutoConfigScreen extends Screen {
         return new AutoConfigScreen(parent, holder);
     }
 
-    public static <T> Screen create(ConfigHolder<T> holder, Screen parent, Side.Env viewEnv, boolean readOnly) {
+    public static <T> Screen create(ConfigHolder<T> holder, Screen parent, Env viewEnv, boolean readOnly) {
         return new AutoConfigScreen(parent, holder, viewEnv, readOnly);
     }
 
@@ -116,7 +116,7 @@ public class AutoConfigScreen extends Screen {
             }
             this.applyActions.forEach(Runnable::run);
 
-            if (this.viewEnv == Side.Env.SERVER && !this.readOnly) {
+            if (this.viewEnv == Env.SERVER && !this.readOnly) {
                 NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
             } else {
                 this.holder.save();
@@ -187,7 +187,7 @@ public class AutoConfigScreen extends Screen {
         return this.holder.getMeta().snakeCaseKeys() ? KeyFormatter.toSnakeCase(raw) : raw;
     }
 
-    private boolean matchesCurrentView(final Side.Env fieldEnv) {
+    private boolean matchesCurrentView(final Env fieldEnv) {
         return fieldEnv == this.viewEnv;
     }
 

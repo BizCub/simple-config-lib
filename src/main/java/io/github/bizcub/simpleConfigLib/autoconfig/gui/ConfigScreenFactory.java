@@ -1,7 +1,7 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side.Env;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Env;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 /*? >=1.21.11*/ import net.minecraft.server.permissions.Permissions;

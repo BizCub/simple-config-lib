@@ -1,7 +1,7 @@
 package io.github.bizcub.simpleConfigLib.main;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Env;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import io.github.bizcub.simpleConfigLib.util.network.Network;
@@ -45,7 +45,7 @@ public class SimpleConfigLibMain {
         if (!allowed) return;
 
         ConfigHolder<?> holder = ConfigHolder.byName(payload.name());
-        if (holder == null || holder.getMeta().env() != Side.Env.SERVER) return;
+        if (holder == null || holder.getMeta().env() != Env.SERVER) return;
 
         holder.applySnapshot(payload.json());
         holder.save();
@@ -57,7 +57,7 @@ public class SimpleConfigLibMain {
 
     public static void onPlayerJoin(ServerPlayer player) {
         for (ConfigHolder<?> holder : ConfigHolder.registered()) {
-            if (holder.getMeta().env() == Side.Env.SERVER) {
+            if (holder.getMeta().env() == Env.SERVER) {
                 Network.sendToPlayer(player, new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot()));
             }
         }
