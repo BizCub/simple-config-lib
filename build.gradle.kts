@@ -20,6 +20,9 @@ multiloader {
     }
 
     sc.replacements {
+        string(scp >= "26.3") {
+            replace("blaze3d.textures", "renderpearl.api.textures")
+        }
         string(scp >= "26.2") {
             replace("TabNavigationBar", "MenuTabBar")
             replace(".setScreen(", ".gui.setScreen(")
