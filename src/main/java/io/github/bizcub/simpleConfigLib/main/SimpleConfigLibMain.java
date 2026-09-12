@@ -45,7 +45,9 @@ public class SimpleConfigLibMain {
         if (!allowed) return;
 
         ConfigHolder<?> holder = ConfigHolder.byName(payload.name());
-        if (holder == null || holder.getMeta().env() != Env.SERVER) return;
+        if (holder == null) return;
+        Env env = holder.getMeta().env();
+        if (env != Env.SERVER && env != Env.COMMON) return;
 
         holder.applySnapshot(payload.json());
         holder.save();
@@ -57,7 +59,8 @@ public class SimpleConfigLibMain {
 
     public static void onPlayerJoin(ServerPlayer player) {
         for (ConfigHolder<?> holder : ConfigHolder.registered()) {
-            if (holder.getMeta().env() == Env.SERVER) {
+            Env env = holder.getMeta().env();
+            if (env == Env.SERVER || env == Env.COMMON) {
                 Network.sendToPlayer(player, new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot()));
             }
         }

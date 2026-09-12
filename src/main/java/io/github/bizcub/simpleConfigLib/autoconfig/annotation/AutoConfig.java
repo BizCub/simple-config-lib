@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 public @interface AutoConfig {
     String name();
-    Env env() default Env.CLIENT;
+    Env env() default Env.COMMON;
     boolean snakeCaseKeys() default false;
     boolean translate() default false;
 }

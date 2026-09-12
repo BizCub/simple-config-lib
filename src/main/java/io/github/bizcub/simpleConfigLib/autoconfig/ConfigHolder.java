@@ -97,7 +97,9 @@ public class ConfigHolder<T> {
 
     public static void applyServerSnapshot(String name, String json) {
         ConfigHolder<?> holder = byName(name);
-        if (holder != null && holder.getMeta().env() == Env.SERVER) {
+        if (holder == null) return;
+        Env env = holder.getMeta().env();
+        if (env == Env.SERVER || env == Env.COMMON) {
             holder.applySnapshot(json);
         }
     }

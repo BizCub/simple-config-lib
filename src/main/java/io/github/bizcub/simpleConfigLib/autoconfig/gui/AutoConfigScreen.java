@@ -74,7 +74,10 @@ public class AutoConfigScreen extends Screen {
         this.holder = holder;
         this.viewEnv = viewEnv;
         this.readOnly = readOnly;
-        if (viewEnv != Env.SERVER) {
+
+        boolean remote = Minecraft.getInstance().player != null && !Minecraft.getInstance().hasSingleplayerServer();
+        boolean serverBacked = viewEnv == Env.SERVER || (viewEnv == Env.COMMON && remote);
+        if (!serverBacked) {
             this.holder.load();
         }
     }
@@ -116,7 +119,11 @@ public class AutoConfigScreen extends Screen {
             }
             this.applyActions.forEach(Runnable::run);
 
+            boolean remote = Minecraft.getInstance().player != null && !Minecraft.getInstance().hasSingleplayerServer();
+
             if (this.viewEnv == Env.SERVER && !this.readOnly) {
+                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
+            } else if (this.viewEnv == Env.COMMON && remote && !this.readOnly) {
                 NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
             } else {
                 this.holder.save();
@@ -227,11 +234,11 @@ public class AutoConfigScreen extends Screen {
         if (this.resetButton != null) {
             boolean shift = Minecraft.getInstance().hasShiftDown();
             this.resetButton.active = shift;
-            Component resetComponent = ComponentBuilder.translatable("config.reset").build();
+            Component resetComponent = ComponentBuilder.translatable("text.simple_config_lib.reset").build();
             this.resetButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
                     shift
                             ? resetComponent
-                            : resetComponent.copy().append("\n").append(ComponentBuilder.translatable("config.reset.shift").build())));
+                            : resetComponent.copy().append("\n").append(ComponentBuilder.translatable("text.simple_config_lib.reset.shift").build())));
         }
     }
 
@@ -325,10 +332,10 @@ public class AutoConfigScreen extends Screen {
                         this.minecraft.gui.setScreen(this);
                     }
                 },
-                ComponentBuilder.translatable("config.confirm.title").build(),
-                ComponentBuilder.translatable("config.confirm.message").build(),
-                ComponentBuilder.translatable("config.confirm.discard").build(),
-                ComponentBuilder.translatable("config.confirm.keep").build()
+                ComponentBuilder.translatable("text.simple_config_lib.confirm.title").build(),
+                ComponentBuilder.translatable("text.simple_config_lib.confirm.message").build(),
+                ComponentBuilder.translatable("text.simple_config_lib.confirm.discard").build(),
+                ComponentBuilder.translatable("text.simple_config_lib.confirm.keep").build()
         ));
     }
 

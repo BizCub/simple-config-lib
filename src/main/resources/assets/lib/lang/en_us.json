@@ -1,8 +1,13 @@
 {
-    "config.reset": "Reset all settings to defaults",
-    "config.reset.shift": "Hold Shift to confirm",
-    "config.confirm.title": "Discard changes?",
-    "config.confirm.message": "You have unsaved changes. Exit without saving?",
-    "config.confirm.discard": "Discard",
-    "config.confirm.keep": "Keep Editing"
+    "text.simple_config_lib.hub.title": "Config Hub",
+    "text.simple_config_lib.hub.entry": "%s (%s)",
+    "text.simple_config_lib.env.client": "Client",
+    "text.simple_config_lib.env.server": "Server",
+    "text.simple_config_lib.env.common": "Common",
+    "text.simple_config_lib.reset": "Reset all settings to defaults",
+    "text.simple_config_lib.reset.shift": "Hold Shift to confirm",
+    "text.simple_config_lib.confirm.title": "Discard changes?",
+    "text.simple_config_lib.confirm.message": "You have unsaved changes. Exit without saving?",
+    "text.simple_config_lib.confirm.discard": "Discard",
+    "text.simple_config_lib.confirm.keep": "Keep Editing"
 }

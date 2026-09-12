@@ -26,7 +26,17 @@ public class ConfigScreenFactory {
     }
 
     static boolean readOnlyFor(final ConfigHolder<?> holder) {
-        return holder.getMeta().env() == Env.SERVER && !hasServerAccess();
+        Env env = holder.getMeta().env();
+        return switch (env) {
+            case SERVER -> !hasServerAccess();
+            case COMMON -> isConnectedToRemoteServer() && !hasServerAccess();
+            case null, default -> false;
+        };
+    }
+
+    private static boolean isConnectedToRemoteServer() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player != null && !mc.hasSingleplayerServer();
     }
 
     private static boolean hasServerAccess() {

@@ -10,6 +10,7 @@ import net.minecraft.client.gui.layouts.FrameLayout;
 import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
@@ -33,10 +34,10 @@ public class ConfigHubScreen extends Screen {
             boolean readOnly = ConfigScreenFactory.readOnlyFor(holder);
 
             String pretty = KeyFormatter.humanize(holder.getMeta().name());
-            String envLabel = env.name().charAt(0) + env.name().substring(1).toLowerCase(); // CLIENT -> Client
+            Component envLabel = ComponentBuilder.translatable("text.simple_config_lib.env." + env.name().toLowerCase()).build();
 
             Button b = Button.builder(
-                            ComponentBuilder.literal(pretty + " (" + envLabel + ")").build(),
+                            ComponentBuilder.translatable("text.simple_config_lib.hub.entry", pretty, envLabel).build(),
                             button -> this.minecraft.gui.setScreen(
                                     AutoConfigScreen.create(holder, this, env, readOnly)))
                     .width(200)
