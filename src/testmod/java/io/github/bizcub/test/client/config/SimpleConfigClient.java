@@ -1,6 +1,7 @@
 package io.github.bizcub.test.client.config;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.simpleConfigLib.util.component.ClickEventBuilder;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
@@ -11,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-@AutoConfig(name = "test_client", env = Env.CLIENT)
+@AutoConfig(name = "test_client", env = ConfigSide.CLIENT)
 public class SimpleConfigClient implements ConfigClient {
     public static ConfigHolder<SimpleConfigClient> getInstance() {
         return ConfigHolder.register(SimpleConfigClient.class).onSave(SimpleConfigClient::onConfigSave);

@@ -1,10 +1,9 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Env;
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.util.KeyFormatter;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.FrameLayout;
 import net.minecraft.client.gui.layouts.GridLayout;
@@ -30,7 +29,7 @@ public class ConfigHubScreen extends Screen {
         GridLayout.RowHelper rows = grid.createRowHelper(1);
 
         for (ConfigHolder<?> holder : this.holders) {
-            Env env = holder.getMeta().env();
+            ConfigSide env = holder.getMeta().side();
             boolean readOnly = ConfigScreenFactory.readOnlyFor(holder);
 
             String pretty = KeyFormatter.humanize(holder.getMeta().name());

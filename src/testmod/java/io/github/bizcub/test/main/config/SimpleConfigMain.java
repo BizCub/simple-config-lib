@@ -2,7 +2,6 @@ package io.github.bizcub.test.main.config;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Env;
 
 @AutoConfig(name = "test_common")
 public class SimpleConfigMain implements ConfigMain {

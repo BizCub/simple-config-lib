@@ -1,7 +1,7 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import com.mojang.logging.LogUtils;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Tooltip;
@@ -61,14 +61,14 @@ public class AutoConfigScreen extends Screen {
     private boolean dirty;
     private String initialSnapshot;
 
-    private final Env viewEnv;
+    private final ConfigSide viewEnv;
     private final boolean readOnly;
 
     public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder) {
-        this(lastScreen, holder, holder.getMeta().env(), false);
+        this(lastScreen, holder, holder.getMeta().side(), false);
     }
 
-    public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder, Env viewEnv, boolean readOnly) {
+    public AutoConfigScreen(Screen lastScreen, ConfigHolder<?> holder, ConfigSide viewEnv, boolean readOnly) {
         super(ComponentBuilder.translatable("text." + holder.getMeta().name() + ".title").build());
         this.lastScreen = lastScreen;
         this.holder = holder;
@@ -76,7 +76,7 @@ public class AutoConfigScreen extends Screen {
         this.readOnly = readOnly;
 
         boolean remote = Minecraft.getInstance().player != null && !Minecraft.getInstance().hasSingleplayerServer();
-        boolean serverBacked = viewEnv == Env.SERVER || (viewEnv == Env.COMMON && remote);
+        boolean serverBacked = viewEnv == ConfigSide.SERVER || (viewEnv == ConfigSide.COMMON && remote);
         if (!serverBacked) {
             this.holder.load();
         }
@@ -86,7 +86,7 @@ public class AutoConfigScreen extends Screen {
         return new AutoConfigScreen(parent, holder);
     }
 
-    public static <T> Screen create(ConfigHolder<T> holder, Screen parent, Env viewEnv, boolean readOnly) {
+    public static <T> Screen create(ConfigHolder<T> holder, Screen parent, ConfigSide viewEnv, boolean readOnly) {
         return new AutoConfigScreen(parent, holder, viewEnv, readOnly);
     }
 
@@ -121,9 +121,9 @@ public class AutoConfigScreen extends Screen {
 
             boolean remote = Minecraft.getInstance().player != null && !Minecraft.getInstance().hasSingleplayerServer();
 
-            if (this.viewEnv == Env.SERVER && !this.readOnly) {
+            if (this.viewEnv == ConfigSide.SERVER && !this.readOnly) {
                 NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
-            } else if (this.viewEnv == Env.COMMON && remote && !this.readOnly) {
+            } else if (this.viewEnv == ConfigSide.COMMON && remote && !this.readOnly) {
                 NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
             } else {
                 this.holder.save();
@@ -194,7 +194,7 @@ public class AutoConfigScreen extends Screen {
         return this.holder.getMeta().snakeCaseKeys() ? KeyFormatter.toSnakeCase(raw) : raw;
     }
 
-    private boolean matchesCurrentView(final Env fieldEnv) {
+    private boolean matchesCurrentView(final ConfigSide fieldEnv) {
         return fieldEnv == this.viewEnv;
     }
 

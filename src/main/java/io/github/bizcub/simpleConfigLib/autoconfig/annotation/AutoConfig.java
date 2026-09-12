@@ -1,5 +1,7 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.annotation;
 
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
+
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -7,7 +9,7 @@ import java.lang.annotation.*;
 public @interface AutoConfig {
     String name();
     String fileName() default "";
-    Env env() default Env.COMMON;
+    ConfigSide side() default ConfigSide.COMMON;
     boolean snakeCaseKeys() default false;
     boolean translate() default false;
 }

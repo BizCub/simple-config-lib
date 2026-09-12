@@ -1,7 +1,7 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Env;
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 /*? >=1.21.11*/ import net.minecraft.server.permissions.Permissions;
@@ -20,13 +20,13 @@ public class ConfigScreenFactory {
     }
 
     static Screen screenFor(ConfigHolder<?> holder, Screen parent) {
-        Env env = holder.getMeta().env();
+        ConfigSide env = holder.getMeta().side();
         boolean readOnly = readOnlyFor(holder);
         return AutoConfigScreen.create(holder, parent, env, readOnly);
     }
 
     static boolean readOnlyFor(final ConfigHolder<?> holder) {
-        Env env = holder.getMeta().env();
+        ConfigSide env = holder.getMeta().side();
         return switch (env) {
             case SERVER -> !hasServerAccess();
             case COMMON -> isConnectedToRemoteServer() && !hasServerAccess();

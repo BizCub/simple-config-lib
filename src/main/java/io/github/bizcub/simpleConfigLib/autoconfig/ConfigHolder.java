@@ -1,6 +1,5 @@
 package io.github.bizcub.simpleConfigLib.autoconfig;
 
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Env;
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
@@ -101,8 +100,8 @@ public class ConfigHolder<T> {
     public static void applyServerSnapshot(String name, String json) {
         ConfigHolder<?> holder = byName(name);
         if (holder == null) return;
-        Env env = holder.getMeta().env();
-        if (env == Env.SERVER || env == Env.COMMON) {
+        ConfigSide env = holder.getMeta().side();
+        if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
             holder.applySnapshot(json);
         }
     }
@@ -171,9 +170,9 @@ public class ConfigHolder<T> {
         }
     }
 
-    public Env envOf(Field field) {
+    public ConfigSide envOf(Field field) {
         Side side = field.getAnnotation(Side.class);
-        return side != null ? side.value() : this.meta.env();
+        return side != null ? side.value() : this.meta.side();
     }
 
     private boolean sanitize(final T loaded, final T defaults) {
