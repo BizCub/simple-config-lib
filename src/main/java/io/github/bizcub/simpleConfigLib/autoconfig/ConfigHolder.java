@@ -80,7 +80,10 @@ public class ConfigHolder<T> {
     }
 
     private Path path() {
-        return SimpleConfigLibMain.gameDir().resolve("config").resolve(this.meta.name() + ".json");
+        String file = this.meta.fileName().isEmpty()
+                ? this.meta.name()
+                : this.meta.fileName();
+        return SimpleConfigLibMain.gameDir().resolve("config").resolve(file + ".json");
     }
 
     @SuppressWarnings("unchecked")
