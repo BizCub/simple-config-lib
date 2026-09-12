@@ -8,6 +8,7 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
+import io.github.bizcub.simpleConfigLib.util.Platform;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
@@ -126,16 +127,19 @@ public class ConfigHolder<T> {
 
         T defaults = newDefault();
 
+        if (this.instance == null) {
+            this.instance = defaults;
+        } else {
+            copyInto(defaults, this.instance);
+        }
+
         if (loaded == null) {
             if (Files.exists(file)) {
                 backup();
             }
-            if (this.instance == null) {
-                this.instance = defaults;
-            } else {
-                copyInto(defaults, this.instance);
+            if (!(this.meta.side() == ConfigSide.SERVER && Platform.isPhysicalClient())) {
+                save();
             }
-            save();
             return;
         }
 
@@ -144,11 +148,7 @@ public class ConfigHolder<T> {
             backup();
         }
 
-        if (this.instance == null) {
-            this.instance = loaded;
-        } else {
-            copyInto(loaded, this.instance);
-        }
+        copyInto(loaded, this.instance);
 
         if (corrupted) {
             save();

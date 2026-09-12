@@ -10,7 +10,7 @@ public interface ConfigMain {
         ConfigProvider.set(ConfigMain.class, instance);
     }
 
-    default boolean testBoolean() {
+    default boolean testMain() {
         return false;
     }
 }

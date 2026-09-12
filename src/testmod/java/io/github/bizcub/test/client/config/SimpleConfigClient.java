@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-@AutoConfig(name = "test_client", env = ConfigSide.CLIENT)
+@AutoConfig(name = "test_client", side = ConfigSide.CLIENT)
 public class SimpleConfigClient implements ConfigClient {
     public static ConfigHolder<SimpleConfigClient> getInstance() {
         return ConfigHolder.register(SimpleConfigClient.class).onSave(SimpleConfigClient::onConfigSave);

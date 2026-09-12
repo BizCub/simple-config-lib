@@ -14,6 +14,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.Node;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ObjectElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
+import io.github.bizcub.simpleConfigLib.util.Platform;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.simpleConfigLib.util.network.NetworkClient;
 import net.minecraft.ChatFormatting;
@@ -125,7 +126,7 @@ public class AutoConfigScreen extends Screen {
                 NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
             } else if (this.viewEnv == ConfigSide.COMMON && remote && !this.readOnly) {
                 NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
-            } else {
+            } else if (!(this.viewEnv == ConfigSide.SERVER && Platform.isPhysicalClient())) {
                 this.holder.save();
             }
 

@@ -9,10 +9,10 @@ public class SimpleConfigMain implements ConfigMain {
         return ConfigHolder.register(SimpleConfigMain.class);
     }
 
-    public boolean testBoolean = ConfigMain.super.testBoolean();
+    public boolean testMain = ConfigMain.super.testMain();
 
     @Override
-    public boolean testBoolean() {
-        return this.testBoolean;
+    public boolean testMain() {
+        return this.testMain;
     }
 }
