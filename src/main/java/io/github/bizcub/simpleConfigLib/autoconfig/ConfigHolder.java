@@ -2,7 +2,6 @@ package io.github.bizcub.simpleConfigLib.autoconfig;
 
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 import io.github.bizcub.simpleConfigLib.util.Platform;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -103,9 +102,7 @@ public class ConfigHolder<T> {
         if (holder == null) return;
         ConfigSide env = holder.getMeta().side();
         if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
-            // Применяем только серверные/общие поля, чтобы синк с сервера
-            // не затирал локальные CLIENT-значения этого же конфига.
-            holder.applySnapshot(json, EnumSet.of(ConfigSide.SERVER, ConfigSide.COMMON));
+            holder.applySnapshot(json);
         }
     }
 
@@ -172,11 +169,6 @@ public class ConfigHolder<T> {
         }
     }
 
-    public ConfigSide envOf(Field field) {
-        Side side = field.getAnnotation(Side.class);
-        return side != null ? side.value() : this.meta.side();
-    }
-
     private boolean sanitize(final T loaded, final T defaults) {
         boolean corrupted = false;
         for (Field f : this.type.getDeclaredFields()) {
@@ -200,10 +192,6 @@ public class ConfigHolder<T> {
     }
 
     public void applySnapshot(final String json) {
-        applySnapshot(json, null);
-    }
-
-    public void applySnapshot(final String json, final Set<ConfigSide> sides) {
         T loaded;
         try {
             loaded = GSON.fromJson(json, this.type);
@@ -217,7 +205,7 @@ public class ConfigHolder<T> {
         sanitize(loaded, defaults);
 
         if (this.instance == null) this.instance = loaded;
-        else copyInto(loaded, this.instance, sides);
+        else copyInto(loaded, this.instance);
     }
 
     private void backup() {
@@ -247,16 +235,9 @@ public class ConfigHolder<T> {
     }
 
     private void copyInto(final T source, final T target) {
-        copyInto(source, target, null);
-    }
-
-    private void copyInto(final T source, final T target, final Set<ConfigSide> sides) {
         for (Field f : this.type.getDeclaredFields()) {
             int mods = f.getModifiers();
             if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
-                continue;
-            }
-            if (sides != null && !sides.contains(envOf(f))) {
                 continue;
             }
             try {

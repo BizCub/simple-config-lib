@@ -9,7 +9,6 @@ import io.github.bizcub.test.client.config.ConfigClient;
 import io.github.bizcub.test.client.config.SimpleConfigClient;
 import io.github.bizcub.test.client.screen.TestScreen;
 import io.github.bizcub.test.main.TestModMain;
-import io.github.bizcub.test.main.config.ConfigMain;
 import io.github.bizcub.test.network.PingPayload;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -39,9 +38,6 @@ public class TestModClient {
         }
         while (SEND_PING.consumeClick()) {
             NetworkClient.sendToServer(new PingPayload("ping", client.player.getMainHandItem()));
-        }
-        if (ConfigMain.get().testClientInCommon() && client.player != null) {
-            client.player.sendOverlayMessage(ComponentBuilder.literal("test client-in-common").build());
         }
     }
 

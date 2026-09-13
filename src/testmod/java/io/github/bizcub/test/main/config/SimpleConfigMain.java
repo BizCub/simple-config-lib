@@ -1,9 +1,7 @@
 package io.github.bizcub.test.main.config;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
 
 @AutoConfig(name = "test_common")
 public class SimpleConfigMain implements ConfigMain {
@@ -13,16 +11,8 @@ public class SimpleConfigMain implements ConfigMain {
 
     public boolean testMain = ConfigMain.super.testMain();
 
-    @Side(ConfigSide.CLIENT)
-    public boolean testClientInCommon = ConfigMain.super.testClientInCommon();
-
     @Override
     public boolean testMain() {
         return this.testMain;
-    }
-
-    @Override
-    public boolean testClientInCommon() {
-        return this.testClientInCommon;
     }
 }

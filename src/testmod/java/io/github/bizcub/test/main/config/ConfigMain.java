@@ -13,8 +13,4 @@ public interface ConfigMain {
     default boolean testMain() {
         return false;
     }
-
-    default boolean testClientInCommon() {
-        return false;
-    }
 }

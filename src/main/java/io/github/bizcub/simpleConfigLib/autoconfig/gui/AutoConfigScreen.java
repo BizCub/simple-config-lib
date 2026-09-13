@@ -202,22 +202,12 @@ public class AutoConfigScreen extends Screen {
         return this.holder.getMeta().snakeCaseKeys() ? KeyFormatter.toSnakeCase(raw) : raw;
     }
 
-    private boolean matchesCurrentView(final ConfigSide fieldEnv) {
-        if (this.viewEnv == ConfigSide.COMMON) {
-            return fieldEnv == ConfigSide.COMMON || fieldEnv == ConfigSide.CLIENT;
-        }
-        return fieldEnv == this.viewEnv;
-    }
-
     private Map<String, List<Field>> groupFields() {
         Map<String, List<Field>> groups = new LinkedHashMap<>();
         groups.put(DEFAULT_GROUP, new ArrayList<>());
         for (Field field : this.holder.type().getDeclaredFields()) {
             int mods = field.getModifiers();
             if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
-                continue;
-            }
-            if (!matchesCurrentView(this.holder.envOf(field))) {
                 continue;
             }
             ConfigGroup g = field.getAnnotation(ConfigGroup.class);
