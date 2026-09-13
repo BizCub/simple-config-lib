@@ -30,7 +30,7 @@ public class ConfigScreenFactory {
         return switch (env) {
             case SERVER -> !hasServerAccess();
             case COMMON -> isConnectedToRemoteServer() && !hasServerAccess();
-            case null, default -> false;
+            default -> false;
         };
     }
 

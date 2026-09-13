@@ -3,12 +3,12 @@ package io.github.bizcub.simpleConfigLib.autoconfig;
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Side;
+import io.github.bizcub.simpleConfigLib.util.Platform;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
-import io.github.bizcub.simpleConfigLib.util.Platform;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 

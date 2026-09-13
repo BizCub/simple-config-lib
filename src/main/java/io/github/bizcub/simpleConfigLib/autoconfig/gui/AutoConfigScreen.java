@@ -1,11 +1,11 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import com.mojang.logging.LogUtils;
-import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Tooltip;
-import io.github.bizcub.simpleConfigLib.util.KeyFormatter;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.Element;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.GroupNode;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ListModel;
@@ -14,6 +14,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.Node;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ObjectElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
+import io.github.bizcub.simpleConfigLib.util.KeyFormatter;
 import io.github.bizcub.simpleConfigLib.util.Platform;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.simpleConfigLib.util.network.NetworkClient;
