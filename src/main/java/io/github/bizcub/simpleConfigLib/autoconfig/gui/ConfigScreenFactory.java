@@ -15,6 +15,13 @@ public class ConfigScreenFactory {
         return open(parent, ConfigHolder.registered());
     }
 
+    public static Screen open(String modId, Screen parent) {
+        List<ConfigHolder<?>> holders = ConfigHolder.registered().stream()
+                .filter(h -> h.getMeta().name().equals(modId) || h.getMeta().name().startsWith(modId + "/"))
+                .toList();
+        return open(parent, holders);
+    }
+
     public static Screen open(ConfigHolder<?> holder, Screen parent) {
         return screenFor(holder, parent);
     }

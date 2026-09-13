@@ -9,6 +9,8 @@ import io.github.bizcub.test.client.config.ConfigClient;
 import io.github.bizcub.test.client.config.SimpleConfigClient;
 import io.github.bizcub.test.client.screen.TestScreen;
 import io.github.bizcub.test.main.TestModMain;
+import io.github.bizcub.test.main.config.SimpleConfigMain;
+import io.github.bizcub.test.main.config.SimpleConfigServer;
 import io.github.bizcub.test.network.PingPayload;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -42,6 +44,6 @@ public class TestModClient {
     }
 
     public static Screen getConfigScreen(Screen parent) {
-        return ConfigScreenFactory.open(parent);
+        return ConfigScreenFactory.open(parent, SimpleConfigClient.getInstance(), SimpleConfigMain.getInstance(), SimpleConfigServer.getInstance());
     }
 }

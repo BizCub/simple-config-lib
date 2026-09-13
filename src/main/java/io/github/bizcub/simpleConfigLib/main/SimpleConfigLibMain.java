@@ -44,7 +44,7 @@ public class SimpleConfigLibMain {
         //boolean allowed = player.hasPermissions(2);
         if (!allowed) return;
 
-        ConfigHolder<?> holder = ConfigHolder.byName(payload.name());
+        ConfigHolder<?> holder = ConfigHolder.byId(payload.name());
         if (holder == null) return;
         ConfigSide env = holder.getMeta().side();
         if (env != ConfigSide.SERVER && env != ConfigSide.COMMON) return;
@@ -53,7 +53,7 @@ public class SimpleConfigLibMain {
         holder.save();
 
         for (ServerPlayer p : player.level().getServer().getPlayerList().getPlayers()) {
-            Network.sendToPlayer(p, new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot()));
+            Network.sendToPlayer(p, new ConfigSyncPayload(holder.id(), holder.snapshot()));
         }
     }
 
@@ -61,7 +61,7 @@ public class SimpleConfigLibMain {
         for (ConfigHolder<?> holder : ConfigHolder.registered()) {
             ConfigSide env = holder.getMeta().side();
             if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
-                Network.sendToPlayer(player, new ConfigSyncPayload(holder.getMeta().name(), holder.snapshot()));
+                Network.sendToPlayer(player, new ConfigSyncPayload(holder.id(), holder.snapshot()));
             }
         }
     }

@@ -78,6 +78,10 @@ public class ConfigHolder<T> {
         return this.type;
     }
 
+    public String id() {
+        return this.type.getName();
+    }
+
     private Path path() {
         String file = this.meta.fileName().isEmpty()
                 ? this.meta.name()
@@ -90,15 +94,17 @@ public class ConfigHolder<T> {
         return (ConfigHolder<T>) REGISTRY.computeIfAbsent(type, ConfigHolder::new);
     }
 
-    public static ConfigHolder<?> byName(final String name) {
-        for (ConfigHolder<?> holder : REGISTRY.values()) {
-            if (holder.meta.name().equals(name)) return holder;
+    public static ConfigHolder<?> byId(final String id) {
+        synchronized (REGISTRY) {
+            for (ConfigHolder<?> holder : REGISTRY.values()) {
+                if (holder.type.getName().equals(id)) return holder;
+            }
         }
         return null;
     }
 
-    public static void applyServerSnapshot(String name, String json) {
-        ConfigHolder<?> holder = byName(name);
+    public static void applyServerSnapshot(String id, String json) {
+        ConfigHolder<?> holder = byId(id);
         if (holder == null) return;
         ConfigSide env = holder.getMeta().side();
         if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {

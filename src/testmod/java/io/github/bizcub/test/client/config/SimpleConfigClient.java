@@ -6,13 +6,14 @@ import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.simpleConfigLib.util.component.ClickEventBuilder;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.simpleConfigLib.util.component.HoverEventBuilder;
+import io.github.bizcub.test.main.TestModMain;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@AutoConfig(name = "test_client", side = ConfigSide.CLIENT)
+@AutoConfig(name = TestModMain.MOD_ID, fileName = TestModMain.MOD_ID + "_client", side = ConfigSide.CLIENT)
 public class SimpleConfigClient implements ConfigClient {
     public static ConfigHolder<SimpleConfigClient> getInstance() {
         return ConfigHolder.register(SimpleConfigClient.class).onSave(SimpleConfigClient::onConfigSave);
