@@ -103,7 +103,9 @@ public class ConfigHolder<T> {
         if (holder == null) return;
         ConfigSide env = holder.getMeta().side();
         if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
-            holder.applySnapshot(json);
+            // Применяем только серверные/общие поля, чтобы синк с сервера
+            // не затирал локальные CLIENT-значения этого же конфига.
+            holder.applySnapshot(json, EnumSet.of(ConfigSide.SERVER, ConfigSide.COMMON));
         }
     }
 
@@ -198,6 +200,10 @@ public class ConfigHolder<T> {
     }
 
     public void applySnapshot(final String json) {
+        applySnapshot(json, null);
+    }
+
+    public void applySnapshot(final String json, final Set<ConfigSide> sides) {
         T loaded;
         try {
             loaded = GSON.fromJson(json, this.type);
@@ -211,7 +217,7 @@ public class ConfigHolder<T> {
         sanitize(loaded, defaults);
 
         if (this.instance == null) this.instance = loaded;
-        else copyInto(loaded, this.instance);
+        else copyInto(loaded, this.instance, sides);
     }
 
     private void backup() {
@@ -241,9 +247,16 @@ public class ConfigHolder<T> {
     }
 
     private void copyInto(final T source, final T target) {
+        copyInto(source, target, null);
+    }
+
+    private void copyInto(final T source, final T target, final Set<ConfigSide> sides) {
         for (Field f : this.type.getDeclaredFields()) {
             int mods = f.getModifiers();
             if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
+                continue;
+            }
+            if (sides != null && !sides.contains(envOf(f))) {
                 continue;
             }
             try {

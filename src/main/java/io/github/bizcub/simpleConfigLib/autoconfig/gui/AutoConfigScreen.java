@@ -121,13 +121,19 @@ public class AutoConfigScreen extends Screen {
             }
             this.applyActions.forEach(Runnable::run);
 
-            boolean remote = Minecraft.getInstance().player != null && !Minecraft.getInstance().hasSingleplayerServer();
+            boolean remote = Minecraft.getInstance().player != null
+                    && !Minecraft.getInstance().hasSingleplayerServer();
 
-            if (this.viewEnv == ConfigSide.SERVER && !this.readOnly) {
-                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
-            } else if (this.viewEnv == ConfigSide.COMMON && remote && !this.readOnly) {
-                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
-            } else if (!(this.viewEnv == ConfigSide.SERVER && Platform.isPhysicalClient())) {
+            boolean sendToServer = !this.readOnly
+                    && (this.viewEnv == ConfigSide.SERVER
+                    || (this.viewEnv == ConfigSide.COMMON && remote));
+
+            if (sendToServer) {
+                NetworkClient.sendToServer(
+                        new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
+            }
+
+            if (!(this.viewEnv == ConfigSide.SERVER && Platform.isPhysicalClient())) {
                 this.holder.save();
             }
 
