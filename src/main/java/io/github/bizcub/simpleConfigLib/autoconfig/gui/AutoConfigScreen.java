@@ -129,7 +129,7 @@ public class AutoConfigScreen extends Screen {
                     || (this.viewEnv == ConfigSide.COMMON && remote));
 
             if (sendToServer) {
-                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.getMeta().name(), this.holder.snapshot()));
+                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.id(), this.holder.snapshot()));
             } else if (!(this.viewEnv == ConfigSide.SERVER && Platform.isPhysicalClient())) {
                 this.holder.save();
             }
