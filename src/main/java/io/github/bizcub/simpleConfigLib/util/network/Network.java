@@ -4,7 +4,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -43,11 +42,11 @@ public final class Network {
     }
 
     public static List<Serverbound<?>> serverbound() {
-        return Collections.unmodifiableList(SERVERBOUND);
+        return new ArrayList<>(SERVERBOUND);
     }
 
     public static List<Clientbound<?>> clientbound() {
-        return Collections.unmodifiableList(CLIENTBOUND);
+        return new ArrayList<>(CLIENTBOUND);
     }
 
     public static void sendToPlayer(ServerPlayer player, SclPayload payload) {

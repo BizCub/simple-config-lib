@@ -4,6 +4,7 @@
 import io.github.bizcub.simpleConfigLib.main.SimpleConfigLibMain;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -26,4 +27,9 @@ public class ForgeClient {
     public static void registerPIPRenderers(RegisterPictureInPictureRendererEvent event) {
         event.register(new ScaledItemPIPRenderer(/^? <26.2 >>+ ')'^/ /^event.getBufferSource()^/));
     }//?}
+
+    @SubscribeEvent
+    public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        SimpleConfigLibMain.onClientDisconnect();
+    }
 }*///?}

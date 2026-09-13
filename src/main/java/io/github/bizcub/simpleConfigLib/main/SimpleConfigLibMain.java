@@ -65,4 +65,13 @@ public class SimpleConfigLibMain {
             }
         }
     }
+
+    public static void onClientDisconnect() {
+        for (ConfigHolder<?> holder : ConfigHolder.registered()) {
+            ConfigSide env = holder.getMeta().side();
+            if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
+                holder.load();
+            }
+        }
+    }
 }

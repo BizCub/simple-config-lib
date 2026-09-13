@@ -31,7 +31,7 @@ public class ConfigHubScreen extends Screen {
 
         for (ConfigHolder<?> holder : this.holders) {
             ConfigSide env = holder.getMeta().side();
-            boolean readOnly = ConfigScreenFactory.readOnlyFor(holder);
+            boolean readOnly = ConfigScreens.readOnlyFor(holder);
 
             String pretty = KeyFormatter.humanize(holder.getMeta().name());
             Component envLabel = ComponentBuilder.translatable("text.simple_config_lib.env." + env.name().toLowerCase()).build();

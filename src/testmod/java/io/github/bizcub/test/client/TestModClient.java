@@ -1,7 +1,7 @@
 package io.github.bizcub.test.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreenFactory;
+import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreens;
 import io.github.bizcub.simpleConfigLib.util.Keymapper;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.simpleConfigLib.util.network.NetworkClient;
@@ -9,8 +9,6 @@ import io.github.bizcub.test.client.config.ConfigClient;
 import io.github.bizcub.test.client.config.SimpleConfigClient;
 import io.github.bizcub.test.client.screen.TestScreen;
 import io.github.bizcub.test.main.TestModMain;
-import io.github.bizcub.test.main.config.SimpleConfigMain;
-import io.github.bizcub.test.main.config.SimpleConfigServer;
 import io.github.bizcub.test.network.PingPayload;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -44,6 +42,6 @@ public class TestModClient {
     }
 
     public static Screen getConfigScreen(Screen parent) {
-        return ConfigScreenFactory.open(parent, SimpleConfigClient.getInstance(), SimpleConfigMain.getInstance(), SimpleConfigServer.getInstance());
+        return ConfigScreens.open(TestModMain.MOD_ID, parent);
     }
 }

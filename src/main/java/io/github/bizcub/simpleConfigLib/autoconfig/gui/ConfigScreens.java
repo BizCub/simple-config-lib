@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 import java.util.Arrays;
 import java.util.List;
 
-public class ConfigScreenFactory {
+public class ConfigScreens {
 
     public static Screen open(Screen parent) {
         return open(parent, ConfigHolder.registered());
