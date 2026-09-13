@@ -6,13 +6,27 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 /*? >=1.21.11*/ import net.minecraft.server.permissions.Permissions;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class ConfigScreenFactory {
 
     public static Screen open(Screen parent) {
-        List<ConfigHolder<?>> holders = ConfigHolder.registered();
+        return open(parent, ConfigHolder.registered());
+    }
 
+    public static Screen open(ConfigHolder<?> holder, Screen parent) {
+        return screenFor(holder, parent);
+    }
+
+    public static Screen open(Screen parent, ConfigHolder<?>... holders) {
+        return open(parent, Arrays.asList(holders));
+    }
+
+    public static Screen open(Screen parent, List<ConfigHolder<?>> holders) {
+        if (holders.isEmpty()) {
+            return parent;
+        }
         if (holders.size() == 1) {
             return screenFor(holders.get(0), parent);
         }
