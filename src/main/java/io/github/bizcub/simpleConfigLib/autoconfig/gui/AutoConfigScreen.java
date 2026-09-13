@@ -197,6 +197,9 @@ public class AutoConfigScreen extends Screen {
     }
 
     private boolean matchesCurrentView(final ConfigSide fieldEnv) {
+        if (this.viewEnv == ConfigSide.COMMON) {
+            return fieldEnv == ConfigSide.COMMON || fieldEnv == ConfigSide.CLIENT;
+        }
         return fieldEnv == this.viewEnv;
     }
 
