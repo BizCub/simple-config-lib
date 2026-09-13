@@ -21,6 +21,7 @@ public class Platform {
 
     public static boolean isPhysicalClient() {
         /*? fabric*/ return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
-        /*? forge || neoforge*/ //return FMLEnvironment.dist.isClient();
+        /*? forge || (neoforge && <=1.21.8)*/ //return FMLEnvironment.dist.isClient();
+        /*? neoforge && >=1.21.9*/ //return FMLEnvironment.getDist().isClient();
     }
 }
