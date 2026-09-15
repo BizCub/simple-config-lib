@@ -835,9 +835,11 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 return cw.mouseClicked(mouseButtonEvent, doubleClick);
             }
 
+            int rightButton = /*? >=26.3 {*/ 3/*?} else >> ';'*/ /*1*/;
+
             //? >=1.21.9
             int button = mouseButtonEvent.button();
-            if (button == 1 && this.model.editable) {
+            if (button == rightButton && this.model.editable) {
                 AutoConfigList.this.toggleSelect(this.model, this.index);
                 return true;
             }
@@ -949,14 +951,18 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             //~ mb_event
             if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < toggleLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) { //~ !mb_event
+
+                int rightButton = /*? >=26.3 {*/ 3/*?} else >> ';'*/ /*1*/;
+                int leftButton = /*? >=26.3 {*/ 1/*?} else >> ';'*/ /*0*/;
+
                 //? >=1.21.9
                 int button = mouseButtonEvent.button();
-                if (button == 1) {
+                if (button == rightButton) {
                     if (this.model.editable) {
                         AutoConfigList.this.toggleSelect(this.model, this.index);
                     }
                     return true;
-                } else if (button == 0) {
+                } else if (button == leftButton) {
                     GuiSounds.playClick();
                     this.toggle();
                     return true;
