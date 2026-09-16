@@ -10,6 +10,8 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 //? >=1.20.5 {
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -24,28 +26,36 @@ import net.minecraftforge.network.Channel;
 public class ForgeMain {
 
     //? >=1.20.5 {
-    public static final Channel<CustomPacketPayload> CHANNEL = buildChannel();
-    //?} else
-    //public static final SimpleChannel CHANNEL = buildChannel();
+    public static Channel<CustomPacketPayload> CHANNEL;
+     //?} else
+    //public static SimpleChannel CHANNEL;
+
+    public ForgeMain(FMLJavaModLoadingContext context) {
+        context.getModEventBus().addListener(ForgeMain::onCommonSetup);
+    }
+
+    private static void onCommonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(ForgeMain::buildChannel);
+    }
 
     @SuppressWarnings("unchecked")
-    private static /^? >=1.20.5 {^/ Channel<CustomPacketPayload> /^?} else >> ^//^SimpleChannel^/ buildChannel() {
-    SimpleConfigLibMain.registerPayloads();
+    private static void buildChannel() {
+        SimpleConfigLibMain.registerPayloads();
 
-    PayloadRegistryForge.Builder builder = PayloadRegistryForge.builder("config");
+        PayloadRegistryForge.Builder builder = PayloadRegistryForge.builder("config");
 
         for (Network.Serverbound<?> entry : Network.serverbound()) {
             Network.Serverbound<SclPayload> serverboundEntry = (Network.Serverbound<SclPayload>) entry;
             builder.serverbound(serverboundEntry.type(), serverboundEntry.handler());
         }
 
-    for (Network.Clientbound<?> entry : Network.clientbound()) {
-        Network.Clientbound<SclPayload> clientboundEntry = (Network.Clientbound<SclPayload>) entry;
-        builder.clientbound(clientboundEntry.type(), clientboundEntry.handler());
-    }
+        for (Network.Clientbound<?> entry : Network.clientbound()) {
+            Network.Clientbound<SclPayload> clientboundEntry = (Network.Clientbound<SclPayload>) entry;
+            builder.clientbound(clientboundEntry.type(), clientboundEntry.handler());
+        }
 
-    return builder.build();
-}
+        CHANNEL = builder.build();
+    }
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {

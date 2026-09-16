@@ -17,9 +17,14 @@ import net.minecraftforge.client.event.RegisterPictureInPictureRendererEvent;
 @EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID, value = Dist.CLIENT)
 public class ForgeClient {
 
-    @SubscribeEvent
-    public static void registerKeymappings(RegisterKeyMappingsEvent event) {
-        Keymapper.onRegisterKeyMappings(event);
+    //~ if >=1.21.9 'Bus.MOD' -> 'Bus.FORGE'
+    @EventBusSubscriber(modid = SimpleConfigLibMain.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.FORGE)
+    public static class ModBus {
+
+        @SubscribeEvent
+        public static void registerKeymappings(RegisterKeyMappingsEvent event) {
+            Keymapper.onRegisterKeyMappings(event);
+        }
     }
 
     //? >=1.21.6 {
