@@ -31,7 +31,10 @@ public class ForgeMain {
     //public static SimpleChannel CHANNEL;
 
     public ForgeMain(FMLJavaModLoadingContext context) {
-        context.getModEventBus().addListener(ForgeMain::onCommonSetup);
+        //? >=1.21.6 {
+        FMLCommonSetupEvent.getBus(context.getModBusGroup()).addListener(ForgeMain::onCommonSetup);
+        //?} else
+        //context.getModEventBus().addListener(ForgeMain::onCommonSetup);
     }
 
     private static void onCommonSetup(FMLCommonSetupEvent event) {
