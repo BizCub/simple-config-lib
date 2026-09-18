@@ -6,6 +6,7 @@ import io.github.bizcub.simpleConfigLib.util.network.Network;
 import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistryFabric;
 import io.github.bizcub.simpleConfigLib.util.network.SclPayload;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -29,5 +30,8 @@ public class FabricMain implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 SimpleConfigLibMain.onPlayerJoin(handler.player));
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) ->
+                dispatcher.register(SimpleConfigLibMain.buildReloadCommand()));
     }
 }//?}

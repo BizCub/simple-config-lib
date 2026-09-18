@@ -6,6 +6,7 @@ import io.github.bizcub.simpleConfigLib.util.network.Network;
 import io.github.bizcub.simpleConfigLib.util.network.PayloadRegistryForge;
 import io.github.bizcub.simpleConfigLib.util.network.SclPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -64,5 +65,10 @@ public class ForgeMain {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         SimpleConfigLibMain.onPlayerJoin(player);
+    }
+
+    @SubscribeEvent
+    public static void onRegisterCommands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(SimpleConfigLibMain.buildReloadCommand());
     }
 }*///?}

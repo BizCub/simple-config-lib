@@ -158,6 +158,8 @@ public class ConfigHolder<T> {
         if (corrupted) {
             save();
         }
+
+        notifyListeners();
     }
 
     public void reset() {
@@ -266,11 +268,15 @@ public class ConfigHolder<T> {
             LOGGER.error("Failed to save config {}", file, e);
             return;
         }
+        notifyListeners();
+    }
+
+    private void notifyListeners() {
         for (Consumer<T> listener : this.saveListeners) {
             try {
                 listener.accept(this.instance);
             } catch (Exception e) {
-                LOGGER.error("Config save listener failed for {}", this.meta.name(), e);
+                LOGGER.error("Config update listener failed for {}", this.meta.name(), e);
             }
         }
     }

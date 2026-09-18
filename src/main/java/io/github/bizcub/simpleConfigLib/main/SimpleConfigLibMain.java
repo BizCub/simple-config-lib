@@ -1,10 +1,14 @@
 package io.github.bizcub.simpleConfigLib.main;
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.util.network.Network;
+import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;import io.github.bizcub.simpleConfigLib.util.network.Network;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 /*? >=1.21.11*/ import net.minecraft.server.permissions.Permissions;
 
@@ -37,11 +41,36 @@ public class SimpleConfigLibMain {
                 payload -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
     }
 
+    public static int reloadAll(MinecraftServer server) {
+        int count = 0;
+        for (ConfigHolder<?> holder : ConfigHolder.registered()) {
+            ConfigSide env = holder.getMeta().side();
+            if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
+                holder.load();
+                count++;
+                for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                    Network.sendToPlayer(p, new ConfigSyncPayload(holder.id(), holder.snapshot()));
+                }
+            }
+        }
+        return count;
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> buildReloadCommand() {
+        return Commands.literal("simpleconfig")
+                //~ if >=1.21.11 '.hasPermission(2)' -> '.permissions().hasPermission(Permissions.COMMANDS_ADMIN)'
+                .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_ADMIN))
+                .then(Commands.literal("reload").executes(ctx -> {
+                    int n = SimpleConfigLibMain.reloadAll(ctx.getSource().getServer());
+                    ctx.getSource().sendSuccess(
+                            () -> ComponentBuilder.translatable("text.simple_config_lib.command.reload", n).build(), true);
+                    return n;
+                }));
+    }
+
     public static void handleApply(ConfigApplyPayload payload, ServerPlayer player) {
-        //? >=1.21.11 {
+        //~ if >=1.21.11 '.hasPermissions(2)' -> '.permissions().hasPermission(Permissions.COMMANDS_ADMIN)'
         boolean allowed = player.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
-        //?} else
-        //boolean allowed = player.hasPermissions(2);
         if (!allowed) return;
 
         ConfigHolder<?> holder = ConfigHolder.byId(payload.name());

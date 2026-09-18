@@ -9,5 +9,6 @@
     "text.simple_config_lib.confirm.title": "Discard changes?",
     "text.simple_config_lib.confirm.message": "You have unsaved changes. Exit without saving?",
     "text.simple_config_lib.confirm.discard": "Discard",
-    "text.simple_config_lib.confirm.keep": "Keep Editing"
+    "text.simple_config_lib.confirm.keep": "Keep Editing",
+    "text.simple_config_lib.command.reload": "Reloaded %s config(s)"
 }

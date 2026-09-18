@@ -16,11 +16,7 @@ import java.util.List;
 @AutoConfig(name = TestModMain.MOD_ID, fileName = TestModMain.MOD_ID + "_client", side = ConfigSide.CLIENT)
 public class SimpleConfigClient implements ConfigClient {
     public static ConfigHolder<SimpleConfigClient> getInstance() {
-        return ConfigHolder.register(SimpleConfigClient.class).onSave(SimpleConfigClient::onConfigSave);
-    }
-
-    public static void onConfigSave(ConfigClient config) {
-        System.out.println("Config saved!");
+        return ConfigHolder.register(SimpleConfigClient.class).onSave(config -> System.out.println("Client config saved!"));
     }
 
     @BooleanConfig(yesNo = false)
