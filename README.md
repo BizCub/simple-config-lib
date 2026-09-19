@@ -1,4 +1,4 @@
-[![banner.png](https://github.com/user-attachments/assets/c4ecf277-ba9a-4f5c-bb00-18e7f3689057)
+![banner.png](https://github.com/user-attachments/assets/c4ecf277-ba9a-4f5c-bb00-18e7f3689057)
 
 # Simple Config Lib
 
@@ -11,8 +11,8 @@ The main goal of the project is to free developers from routinely implementing a
 > Detailed documentation is available in the wiki: [Simple Config Lib Wiki](https://github.com/BizCub/simple-config-lib/wiki)
 
 ![Test configuration screen](https://github.com/user-attachments/assets/390a91ea-a72d-4919-bd19-a7c7ab26b434)
-  
----  
+
+---
 
 ## Purpose
 
@@ -26,15 +26,15 @@ Simple Config Lib offers a single approach to solving this task:
 - behavior stays identical on Fabric, Forge, and NeoForge.
 
 This approach lets developers focus on the mod's functionality rather than on the infrastructure behind its settings.
-  
----  
+
+---
 
 ## Who It's For
 
 - **Mod developers** — it is intended for those who want to give users a convenient settings screen without spending time implementing the interface and file handling themselves.
 - **Players** — the library is a dependency and is usually installed because another mod requires it. It needs no separate configuration and simply ensures that the settings of other mods work correctly.
 
----  
+---
 
 ## Features
 
@@ -48,36 +48,35 @@ This approach lets developers focus on the mod's functionality rather than on th
 - Server-side configurations synchronized across the network: a config marked as server-side is stored on the server, sent to every player on join, and shown to clients as read-only unless they have operator permissions.
 - A loader- and version-independent networking layer: describe a packet as a plain Java record and register it once — the library builds the codec, registers it on every loader, and handles sending in both directions.
 
----  
+---
 
 ## Installation
 
 On the **Fabric** loader, **Fabric API** must be installed additionally for the library to work. On **Forge** and **NeoForge**, no additional dependencies are required.
-  
----  
+
+---
 
 ## FAQ
 
-**Do players need to install the library?**  
+**Do players need to install the library?**
 Only if another mod requires it. Simple Config Lib is a dependency and needs no separate configuration — it simply makes the settings of the mods that use it work.
 
-**Can the library be added to modpacks?**  
+**Can the library be added to modpacks?**
 Yes. The library can be included in modpacks as long as a link to its original page is provided.
 
-**Does the library conflict with other mods?**  
+**Does the library conflict with other mods?**
 No. Simple Config Lib does not interfere with other mods and does not conflict with them.
 
-**Do I need to write different code for different versions and loaders?**  
+**Do I need to write different code for different versions and loaders?**
 No. Both the configuration and the helper utilities are designed to be used independently of the game version and loader — the same code works everywhere.
 
-**Where do I report bugs and suggestions?**  
+**Where do I report bugs and suggestions?**
 Bugs and suggestions can be reported on GitHub.
-  
----  
+
+---
 
 ## Project Status
 
 Simple Config Lib was originally created for my own projects. I had to take it on because many existing libraries stopped supporting Forge on the newest versions of Minecraft.
 
 The project is open and continues to develop: the feature set will expand, and any bugs found will be fixed.
-]()
