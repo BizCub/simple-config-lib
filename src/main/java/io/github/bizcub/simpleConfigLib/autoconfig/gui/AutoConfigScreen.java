@@ -616,7 +616,10 @@ public class AutoConfigScreen extends Screen {
                 || t == float.class || t == Float.class || t == double.class || t == Double.class) {
             EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
             box.setValue(String.valueOf(field.get(config)));
-            box.setResponder(v -> parseNumber(config, field, v));
+            box.setResponder(v -> {
+                parseNumber(config, field, v);
+                markDirty();
+            });
             return box;
         }
 

@@ -9,8 +9,7 @@ import java.util.List;
 public class Graphics {
     public boolean vsync = true;
 
-    @Slider(min = 0, max = 100)
-    public int brightness = 50;
+    public double brightness = 50;
 
     @Color(alpha = true)
     public int overlay = 0x80FF0000;
