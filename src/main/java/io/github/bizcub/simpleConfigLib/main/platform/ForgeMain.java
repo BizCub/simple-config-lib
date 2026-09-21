@@ -35,7 +35,7 @@ public class ForgeMain {
         //? >=1.21.6 {
         FMLCommonSetupEvent.getBus(context.getModBusGroup()).addListener(ForgeMain::onCommonSetup);
         //?} else
-        //context.getModEventBus().addListener(ForgeMain::onCommonSetup);
+        //FMLJavaModLoadingContext.get().getModEventBus().addListener(ForgeMain::onCommonSetup);
     }
 
     private static void onCommonSetup(FMLCommonSetupEvent event) {
