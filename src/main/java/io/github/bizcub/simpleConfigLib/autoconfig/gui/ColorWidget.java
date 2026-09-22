@@ -139,9 +139,7 @@ public final class ColorWidget extends AbstractWidget {
     void closePicker() { this.pickerOpen = false; }
 
     boolean isOverSwatch(final double mx, final double my) {
-        GuiSounds.playClick();
-        return mx >= swatchX() && mx < swatchX() + SWATCH
-                && my >= swatchY() && my < swatchY() + SWATCH;
+        return mx >= swatchX() && mx < swatchX() + SWATCH && my >= swatchY() && my < swatchY() + SWATCH;
     }
 
     boolean isOverPicker(final double mx, final double my) {
@@ -151,19 +149,15 @@ public final class ColorWidget extends AbstractWidget {
     }
 
     private boolean isOverSV(final double mx, final double my) {
-        GuiSounds.playClick();
         return mx >= svX() && mx < svX() + SV_SIZE && my >= svY() && my < svY() + SV_SIZE;
     }
 
     private boolean isOverHue(final double mx, final double my) {
-        GuiSounds.playClick();
         return mx >= hueX() && mx < hueX() + HUE_W && my >= hueY() && my < hueY() + SV_SIZE;
     }
 
     private boolean isOverAlpha(final double mx, final double my) {
-        GuiSounds.playClick();
-        return alpha && mx >= alphaX() && mx < alphaX() + HUE_W
-                && my >= alphaY() && my < alphaY() + SV_SIZE;
+        return alpha && mx >= alphaX() && mx < alphaX() + HUE_W && my >= alphaY() && my < alphaY() + SV_SIZE;
     }
 
     @Override //$ render_aw >> ' graphics'
@@ -276,27 +270,22 @@ public final class ColorWidget extends AbstractWidget {
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         //~ mb_event
         double mx = mouseButtonEvent.x(), my = mouseButtonEvent.y(); //~ !mb_event
-        if (this.pickerOpen) {
+        if (this.pickerOpen && isOverPicker(mx, my)) {
+            GuiSounds.playClick();
             if (isOverSV(mx, my)) {
                 this.draggingSV = true;
                 updateSV(mx, my);
-                return true;
-            }
-            if (isOverHue(mx, my)) {
+            } else if (isOverHue(mx, my)) {
                 this.draggingHue = true;
                 updateHue(my);
-                return true;
-            }
-            if (isOverAlpha(mx, my)) {
+            } else if (isOverAlpha(mx, my)) {
                 this.draggingAlpha = true;
                 updateAlpha(my);
-                return true;
             }
-            if (isOverPicker(mx, my)) {
-                return true;
-            }
+            return true;
         }
         if (isOverSwatch(mx, my)) {
+            GuiSounds.playClick();
             this.pickerOpen = !this.pickerOpen;
             return true;
         }
