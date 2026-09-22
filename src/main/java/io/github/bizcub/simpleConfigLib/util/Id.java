@@ -13,4 +13,9 @@ public class Id {
         /*? >=1.21 {*/ return Identifier.fromNamespaceAndPath(namespace, id);
         /*?} else*/ //return new Identifier(namespace, id);
     }
+
+    public static Identifier parse(String id) {
+        /*? >=1.21 {*/ return Identifier.parse(id);
+        /*?} else*/ //return new Identifier(id);
+    }
 }
