@@ -100,6 +100,8 @@ multiloader {
     setMREnvironment(mrEnvs.clientOrServerPrefersBoth)
     setCFEnvironment(cfEnvs.both)
 
+    versionRange("26.4-snapshot-1", from = "26.4-snapshot-1", to = "latest", loader = "fabric")
+
     if (isFabric) {
         addDependency(
             dependency = "net.fabricmc:fabric-loader:${getDep("fabric")}",
