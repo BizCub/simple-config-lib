@@ -35,6 +35,7 @@ public class TestModClient {
         Minecraft client = Minecraft.getInstance();
         while (TOGGLE_VISIBILITY.consumeClick()) {
             client.gui.setScreen(new TestScreen(ComponentBuilder.literal("test").build()));
+            //client.gui.setScreen(getConfigScreen(Minecraft.getInstance().gui.screen()));
         }
         while (SEND_PING.consumeClick()) {
             NetworkClient.sendToServer(new PingPayload("ping", client.player.getMainHandItem()));
