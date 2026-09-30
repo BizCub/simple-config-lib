@@ -98,6 +98,15 @@ public class AutoConfigScreen extends Screen {
         this.lists.clear();
         this.objectBacking.clear();
 
+        //? if >=26.4 {
+        /*MenuTabBar.Builder tabBarBuilder = MenuTabBar.builder(this.tabManager, this.width);
+        groupFields().forEach((key, value) ->
+                tabBarBuilder.addTab(groupLabel(key), new ConfigTab(key, value))
+        );
+
+        this.tabNavigationBar = this.addRenderableWidget(tabBarBuilder.build());
+
+        *///?} else {
         List<ConfigTab> tabs = new ArrayList<>();
         groupFields().forEach((key, value) ->
                 tabs.add(new ConfigTab(key, value))
@@ -106,7 +115,7 @@ public class AutoConfigScreen extends Screen {
         this.tabNavigationBar = this.addRenderableWidget(MenuTabBar.builder(this.tabManager, this.width)
                 .addTabs(tabs.toArray(new Tab[0]))
                 .build()
-        );
+        );//?}
 
         //? >=1.20.2 {
         LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
@@ -167,9 +176,10 @@ public class AutoConfigScreen extends Screen {
 
         if (this.readOnly) {
             this.doneButton.active = false;
+            //~ if >=26.4 'visible = false' -> 'setVisible(false)' {
             this.doneButton.visible = false;
             this.resetButton.active = false;
-            this.resetButton.visible = false;
+            this.resetButton.visible = false;//~}
             for (AutoConfigList l : this.lists) {
                 l.setReadOnly(true);
             }
@@ -341,6 +351,7 @@ public class AutoConfigScreen extends Screen {
         private final AutoConfigList list;
 
         ConfigTab(final String groupId, final List<Field> fields) {
+            //? if <26.4
             super(AutoConfigScreen.this.groupLabel(groupId));
             this.list = new AutoConfigList(AutoConfigScreen.this.minecraft, AutoConfigScreen.this.width,
                     AutoConfigScreen.this.height, 0, AutoConfigScreen.this);

@@ -14,6 +14,7 @@ plugins {
 }
 
 multiloader {
+    matchExact("26.4", "26.4-snapshot-2", fb)
     matchExact("26.4", "26.4-snapshot-1", fb)
 
     match("26.3",   fb, fg, nf)
