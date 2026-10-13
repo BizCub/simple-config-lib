@@ -1,5 +1,6 @@
 package io.github.bizcub.simpleConfigLib.util.network;
 
+import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -7,15 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-//? fabric {
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-//?} forge {
-/*import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.PacketDistributor;
-import static io.github.bizcub.simpleConfigLib.main.platform.ForgeMain.CHANNEL;
-*///?} neoforge
-//import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class Network {
 
@@ -28,7 +20,9 @@ public final class Network {
     public static <T extends SclPayload> void registerServerbound(Class<T> type, BiConsumer<T, ServerPlayer> handler) {
         PayloadRegistry.validate(type);
         for (Serverbound<?> existing : SERVERBOUND) {
-            if (existing.type() == type) return;
+            if (existing.type() == type) {
+                return;
+            }
         }
         SERVERBOUND.add(new Serverbound<>(type, handler));
     }
@@ -36,7 +30,9 @@ public final class Network {
     public static <T extends SclPayload> void registerClientbound(Class<T> type, Consumer<T> handler) {
         PayloadRegistry.validate(type);
         for (Clientbound<?> existing : CLIENTBOUND) {
-            if (existing.type() == type) return;
+            if (existing.type() == type) {
+                return;
+            }
         }
         CLIENTBOUND.add(new Clientbound<>(type, handler));
     }
@@ -50,19 +46,10 @@ public final class Network {
     }
 
     public static void sendToPlayer(ServerPlayer player, SclPayload payload) {
-        /*? fabric*/ ServerPlayNetworking.send(player, payload);
-        /*? forge*/ //CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
-        /*? neoforge*/ //PacketDistributor.sendToPlayer(player, payload);
+        PlatformHooks.get().sendToPlayer(player, payload);
     }
 
     public static void sendToAllPlayers(MinecraftServer server, SclPayload payload) {
-        //? fabric {
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            ServerPlayNetworking.send(player, payload);
-        }
-        //?} forge {
-        /*CHANNEL.send(payload, PacketDistributor.ALL.noArg());
-        *///?} neoforge {
-        /*PacketDistributor.sendToAllPlayers(payload);*///?}
+        PlatformHooks.get().sendToAllPlayers(server, payload);
     }
 }

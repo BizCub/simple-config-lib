@@ -1,5 +1,6 @@
 package io.github.bizcub.test.main;
 
+import io.github.bizcub.simpleConfigLib.util.Platform;
 import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
 import io.github.bizcub.simpleConfigLib.util.network.Network;
 import io.github.bizcub.test.main.config.ConfigMain;
@@ -8,10 +9,6 @@ import io.github.bizcub.test.main.config.SimpleConfigMain;
 import io.github.bizcub.test.main.config.SimpleConfigServer;
 import io.github.bizcub.test.network.PingPayload;
 import net.minecraft.server.MinecraftServer;
-
-/*? fabric*/ import net.fabricmc.loader.api.FabricLoader;
-/*? forge*/ //import net.minecraftforge.fml.ModList;
-/*? neoforge*/ //import net.neoforged.fml.ModList;
 
 public class TestModMain {
     public static final String MOD_ID = "test_lib";
@@ -28,9 +25,7 @@ public class TestModMain {
     }
 
     public static boolean isModLoaded(String modId) {
-        /*? fabric*/ return FabricLoader.getInstance().isModLoaded(modId);
-        /*? neoforge*/ //return ModList.get().isLoaded(modId);
-        /*? forge*/ //return ModList.isLoaded(modId);
+        return Platform.isModLoaded(modId);
     }
 
     public static void onServerTick(MinecraftServer server) {
