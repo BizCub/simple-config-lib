@@ -19,16 +19,25 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class NeoForgeHooks implements PlatformHooks {
 
+    static final List<ServerboundRegistration<?>> PENDING_SERVERBOUND = new ArrayList<>();
     static final List<ClientboundRegistration<?>> PENDING_CLIENTBOUND = new ArrayList<>();
+    static final List<Class<? extends SclPayload>> PENDING_TYPES = new ArrayList<>();
+
+    private static boolean drained;
+
+    record ServerboundRegistration<T extends SclPayload>(
+            Class<T> type, BiConsumer<T, ServerPlayer> handler) {}
 
     record ClientboundRegistration<T extends SclPayload>(
             Class<T> type, BiConsumer<T, Minecraft> handler) {}
 
     public static <T extends SclPayload> void addPendingClientbound(
             Class<T> type, BiConsumer<T, Minecraft> handler) {
+        checkNotDrained();
         PENDING_CLIENTBOUND.add(new ClientboundRegistration<>(type, handler));
     }
 
@@ -57,6 +66,19 @@ public class NeoForgeHooks implements PlatformHooks {
         PacketDistributor.sendToAllPlayers(payload);
     }
 
+    @Override
+    public <T extends SclPayload> void registerServerbound(
+            Class<T> type, BiConsumer<T, ServerPlayer> handler) {
+        checkNotDrained();
+        PENDING_SERVERBOUND.add(new ServerboundRegistration<>(type, handler));
+    }
+
+    @Override
+    public <T extends SclPayload> void registerClientboundType(Class<T> type) {
+        checkNotDrained();
+        PENDING_TYPES.add(type);
+    }
+
     public static <T extends SclPayload> void registerServerbound(
             PayloadRegistrar registrar,
             Class<T> type,
@@ -74,7 +96,7 @@ public class NeoForgeHooks implements PlatformHooks {
     public static <T extends SclPayload> void registerClientbound(
             PayloadRegistrar registrar,
             Class<T> type,
-            java.util.function.Consumer<T> handler) {
+            Consumer<T> handler) {
         CustomPacketPayload.Type<T> payloadType = PayloadRegistry.typeOf(type);
         StreamCodec<RegistryFriendlyByteBuf, T> codec = PayloadRegistry.codecOf(type);
 
@@ -83,12 +105,36 @@ public class NeoForgeHooks implements PlatformHooks {
     }
 
     @SuppressWarnings("unchecked")
-    static void drainClientbound(PayloadRegistrar registrar) {
+    static void drain(PayloadRegistrar registrar) {
+        for (ServerboundRegistration<?> entry : PENDING_SERVERBOUND) {
+            ServerboundRegistration<SclPayload> typed = (ServerboundRegistration<SclPayload>) entry;
+            registerServerbound(registrar, typed.type(), typed.handler());
+        }
+
         for (ClientboundRegistration<?> entry : PENDING_CLIENTBOUND) {
             ClientboundRegistration<SclPayload> typed = (ClientboundRegistration<SclPayload>) entry;
             registerClientbound(registrar, typed.type(),
                     payload -> typed.handler().accept(payload, Minecraft.getInstance()));
         }
+
+        for (Class<? extends SclPayload> type : PENDING_TYPES) {
+            boolean hasHandler = PENDING_CLIENTBOUND.stream()
+                    .anyMatch(e -> e.type() == type);
+            if (!hasHandler) {
+                registerClientbound(registrar, (Class<SclPayload>) type, payload -> {});
+            }
+        }
+
+        PENDING_SERVERBOUND.clear();
         PENDING_CLIENTBOUND.clear();
+        PENDING_TYPES.clear();
+        drained = true;
+    }
+
+    private static void checkNotDrained() {
+        if (drained) {
+            throw new IllegalStateException(
+                    "Payloads must be registered before RegisterPayloadHandlersEvent");
+        }
     }
 }

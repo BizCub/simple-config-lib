@@ -45,7 +45,8 @@ public class FabricHooks implements PlatformHooks {
         }
     }
 
-    public static <T extends SclPayload> void registerServerbound(
+    @Override
+    public <T extends SclPayload> void registerServerbound(
             Class<T> type, BiConsumer<T, ServerPlayer> handler) {
         CustomPacketPayload.Type<T> payloadType = PayloadRegistry.typeOf(type);
         StreamCodec<RegistryFriendlyByteBuf, T> codec = PayloadRegistry.codecOf(type);
@@ -58,7 +59,8 @@ public class FabricHooks implements PlatformHooks {
         });
     }
 
-    public static <T extends SclPayload> void registerClientboundType(Class<T> type) {
+    @Override
+    public <T extends SclPayload> void registerClientboundType(Class<T> type) {
         CustomPacketPayload.Type<T> payloadType = PayloadRegistry.typeOf(type);
         StreamCodec<RegistryFriendlyByteBuf, T> codec = PayloadRegistry.codecOf(type);
 

@@ -2,8 +2,6 @@ package io.github.bizcub.simpleConfigLib.platform;
 
 import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
 import io.github.bizcub.simpleConfigLib.platform.client.NeoForgeClientEntrypoint;
-import io.github.bizcub.simpleConfigLib.util.network.Network;
-import io.github.bizcub.simpleConfigLib.util.network.SclPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -26,23 +24,12 @@ public class NeoForgeEntrypoint {
     }
 
     @SubscribeEvent
-    @SuppressWarnings("unchecked")
     public static void register(RegisterPayloadHandlersEvent event) {
         SimpleConfigLib.registerPayloads();
 
         PayloadRegistrar registrar = event.registrar("1");
 
-        for (Network.Serverbound<?> entry : Network.serverbound()) {
-            Network.Serverbound<SclPayload> typed = (Network.Serverbound<SclPayload>) entry;
-            NeoForgeHooks.registerServerbound(registrar, typed.type(), typed.handler());
-        }
-
-        for (Network.Clientbound<?> entry : Network.clientbound()) {
-            Network.Clientbound<SclPayload> typed = (Network.Clientbound<SclPayload>) entry;
-            NeoForgeHooks.registerClientbound(registrar, typed.type(), typed.handler());
-        }
-
-        NeoForgeHooks.drainClientbound(registrar);
+        NeoForgeHooks.drain(registrar);
     }
 
     @SubscribeEvent

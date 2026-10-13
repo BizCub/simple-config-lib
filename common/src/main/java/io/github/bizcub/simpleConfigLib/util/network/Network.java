@@ -25,6 +25,7 @@ public final class Network {
             }
         }
         SERVERBOUND.add(new Serverbound<>(type, handler));
+        PlatformHooks.get().registerServerbound(type, handler);
     }
 
     public static <T extends SclPayload> void registerClientbound(Class<T> type, Consumer<T> handler) {
@@ -35,6 +36,7 @@ public final class Network {
             }
         }
         CLIENTBOUND.add(new Clientbound<>(type, handler));
+        PlatformHooks.get().registerClientboundType(type);
     }
 
     public static List<Serverbound<?>> serverbound() {

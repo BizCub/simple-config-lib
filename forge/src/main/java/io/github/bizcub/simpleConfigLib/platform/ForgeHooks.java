@@ -32,6 +32,20 @@ public class ForgeHooks implements PlatformHooks {
     public record ClientboundRegistration<T extends SclPayload>(
             Class<T> type, BiConsumer<T, Minecraft> handler) {}
 
+    static final List<ServerboundRegistration<?>> PENDING_SERVERBOUND = new ArrayList<>();
+
+    public record ServerboundRegistration<T extends SclPayload>(
+            Class<T> type, BiConsumer<T, ServerPlayer> handler) {}
+
+    @Override
+    public <T extends SclPayload> void registerServerbound(Class<T> type, BiConsumer<T, ServerPlayer> handler) {
+        PENDING_SERVERBOUND.add(new ServerboundRegistration<>(type, handler));
+    }
+
+    @Override
+    public <T extends SclPayload> void registerClientboundType(Class<T> type) {
+    }
+
     @Override
     public boolean isModLoaded(String modId) {
         return ModList.isLoaded(modId);
