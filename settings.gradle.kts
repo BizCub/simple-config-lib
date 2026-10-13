@@ -1,7 +1,6 @@
 pluginManagement {
     repositories {
         mavenLocal()
-        mavenCentral()
         gradlePluginPortal()
         maven("https://maven.kikugie.dev/snapshots")
         maven("https://maven.fabricmc.net")
@@ -9,36 +8,5 @@ pluginManagement {
 }
 
 plugins {
-    id("dev.kikugie.stonecutter") version "0.9+"
-    id("io.github.bizcub.multiloader") version "0.8+"
-}
-
-multiloader {
-    matchExact("26.4", "26.4-snapshot-2", fb)
-    matchExact("26.4", "26.4-snapshot-1", fb)
-
-    match("26.3",   fb, fg, nf)
-    match("26.2",   fb, fg, nf)
-    match("26.1.2", fb, fg, nf)
-    match("26.1.1", fb, fg, nf)
-    match("26.1",   fb, fg, nf)
-    match("1.21.11",fb, fg, nf)
-    match("1.21.10",fb, fg, nf)
-    match("1.21.9", fb, fg, nf)
-    match("1.21.8", fb, fg, nf)
-    match("1.21.7", fb, fg, nf)
-    match("1.21.6", fb, fg, nf)
-    match("1.21.5", fb, fg, nf)
-    match("1.21.4", fb, fg, nf)
-    match("1.21.3", fb, fg, nf)
-    match("1.21.2", fb,     nf)
-    match("1.21.1", fb, fg, nf)
-    match("1.21",   fb, fg, nf)
-    match("1.20.6", fb, fg)
-    match("1.20.5", fb)
-    match("1.20.4", fb, fg)
-    match("1.20.3", fb, fg)
-    match("1.20.2", fb, fg)
-    match("1.20.1", fb, fg)
-    match("1.20",   fb, fg)
+    id("io.github.bizcub.multiloader") version "0.10+"
 }
