@@ -20,7 +20,9 @@ import net.minecraftforge.network.PacketDistributor;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 public class ForgeHooks implements PlatformHooks {
@@ -82,17 +84,9 @@ public class ForgeHooks implements PlatformHooks {
                 .payloadChannel()
                 .play();
 
+        Set<Class<?>> registeredTypes = new HashSet<>();
+
         var clientboundBuilder = play.clientbound();
-        for (Network.Clientbound<?> entry : Network.clientbound()) {
-            Network.Clientbound<SclPayload> typed = (Network.Clientbound<SclPayload>) entry;
-            clientboundBuilder = clientboundBuilder.add(
-                    PayloadRegistry.typeOf(typed.type()),
-                    PayloadRegistry.codecOf(typed.type()),
-                    (payload, ctx) -> {
-                        ctx.enqueueWork(() -> typed.handler().accept(payload));
-                        ctx.setPacketHandled(true);
-                    });
-        }
         for (ClientboundRegistration<?> entry : PENDING_CLIENTBOUND) {
             ClientboundRegistration<SclPayload> typed = (ClientboundRegistration<SclPayload>) entry;
             clientboundBuilder = clientboundBuilder.add(
@@ -103,11 +97,26 @@ public class ForgeHooks implements PlatformHooks {
                                 typed.handler().accept(payload, Minecraft.getInstance()));
                         ctx.setPacketHandled(true);
                     });
+            registeredTypes.add(typed.type());
+        }
+        for (Network.Clientbound<?> entry : Network.clientbound()) {
+            if (registeredTypes.contains(entry.type())) {
+                continue;
+            }
+            Network.Clientbound<SclPayload> typed = (Network.Clientbound<SclPayload>) entry;
+            clientboundBuilder = clientboundBuilder.add(
+                    PayloadRegistry.typeOf(typed.type()),
+                    PayloadRegistry.codecOf(typed.type()),
+                    (payload, ctx) -> {
+                        ctx.enqueueWork(() -> typed.handler().accept(payload));
+                        ctx.setPacketHandled(true);
+                    });
+            registeredTypes.add(typed.type());
         }
 
         var serverboundBuilder = clientboundBuilder.serverbound();
-        for (Network.Serverbound<?> entry : Network.serverbound()) {
-            Network.Serverbound<SclPayload> typed = (Network.Serverbound<SclPayload>) entry;
+        for (ServerboundRegistration<?> entry : PENDING_SERVERBOUND) {
+            ServerboundRegistration<SclPayload> typed = (ServerboundRegistration<SclPayload>) entry;
             serverboundBuilder = serverboundBuilder.add(
                     PayloadRegistry.typeOf(typed.type()),
                     PayloadRegistry.codecOf(typed.type()),
@@ -122,6 +131,7 @@ public class ForgeHooks implements PlatformHooks {
 
         CHANNEL = serverboundBuilder.build();
         PENDING_CLIENTBOUND.clear();
+        PENDING_SERVERBOUND.clear();
     }
 
     public static <T extends SclPayload> void addPendingClientbound(
