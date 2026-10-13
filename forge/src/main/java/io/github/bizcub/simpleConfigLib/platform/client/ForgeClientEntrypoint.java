@@ -16,20 +16,12 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class ForgeClientEntrypoint {
 
     public static void init() {
+        RegisterKeyMappingsEvent.BUS.addListener(ForgeClientHooks::consumeKeyMappings);
+
         ClientHooks.get().registerClientboundReceiver(
                 ConfigSyncPayload.class,
                 (payload, client) ->
                         ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
-    }
-
-    @EventBusSubscriber(modid = SimpleConfigLib.MOD_ID, value = Dist.CLIENT,
-            bus = EventBusSubscriber.Bus.FORGE)
-    public static class ForgeBus {
-
-        @SubscribeEvent
-        public static void registerKeymappings(RegisterKeyMappingsEvent event) {
-            ForgeClientHooks.consumeKeyMappings(event);
-        }
     }
 
     @SubscribeEvent
