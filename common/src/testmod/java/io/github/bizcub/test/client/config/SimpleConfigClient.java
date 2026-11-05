@@ -41,6 +41,7 @@ public class SimpleConfigClient implements ConfigClient {
     public int profilerBackground = ConfigClient.super.profilerBackground();
 
     @Tooltip
+    @TextConfig(maxLength = 32)
     @ListConfig(expanded = true, addToFront = true)
     public List<String> ignoredMods = ConfigClient.super.ignoredMods();
 
@@ -71,6 +72,7 @@ public class SimpleConfigClient implements ConfigClient {
     public List<Component> hints = new ArrayList<>(List.of(headerNote, emptyNote));
 
     @Tooltip
+    @TextConfig(maxLength = 10)
     @ConfigGroup("gameplay")
     public String worldProfile = ConfigClient.super.worldProfile();
 

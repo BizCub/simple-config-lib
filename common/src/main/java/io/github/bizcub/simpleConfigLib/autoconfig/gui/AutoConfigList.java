@@ -297,6 +297,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         public Color colorCfg;
         public int selectedIndex = -1;
         public Class<?> type;
+        public int textMaxLength = 256;
 
         public final List<Element> elements = new ArrayList<>();
         public final Supplier<Element> factory;
@@ -702,7 +703,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             } else {
                 EditBox eb = new EditBox(AutoConfigList.this.font, 0, 0,
                         getRowWidth() - pad, 20, ComponentBuilder.empty().build());
-                eb.setMaxLength(256);
+                eb.setMaxLength(this.model.textMaxLength);
                 eb.setValue(value);
                 eb.setResponder(v -> {
                     ScalarElement s = scalar();

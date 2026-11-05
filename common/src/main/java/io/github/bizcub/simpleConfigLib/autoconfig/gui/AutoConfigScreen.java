@@ -404,6 +404,11 @@ public class AutoConfigScreen extends Screen {
         }
     }
 
+    private static int textMaxLength(final Field field) {
+        TextConfig textConfig = field.getAnnotation(TextConfig.class);
+        return textConfig != null ? textConfig.maxLength() : 256;
+    }
+
     private Node buildListNode(final Object config, final Field field) throws IllegalAccessException {
         return buildListNode(config, field, null);
     }
@@ -444,6 +449,7 @@ public class AutoConfigScreen extends Screen {
                                     : colorCfg  != null ? "0"
                                       : sliderCfg != null ? String.valueOf(sliderCfg.min())
                                         : ""));
+            model.textMaxLength = textMaxLength(field);
 
             if (element == Integer.class) {
                 model.sliderCfg = sliderCfg;
@@ -571,6 +577,7 @@ public class AutoConfigScreen extends Screen {
 
         if (t == String.class) {
             EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, ComponentBuilder.empty().build());
+            box.setMaxLength(textMaxLength(field));
             box.setValue((String) field.get(config));
             box.setResponder(v -> apply(config, field, v));
             return box;
