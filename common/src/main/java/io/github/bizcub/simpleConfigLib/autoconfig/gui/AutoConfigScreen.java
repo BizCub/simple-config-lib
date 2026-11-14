@@ -298,7 +298,6 @@ public class AutoConfigScreen extends Screen {
     @Override
     public void onClose() {
         if (!this.dirty) {
-            this.holder.load();
             this.minecraft.gui.setScreen(this.lastScreen);
             return;
         }
@@ -306,7 +305,12 @@ public class AutoConfigScreen extends Screen {
         this.minecraft.gui.setScreen(new ConfirmScreen(
                 yes -> {
                     if (yes) {
-                        this.holder.load();
+                        boolean remote = this.minecraft.player != null && !this.minecraft.hasSingleplayerServer();
+                        if (remote && this.viewEnv != ConfigSide.CLIENT) {
+                            this.holder.restoreServerSnapshot(this.initialSnapshot);
+                        } else {
+                            this.holder.load();
+                        }
                         this.minecraft.gui.setScreen(this.lastScreen);
                     } else {
                         this.minecraft.gui.setScreen(this);

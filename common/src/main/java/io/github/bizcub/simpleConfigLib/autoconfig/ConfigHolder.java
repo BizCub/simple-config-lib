@@ -55,6 +55,7 @@ public class ConfigHolder<T> {
     private final AutoConfig meta;
     private final List<Consumer<T>> saveListeners = new ArrayList<>();
     private T instance;
+    private String serverSnapshot;
 
     ConfigHolder(final Class<T> type) {
         this.type = type;
@@ -108,7 +109,12 @@ public class ConfigHolder<T> {
         ConfigSide env = holder.getMeta().side();
         if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
             holder.applySnapshot(json);
+            holder.serverSnapshot = holder.snapshot();
         }
+    }
+
+    public void restoreServerSnapshot(final String fallback) {
+        applySnapshot(this.serverSnapshot != null ? this.serverSnapshot : fallback);
     }
 
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
@@ -119,6 +125,7 @@ public class ConfigHolder<T> {
     }
 
     public void load() {
+        this.serverSnapshot = null;
         Path file = path();
         T loaded = null;
         if (Files.exists(file)) {
