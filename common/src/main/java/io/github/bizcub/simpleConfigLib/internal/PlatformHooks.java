@@ -28,9 +28,6 @@ public interface PlatformHooks {
     <T extends SclPayload> void registerClientboundType(Class<T> type);
 
     class Holder {
-        static final PlatformHooks INSTANCE = java.util.ServiceLoader
-                .load(PlatformHooks.class)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No SCL platform implementation found"));
+        static final PlatformHooks INSTANCE = PlatformLoader.create(PlatformHooks.class, "%sHooks");
     }
 }

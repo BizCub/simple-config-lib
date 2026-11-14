@@ -19,9 +19,6 @@ public interface ClientHooks {
     void sendToServer(SclPayload payload);
 
     class Holder {
-        static final ClientHooks INSTANCE = java.util.ServiceLoader
-                .load(ClientHooks.class)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No SCL client implementation found"));
+        static final ClientHooks INSTANCE = PlatformLoader.create(ClientHooks.class, "client.%sClientHooks");
     }
 }
