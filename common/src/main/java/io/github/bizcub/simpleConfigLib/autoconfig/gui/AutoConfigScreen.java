@@ -386,9 +386,7 @@ public class AutoConfigScreen extends Screen {
                     setQuietly(config, field, value);
                 }
                 GroupNode g = new GroupNode();
-                g.label = field.getType() == Component.class
-                        ? (Component) field.get(config)
-                        : labelFor(field, fieldPrefix);
+                g.label = labelFor(field, fieldPrefix);
                 g.tooltip = tooltipFor(field, fieldPrefix);
                 g.expanded = false;
                 for (Field cf : instanceFields(t)) {
@@ -411,10 +409,6 @@ public class AutoConfigScreen extends Screen {
     private static int textMaxLength(final Field field) {
         TextConfig textConfig = field.getAnnotation(TextConfig.class);
         return textConfig != null ? textConfig.maxLength() : 256;
-    }
-
-    private Node buildListNode(final Object config, final Field field) throws IllegalAccessException {
-        return buildListNode(config, field, null);
     }
 
     private Node buildListNode(final Object config, final Field field, final String fieldPrefix)

@@ -659,13 +659,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             String value = e != null ? e.value : "";
 
             if (model.type == Component.class) {
-                Component comp = (e != null && e.component != null) ? e.component : ComponentBuilder.literal(value).build();
-                this.componentLabel = comp;
+                this.componentLabel = (e != null && e.component != null) ? e.component : ComponentBuilder.literal(value).build();
                 this.widget = new StringWidget(0, 0, getRowWidth() - pad, 20,
                         ComponentBuilder.empty().build(), AutoConfigList.this.font);
             } else if (model.type == Boolean.class) {
                 boolean initial = Boolean.parseBoolean(value);
-                CycleButton<Boolean> cb = CycleButton.onOffBuilder(initial)
+                this.widget = CycleButton.onOffBuilder(initial)
                         .displayOnlyValue()
                         .create(0, 0, getRowWidth() - pad, 20, ComponentBuilder.empty().build(),
                                 (b, v) -> {
@@ -675,23 +674,21 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                                         markDirty();
                                     }
                                 });
-                this.widget = cb;
             } else if (model.sliderCfg != null) {
                 Slider r = model.sliderCfg;
                 int initial = value.isEmpty() ? r.min() : Integer.parseInt(value.trim());
-                AutoConfigScreen.IntSlider slider = new AutoConfigScreen.IntSlider(r.min(), r.max(), r.step(), initial, v -> {
+                this.widget = new AutoConfigScreen.IntSlider(r.min(), r.max(), r.step(), initial, v -> {
                     ScalarElement s = scalar();
                     if (s != null) {
                         s.value = String.valueOf(v);
                         markDirty();
                     }
                 });
-                this.widget = slider;
             } else if (model.colorCfg != null) {
                 int initial = value.isEmpty() ? 0 : (int) Long.parseLong(value.trim());
                 ScalarElement s0 = scalar();
                 if (s0 != null) s0.value = String.valueOf(initial);
-                ColorWidget cw = new ColorWidget(AutoConfigList.this.font, initial,
+                this.widget = new ColorWidget(AutoConfigList.this.font, initial,
                         model.colorCfg.alpha(), v -> {
                     ScalarElement s = scalar();
                     if (s != null) {
@@ -699,7 +696,6 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                         markDirty();
                     }
                 });
-                this.widget = cw;
             } else {
                 EditBox eb = new EditBox(AutoConfigList.this.font, 0, 0,
                         getRowWidth() - pad, 20, ComponentBuilder.empty().build());

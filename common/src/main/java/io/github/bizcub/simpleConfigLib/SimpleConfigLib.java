@@ -33,9 +33,7 @@ public class SimpleConfigLib {
             if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
                 holder.load();
                 count++;
-                for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                    Network.sendToPlayer(p, new ConfigSyncPayload(holder.id(), holder.snapshot()));
-                }
+                Network.sendToAllPlayers(server, new ConfigSyncPayload(holder.id(), holder.snapshot()));
             }
         }
         return count;
@@ -64,9 +62,7 @@ public class SimpleConfigLib {
         holder.applySnapshot(payload.json());
         holder.save();
 
-        for (ServerPlayer p : player.level().getServer().getPlayerList().getPlayers()) {
-            Network.sendToPlayer(p, new ConfigSyncPayload(holder.id(), holder.snapshot()));
-        }
+        Network.sendToAllPlayers(player.level().getServer(), new ConfigSyncPayload(holder.id(), holder.snapshot()));
     }
 
     public static void onPlayerJoin(ServerPlayer player) {
