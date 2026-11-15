@@ -51,7 +51,7 @@ public final class ColorWidget extends AbstractWidget {
         super(0, 0, DEFAULT_WIDTH, 20, Component.empty());
         this.alpha = alpha;
         this.onChange = onChange;
-        setColorFromInt(normalize(initial));
+        setColorFromInt(initial);
         this.box = new EditBox(font, 0, 0, DEFAULT_WIDTH - SWATCH - GAP, 20, Component.empty());
         this.box.setMaxLength(9);
         this.box.setValue(format(this.color));
@@ -93,7 +93,7 @@ public final class ColorWidget extends AbstractWidget {
         if (s.startsWith("#")) s = s.substring(1);
         if (s.startsWith("0x") || s.startsWith("0X")) s = s.substring(2);
         try {
-            setColorFromInt(normalize((int) Long.parseLong(s, 16)));
+            setColorFromInt((int) Long.parseLong(s, 16));
             this.onChange.accept(this.color);
         } catch (NumberFormatException ignored) {
         }

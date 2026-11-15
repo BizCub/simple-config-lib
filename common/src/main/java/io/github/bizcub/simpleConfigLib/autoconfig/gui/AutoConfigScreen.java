@@ -1,12 +1,11 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
-import com.mojang.logging.LogUtils;
 import com.mojang.blaze3d.platform.InputConstants;
-import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
+import com.mojang.logging.LogUtils;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
+import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Tooltip;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.Element;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.GroupNode;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ListModel;
@@ -15,6 +14,8 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.Node;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ObjectElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
 import io.github.bizcub.simpleConfigLib.internal.KeyFormatter;
 import io.github.bizcub.simpleConfigLib.internal.network.NetworkClient;
 import net.minecraft.ChatFormatting;
@@ -27,6 +28,7 @@ import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
@@ -61,12 +63,8 @@ public class AutoConfigScreen extends Screen {
     private long saveDeadline;
     private long errorUntil;
     private HeaderAndFooterLayout layout;
-    private final List<Runnable> applyActions = new ArrayList<>();
     private final List<AutoConfigList> lists = new ArrayList<>();
     private final TabManager tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
-
-    private final Map<ObjectElement, Object> objectBacking = new IdentityHashMap<>();
-
     private MenuTabBar tabNavigationBar;
 
     private Button resetButton;
@@ -106,23 +104,12 @@ public class AutoConfigScreen extends Screen {
         int previousTab = Math.max(0, this.lists.indexOf(currentList()));
         List<AutoConfigList.ViewState> views = this.lists.stream().map(AutoConfigList::viewState).toList();
         this.layout = new HeaderAndFooterLayout(this);
-        this.applyActions.clear();
         this.lists.clear();
-        this.objectBacking.clear();
         this.defaultFactories.clear();
         this.defaultFactories.put(this.editing.get(), this.editing::defaults);
         this.invalidInputs.clear();
         this.contextMenu = null;
 
-        //? if >=26.4 {
-        /*MenuTabBar.Builder tabBarBuilder = MenuTabBar.builder(this.tabManager, this.width);
-        groupFields().forEach((key, value) ->
-                tabBarBuilder.addTab(groupLabel(key), new ConfigTab(key, value))
-        );
-
-        this.tabNavigationBar = this.addRenderableWidget(tabBarBuilder.build());
-
-        *///?} else {
         List<ConfigTab> tabs = new ArrayList<>();
         groupFields().forEach((key, value) ->
                 tabs.add(new ConfigTab(key, value))
@@ -131,7 +118,7 @@ public class AutoConfigScreen extends Screen {
         this.tabNavigationBar = this.addRenderableWidget(MenuTabBar.builder(this.tabManager, this.width)
                 .addTabs(tabs.toArray(new Tab[0]))
                 .build()
-        );//?}
+        );
 
         LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
 
@@ -139,11 +126,10 @@ public class AutoConfigScreen extends Screen {
         this.doneButton = Button.builder(CommonComponents.GUI_DONE, b -> save()).build();
         this.doneButton.active = false;
 
-        List<Button> buttons = new ArrayList<>(List.of(cancelButton, this.doneButton));
-        buttons.forEach(button -> {
-            button.setWidth(Math.max(40, Math.min(150, (this.width - 128) / 2)));
+        for (Button button : List.of(cancelButton, this.doneButton)) {
+            button.setWidth(Math.max(40, Math.min(DEFAULT_WIDGET_WIDTH, (this.width - 128) / 2)));
             footer.addChild(button);
-        });
+        }
 
         this.layout.visitWidgets(w -> {
             w.setTabOrderGroup(1);
@@ -177,10 +163,9 @@ public class AutoConfigScreen extends Screen {
 
         if (this.readOnly) {
             this.doneButton.active = false;
-            //~ if >=26.4 'visible = false' -> 'setVisible(false)' {
             this.doneButton.visible = false;
             this.resetButton.active = false;
-            this.resetButton.visible = false;//~}
+            this.resetButton.visible = false;
             for (AutoConfigList l : this.lists) {
                 l.setReadOnly(true);
             }
@@ -190,10 +175,9 @@ public class AutoConfigScreen extends Screen {
     }
 
     public void markDirty() {
-        for (AutoConfigList list : this.lists) list.commitElements();
         this.invalidInputs.removeIf(box -> this.lists.stream().noneMatch(list -> list.containsWidget(box)));
         this.invalidListValues = false;
-        this.applyActions.forEach(Runnable::run);
+        for (AutoConfigList list : this.lists) list.commitElements();
         this.dirty = !this.initialSnapshot.equals(this.editing.snapshot())
                 || !this.invalidInputs.isEmpty() || this.invalidListValues;
         if (this.viewEnv == ConfigSide.CLIENT) this.holder.notifyChanges();
@@ -213,9 +197,7 @@ public class AutoConfigScreen extends Screen {
     private void save() {
         markDirty();
         if (!this.doneButton.active) return;
-        boolean connected = this.minecraft.player != null;
-        boolean sendToServer = connected && this.viewEnv != ConfigSide.CLIENT;
-        if (sendToServer) {
+        if (this.minecraft.player != null && this.viewEnv != ConfigSide.CLIENT) {
             this.pendingRequest = ++nextRequestId;
             this.saveDeadline = System.currentTimeMillis() + 10000;
             updateDoneButton();
@@ -232,7 +214,7 @@ public class AutoConfigScreen extends Screen {
         }
     }
 
-    public void handleResult(io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload result) {
+    public void handleResult(ConfigResultPayload result) {
         if (this.pendingRequest == 0 || result.requestId() != this.pendingRequest || !result.name().equals(this.holder.id())) return;
         if (result.success()) saved();
         else saveFailed();
@@ -319,13 +301,9 @@ public class AutoConfigScreen extends Screen {
     private Map<String, List<Field>> groupFields() {
         Map<String, List<Field>> groups = new LinkedHashMap<>();
         groups.put(DEFAULT_GROUP, new ArrayList<>());
-        for (Field field : this.holder.type().getDeclaredFields()) {
-            int mods = field.getModifiers();
-            if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
-                continue;
-            }
-            ConfigGroup g = field.getAnnotation(ConfigGroup.class);
-            String key = g != null ? g.value() : DEFAULT_GROUP;
+        for (Field field : instanceFields(this.holder.type())) {
+            ConfigGroup group = field.getAnnotation(ConfigGroup.class);
+            String key = group != null ? group.value() : DEFAULT_GROUP;
             groups.computeIfAbsent(key, k -> new ArrayList<>()).add(field);
         }
 
@@ -444,7 +422,7 @@ public class AutoConfigScreen extends Screen {
     }
 
     @Override
-    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+    public boolean charTyped(CharacterEvent event) {
         return this.pendingRequest != 0 || this.contextMenu != null || super.charTyped(event);
     }
 
@@ -489,7 +467,6 @@ public class AutoConfigScreen extends Screen {
         private final AutoConfigList list;
 
         ConfigTab(final String groupId, final List<Field> fields) {
-            //? if <26.4
             super(AutoConfigScreen.this.groupLabel(groupId));
             this.list = new AutoConfigList(AutoConfigScreen.this.minecraft, AutoConfigScreen.this.width,
                     AutoConfigScreen.this.height, 0, AutoConfigScreen.this);
@@ -530,7 +507,8 @@ public class AutoConfigScreen extends Screen {
                     field.set(config, defaultValue(config, field));
                     if (node instanceof WidgetNode widgetNode) {
                         widgetNode.widget = buildWidget(config, field);
-                        currentList().rebuild();
+                        AutoConfigList list = currentList();
+                        if (list != null) list.rebuild();
                     } else {
                         this.rebuildWidgets();
                     }
@@ -541,18 +519,19 @@ public class AutoConfigScreen extends Screen {
             };
             if (node instanceof WidgetNode widgetNode && widgetNode.widget instanceof IntSlider) {
                 node.manualAction = () -> {
+                    AutoConfigList list = currentList();
+                    if (list == null) return;
                     try {
                         if (widgetNode.widget instanceof EditBox box) {
                             if (parseElement(Integer.class, box.getValue()) == null) return;
                             this.invalidInputs.remove(box);
                             widgetNode.widget = buildWidget(config, field);
-                            currentList().rebuild();
-                            currentList().focusWidget(widgetNode.widget);
                         } else {
-                            EditBox box = numberBox(config, field);
-                            widgetNode.widget = box;
-                            currentList().rebuild();
-                            currentList().focusWidget(box);
+                            widgetNode.widget = numberBox(config, field);
+                        }
+                        list.rebuild();
+                        list.focusWidget(widgetNode.widget);
+                        if (widgetNode.widget instanceof EditBox box) {
                             box.setCursorPosition(box.getValue().length());
                             box.setHighlightPos(0);
                         }
@@ -598,7 +577,6 @@ public class AutoConfigScreen extends Screen {
                 GroupNode g = new GroupNode();
                 g.label = labelFor(field, fieldPrefix);
                 g.tooltip = tooltipFor(field, fieldPrefix);
-                g.expanded = false;
                 for (Field cf : instanceFields(t)) {
                     Node child = buildNode(value, cf, fieldPrefix);
                     if (child != null) {
@@ -674,8 +652,7 @@ public class AutoConfigScreen extends Screen {
                 model.colorCfg = colorCfg;
             }
 
-            applyActions.add(() -> {
-                if (!model.active) return;
+            model.applyAction = () -> {
                 List<Object> result = new ArrayList<>();
                 for (Element e : model.elements) {
                     if (e instanceof ScalarElement s) {
@@ -692,7 +669,7 @@ public class AutoConfigScreen extends Screen {
                     }
                 }
                 setQuietly(config, field, result);
-            });
+            };
 
             ListNode n = new ListNode();
             n.label = labelFor(field, fieldPrefix);
@@ -721,19 +698,13 @@ public class AutoConfigScreen extends Screen {
             final ListModel model = new ListModel(initial, editable, expanded, addToFront, element,
                     () -> defaultObjectElement(element, () -> instantiate(element), field, translateElements, expandElements));
 
-            applyActions.add(() -> {
-                if (!model.active) return;
+            model.applyAction = () -> {
                 List<Object> result = new ArrayList<>();
-                for (Element e : model.elements) {
-                    if (e instanceof ObjectElement oe) {
-                        Object backing = this.objectBacking.get(oe);
-                        if (backing != null) {
-                            result.add(backing);
-                        }
-                    }
+                for (Element entry : model.elements) {
+                    if (entry instanceof ObjectElement object && object.value != null) result.add(object.value);
                 }
                 setQuietly(config, field, result);
-            });
+            };
 
             ListNode n = new ListNode();
             n.label = labelFor(field);
@@ -769,7 +740,6 @@ public class AutoConfigScreen extends Screen {
                                              final boolean expandElements) {
         GroupNode g = new GroupNode();
         g.label = elementLabel(ownerField, element, translateElements);
-        g.tooltip = null;
         g.expanded = expandElements;
         for (Field cf : instanceFields(element)) {
             Node child = buildNode(obj, cf, ownerField.getName());
@@ -777,9 +747,7 @@ public class AutoConfigScreen extends Screen {
                 g.children.add(child);
             }
         }
-        ObjectElement oe = new ObjectElement(g);
-        this.objectBacking.put(oe, obj);
-        return oe;
+        return new ObjectElement(g, obj);
     }
 
     @SuppressWarnings("rawtypes")
@@ -964,7 +932,7 @@ public class AutoConfigScreen extends Screen {
         }
     }
 
-    private Class<?> resolveListElementType(final Field field) {
+    private static Class<?> resolveListElementType(final Field field) {
         Type generic = field.getGenericType();
         if (generic instanceof ParameterizedType pt && pt.getActualTypeArguments().length == 1) {
             Type arg = pt.getActualTypeArguments()[0];
@@ -1027,7 +995,6 @@ public class AutoConfigScreen extends Screen {
         });
         return box;
     }
-
 
     private static Class<?> boxed(Class<?> type) {
         if (type == int.class) return Integer.class;

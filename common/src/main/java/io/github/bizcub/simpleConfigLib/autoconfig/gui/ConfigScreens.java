@@ -2,6 +2,7 @@ package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.server.permissions.Permissions;
@@ -11,7 +12,7 @@ import java.util.List;
 
 public class ConfigScreens {
 
-    public static void handleResult(io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload result) {
+    public static void handleResult(ConfigResultPayload result) {
         if (Minecraft.getInstance().gui.screen() instanceof AutoConfigScreen screen) screen.handleResult(result);
     }
 

@@ -2,16 +2,17 @@ package io.github.bizcub.simpleConfigLib.platform;
 
 import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+
 import java.nio.file.Path;
 
 public class FabricHooks implements PlatformHooks {

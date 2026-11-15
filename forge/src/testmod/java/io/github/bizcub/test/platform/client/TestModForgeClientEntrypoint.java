@@ -7,16 +7,16 @@ import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @EventBusSubscriber(modid = TestModMain.MOD_ID, value = Dist.CLIENT)
 public class TestModForgeClientEntrypoint {
 
-    public static void init() {
+    public static void init(FMLJavaModLoadingContext context) {
         TestModClient.init();
 
-        ModLoadingContext.get().registerExtensionPoint(
+        context.registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
                         (minecraft, parent) -> TestModClient.getConfigScreen(parent)));

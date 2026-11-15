@@ -1,8 +1,8 @@
 package io.github.bizcub.test.main;
 
-import net.minecraft.network.chat.Component;
 import io.github.bizcub.test.main.config.SimpleConfigMain;
 import io.github.bizcub.test.main.config.SimpleConfigServer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 
 public class TestModMain {

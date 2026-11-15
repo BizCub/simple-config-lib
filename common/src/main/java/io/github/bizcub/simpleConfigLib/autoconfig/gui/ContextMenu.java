@@ -10,8 +10,8 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
-import java.util.List;
 import java.util.Comparator;
+import java.util.List;
 
 final class ContextMenu extends AbstractWidget {
     private static final int ROW_HEIGHT = 20;

@@ -5,8 +5,8 @@ import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
 import io.github.bizcub.test.main.TestModMain;
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 
 import java.util.ArrayList;

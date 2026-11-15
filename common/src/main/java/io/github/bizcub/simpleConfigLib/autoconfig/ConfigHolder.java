@@ -1,12 +1,12 @@
 package io.github.bizcub.simpleConfigLib.autoconfig;
 
-import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
-import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
+import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
+import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
@@ -57,7 +57,7 @@ public class ConfigHolder<T> {
     private final List<Consumer<T>> saveListeners = new ArrayList<>();
     private final List<Consumer<T>> changeListeners = new ArrayList<>();
     private String notifiedSnapshot;
-    private T instance;
+    private final T instance;
 
     ConfigHolder(final Class<T> type) {
         this(type, true);
@@ -130,7 +130,6 @@ public class ConfigHolder<T> {
         }
     }
 
-
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
         if (listener != null && !this.saveListeners.contains(listener)) {
             this.saveListeners.add(listener);
@@ -177,12 +176,7 @@ public class ConfigHolder<T> {
     }
 
     public void reset() {
-        T defaults = newDefault();
-        if (this.instance == null) {
-            this.instance = defaults;
-        } else {
-            copyInto(defaults, this.instance);
-        }
+        copyInto(newDefault(), this.instance);
         notifyChanges();
     }
 
@@ -248,7 +242,7 @@ public class ConfigHolder<T> {
         }
     }
 
-    private Path nextBackupPath(final Path file) {
+    private static Path nextBackupPath(final Path file) {
         Path dir = file.getParent();
         String base = file.getFileName().toString() + ".bak";
         int n = 1;

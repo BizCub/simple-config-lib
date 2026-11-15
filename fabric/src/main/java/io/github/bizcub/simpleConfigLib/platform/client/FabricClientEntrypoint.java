@@ -2,9 +2,9 @@ package io.github.bizcub.simpleConfigLib.platform.client;
 
 import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreens;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;

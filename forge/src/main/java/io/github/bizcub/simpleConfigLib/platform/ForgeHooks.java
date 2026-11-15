@@ -2,10 +2,10 @@ package io.github.bizcub.simpleConfigLib.platform;
 
 import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreens;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;

@@ -1,7 +1,7 @@
 package io.github.bizcub.test.client;
 
-import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreens;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigScreen;
+import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreens;
 import io.github.bizcub.test.client.config.SimpleConfigClient;
 import io.github.bizcub.test.main.TestModMain;
 import net.minecraft.client.Minecraft;
