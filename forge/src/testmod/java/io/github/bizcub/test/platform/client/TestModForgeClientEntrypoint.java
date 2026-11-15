@@ -4,6 +4,7 @@ import io.github.bizcub.test.client.TestModClient;
 import io.github.bizcub.test.main.TestModMain;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -24,5 +25,10 @@ public class TestModForgeClientEntrypoint {
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
         TestModClient.onClientTick();
+    }
+
+    @SubscribeEvent
+    public static void onScreenRender(ScreenEvent.Render.Post event) {
+        TestModClient.renderPreview(event.getScreen(), event.getGuiGraphics());
     }
 }

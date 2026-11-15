@@ -17,6 +17,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -54,16 +55,33 @@ public class ConfigHolder<T> {
     private final Class<T> type;
     private final AutoConfig meta;
     private final List<Consumer<T>> saveListeners = new ArrayList<>();
+    private final List<Consumer<T>> changeListeners = new ArrayList<>();
+    private String notifiedSnapshot;
     private T instance;
-    private String serverSnapshot;
 
     ConfigHolder(final Class<T> type) {
+        this(type, true);
+    }
+
+    private ConfigHolder(final Class<T> type, final boolean load) {
         this.type = type;
         this.meta = type.getAnnotation(AutoConfig.class);
         if (this.meta == null) {
-            throw new IllegalArgumentException("Class " + type.getName() + " is not marked with @Config");
+            throw new IllegalArgumentException("Class " + type.getName() + " is not marked with @AutoConfig");
         }
-        load();
+        this.instance = newDefault();
+        if (load) load();
+        this.notifiedSnapshot = snapshot();
+    }
+
+    public ConfigHolder<T> draft() {
+        ConfigHolder<T> draft = new ConfigHolder<>(this.type, false);
+        draft.applySnapshot(snapshot());
+        return draft;
+    }
+
+    public T defaults() {
+        return newDefault();
     }
 
     public AutoConfig getMeta() {
@@ -109,13 +127,9 @@ public class ConfigHolder<T> {
         ConfigSide env = holder.getMeta().side();
         if (env == ConfigSide.SERVER || env == ConfigSide.COMMON) {
             holder.applySnapshot(json);
-            holder.serverSnapshot = holder.snapshot();
         }
     }
 
-    public void restoreServerSnapshot(final String fallback) {
-        applySnapshot(this.serverSnapshot != null ? this.serverSnapshot : fallback);
-    }
 
     public ConfigHolder<T> onSave(final Consumer<T> listener) {
         if (listener != null && !this.saveListeners.contains(listener)) {
@@ -124,48 +138,42 @@ public class ConfigHolder<T> {
         return this;
     }
 
+    public ConfigHolder<T> onChange(final Consumer<T> listener) {
+        if (listener != null && !this.changeListeners.contains(listener)) {
+            this.changeListeners.add(listener);
+        }
+        return this;
+    }
+
+    public void notifyChanges() {
+        String current = snapshot();
+        if (!current.equals(this.notifiedSnapshot)) {
+            this.notifiedSnapshot = current;
+            notifyListeners(this.changeListeners);
+        }
+    }
+
     public void load() {
-        this.serverSnapshot = null;
         Path file = path();
         T loaded = null;
         if (Files.exists(file)) {
             try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
                 loaded = GSON.fromJson(reader, this.type);
+                GSON.toJson(loaded);
             } catch (Exception e) {
+                loaded = null;
                 LOGGER.error("Failed to read config {}", file, e);
             }
         }
-
         T defaults = newDefault();
-
-        if (this.instance == null) {
-            this.instance = defaults;
-        } else {
-            copyInto(defaults, this.instance);
+        boolean corrupted = loaded != null && sanitize(loaded, defaults);
+        if ((loaded == null || corrupted) && Files.exists(file)) backup();
+        copyInto(loaded != null ? loaded : defaults, this.instance);
+        if ((loaded == null || corrupted)
+                && !(this.meta.side() == ConfigSide.SERVER && PlatformHooks.get().isPhysicalClient())) {
+            write(this.instance);
         }
-
-        if (loaded == null) {
-            if (Files.exists(file)) {
-                backup();
-            }
-            if (!(this.meta.side() == ConfigSide.SERVER && PlatformHooks.get().isPhysicalClient())) {
-                save();
-            }
-            return;
-        }
-
-        boolean corrupted = sanitize(loaded, defaults);
-        if (corrupted) {
-            backup();
-        }
-
-        copyInto(loaded, this.instance);
-
-        if (corrupted) {
-            save();
-        }
-
-        notifyListeners();
+        notifyChanges();
     }
 
     public void reset() {
@@ -175,6 +183,7 @@ public class ConfigHolder<T> {
         } else {
             copyInto(defaults, this.instance);
         }
+        notifyChanges();
     }
 
     public static List<ConfigHolder<?>> registered() {
@@ -205,21 +214,24 @@ public class ConfigHolder<T> {
         return corrupted;
     }
 
-    public void applySnapshot(final String json) {
-        T loaded;
+    public boolean applySnapshot(final String json) {
+        T loaded = parse(json);
+        if (loaded == null) return false;
+        copyInto(loaded, this.instance);
+        notifyChanges();
+        return true;
+    }
+
+    private T parse(final String json) {
         try {
-            loaded = GSON.fromJson(json, this.type);
+            T loaded = GSON.fromJson(json, this.type);
+            if (loaded == null || sanitize(loaded, newDefault())) return null;
+            GSON.toJson(loaded);
+            return loaded;
         } catch (Exception e) {
             LOGGER.error("Failed to parse config snapshot for {}", this.meta.name(), e);
-            return;
+            return null;
         }
-        if (loaded == null) return;
-
-        T defaults = newDefault();
-        sanitize(loaded, defaults);
-
-        if (this.instance == null) this.instance = loaded;
-        else copyInto(loaded, this.instance);
     }
 
     private void backup() {
@@ -263,22 +275,54 @@ public class ConfigHolder<T> {
         }
     }
 
-    public void save() {
-        Path file = path();
-        try {
-            Files.createDirectories(file.getParent());
-            try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
-                GSON.toJson(this.instance, writer);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to save config {}", file, e);
-            return;
-        }
-        notifyListeners();
+    public boolean save() {
+        if (!write(this.instance)) return false;
+        notifyChanges();
+        notifyListeners(this.saveListeners);
+        return true;
     }
 
-    private void notifyListeners() {
-        for (Consumer<T> listener : this.saveListeners) {
+    public boolean saveSnapshot(final String json) {
+        T loaded = parse(json);
+        if (loaded == null || !write(loaded)) return false;
+        copyInto(loaded, this.instance);
+        notifyChanges();
+        notifyListeners(this.saveListeners);
+        return true;
+    }
+
+    private boolean write(final T value) {
+        Path file = path();
+        Path temporary = null;
+        try {
+            String json = GSON.toJson(value);
+            Files.createDirectories(file.getParent());
+            temporary = Files.createTempFile(file.getParent(), file.getFileName() + ".", ".tmp");
+            try (Writer writer = Files.newBufferedWriter(temporary, StandardCharsets.UTF_8)) {
+                writer.write(json);
+            }
+            try {
+                Files.move(temporary, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING);
+            }
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to save config {}", file, e);
+            return false;
+        } finally {
+            if (temporary != null) {
+                try {
+                    Files.deleteIfExists(temporary);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to remove temporary config {}", temporary, e);
+                }
+            }
+        }
+    }
+
+    private void notifyListeners(final List<Consumer<T>> listeners) {
+        for (Consumer<T> listener : List.copyOf(listeners)) {
             try {
                 listener.accept(this.instance);
             } catch (Exception e) {

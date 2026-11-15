@@ -1,6 +1,7 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import com.mojang.logging.LogUtils;
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
@@ -15,7 +16,6 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ObjectElem
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElement;
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
 import io.github.bizcub.simpleConfigLib.internal.KeyFormatter;
-import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import io.github.bizcub.simpleConfigLib.internal.network.NetworkClient;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -38,6 +38,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 
 public class AutoConfigScreen extends Screen {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -46,7 +47,20 @@ public class AutoConfigScreen extends Screen {
 
     private final Screen lastScreen;
     private final ConfigHolder<?> holder;
-    private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
+    private final ConfigHolder<?> editing;
+    private final Map<Object, Supplier<Object>> defaultFactories = new IdentityHashMap<>();
+    private final Set<EditBox> invalidInputs = Collections.newSetFromMap(new IdentityHashMap<>());
+    private ContextMenu contextMenu;
+    private EditBox searchBox;
+    private Button searchButton;
+    private boolean searchOpen;
+    private String search = "";
+    private boolean invalidListValues;
+    private static int nextRequestId;
+    private int pendingRequest;
+    private long saveDeadline;
+    private long errorUntil;
+    private HeaderAndFooterLayout layout;
     private final List<Runnable> applyActions = new ArrayList<>();
     private final List<AutoConfigList> lists = new ArrayList<>();
     private final TabManager tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
@@ -58,7 +72,7 @@ public class AutoConfigScreen extends Screen {
     private Button resetButton;
     private Button doneButton;
     private boolean dirty;
-    private String initialSnapshot;
+    private final String initialSnapshot;
 
     private final ConfigSide viewEnv;
     private final boolean readOnly;
@@ -73,12 +87,10 @@ public class AutoConfigScreen extends Screen {
         this.holder = holder;
         this.viewEnv = viewEnv;
         this.readOnly = readOnly;
+        this.editing = viewEnv == ConfigSide.CLIENT ? holder : holder.draft();
 
-        boolean remote = Minecraft.getInstance().player != null && !Minecraft.getInstance().hasSingleplayerServer();
-        boolean serverBacked = viewEnv == ConfigSide.SERVER || (viewEnv == ConfigSide.COMMON && remote);
-        if (!serverBacked) {
-            this.holder.load();
-        }
+        if (viewEnv == ConfigSide.CLIENT) this.holder.load();
+        this.initialSnapshot = this.editing.snapshot();
     }
 
     public static <T> Screen create(ConfigHolder<T> holder, Screen parent) {
@@ -91,9 +103,16 @@ public class AutoConfigScreen extends Screen {
 
     @Override
     protected void init() {
+        int previousTab = Math.max(0, this.lists.indexOf(currentList()));
+        List<AutoConfigList.ViewState> views = this.lists.stream().map(AutoConfigList::viewState).toList();
+        this.layout = new HeaderAndFooterLayout(this);
         this.applyActions.clear();
         this.lists.clear();
         this.objectBacking.clear();
+        this.defaultFactories.clear();
+        this.defaultFactories.put(this.editing.get(), this.editing::defaults);
+        this.invalidInputs.clear();
+        this.contextMenu = null;
 
         //? if >=26.4 {
         /*MenuTabBar.Builder tabBarBuilder = MenuTabBar.builder(this.tabManager, this.width);
@@ -117,38 +136,20 @@ public class AutoConfigScreen extends Screen {
         LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
 
         Button cancelButton = Button.builder(CommonComponents.GUI_CANCEL, b -> onClose()).build();
-        this.doneButton = Button.builder(CommonComponents.GUI_DONE, b -> {
-            for (AutoConfigList l : this.lists) {
-                l.commitElements();
-            }
-            this.applyActions.forEach(Runnable::run);
-
-            boolean remote = Minecraft.getInstance().player != null
-                    && !Minecraft.getInstance().hasSingleplayerServer();
-
-            boolean sendToServer = !this.readOnly
-                    && (this.viewEnv == ConfigSide.SERVER
-                    || (this.viewEnv == ConfigSide.COMMON && remote));
-
-            if (sendToServer) {
-                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.id(), this.holder.snapshot()));
-            } else if (!(this.viewEnv == ConfigSide.SERVER && PlatformHooks.get().isPhysicalClient())) {
-                this.holder.save();
-            }
-
-            this.dirty = false;
-            this.minecraft.gui.setScreen(this.lastScreen);
-        }).build();
+        this.doneButton = Button.builder(CommonComponents.GUI_DONE, b -> save()).build();
         this.doneButton.active = false;
 
         List<Button> buttons = new ArrayList<>(List.of(cancelButton, this.doneButton));
-        buttons.forEach(footer::addChild);
+        buttons.forEach(button -> {
+            button.setWidth(Math.max(40, Math.min(150, (this.width - 128) / 2)));
+            footer.addChild(button);
+        });
 
         this.layout.visitWidgets(w -> {
             w.setTabOrderGroup(1);
             this.addRenderableWidget(w);
         });
-        this.tabNavigationBar.selectTab(0, false);
+        this.tabNavigationBar.selectTab(Math.min(previousTab, Math.max(0, this.lists.size() - 1)), false);
         repositionElements();
 
         this.resetButton = this.addRenderableWidget(
@@ -159,11 +160,20 @@ public class AutoConfigScreen extends Screen {
                         .size(20, 20)
                         .pos(this.layout.getFooterHeight() / 2 - 10, this.height - this.layout.getFooterHeight() / 2 - 10)
                         .build());
-        this.resetButton.active = Minecraft.getInstance().hasShiftDown();
-        if (this.initialSnapshot == null) {
-            this.initialSnapshot = this.holder.snapshot();
-        }
-        this.doneButton.active = this.dirty;
+        this.resetButton.active = !this.readOnly && Minecraft.getInstance().hasShiftDown();
+        this.searchButton = this.addRenderableWidget(Button.builder(Component.literal("🔎"), b -> toggleSearch())
+                .size(20, 20).build());
+        this.searchButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                Component.translatable("text.simple_config_lib.search")));
+        this.searchBox = this.addRenderableWidget(new EditBox(this.font, 8, 0, Math.max(40, this.width - 16), 20,
+                Component.translatable("text.simple_config_lib.search")));
+        this.searchBox.setHint(Component.translatable("gui.recipebook.search_hint"));
+        this.searchBox.setValue(this.search);
+        this.searchBox.setResponder(this::filter);
+        this.searchBox.visible = this.searchOpen;
+        for (AutoConfigList list : this.lists) list.setFilter(this.search);
+        repositionElements();
+        updateDoneButton();
 
         if (this.readOnly) {
             this.doneButton.active = false;
@@ -175,25 +185,131 @@ public class AutoConfigScreen extends Screen {
                 l.setReadOnly(true);
             }
         }
+        for (int i = 0; i < Math.min(views.size(), this.lists.size()); i++) this.lists.get(i).restoreViewState(views.get(i));
+        repositionElements();
     }
 
     public void markDirty() {
-        for (AutoConfigList l : this.lists) {
-            l.commitElements();
-        }
+        for (AutoConfigList list : this.lists) list.commitElements();
+        this.invalidInputs.removeIf(box -> this.lists.stream().noneMatch(list -> list.containsWidget(box)));
+        this.invalidListValues = false;
         this.applyActions.forEach(Runnable::run);
+        this.dirty = !this.initialSnapshot.equals(this.editing.snapshot())
+                || !this.invalidInputs.isEmpty() || this.invalidListValues;
+        if (this.viewEnv == ConfigSide.CLIENT) this.holder.notifyChanges();
+        updateDoneButton();
+    }
 
-        boolean changed = this.initialSnapshot != null
-                && !this.initialSnapshot.equals(this.holder.snapshot());
-        this.dirty = changed;
-        if (this.doneButton != null) {
-            this.doneButton.active = changed;
+    private void updateDoneButton() {
+        if (this.doneButton == null) return;
+        boolean error = System.currentTimeMillis() < this.errorUntil;
+        this.doneButton.setMessage(this.pendingRequest != 0
+                ? Component.translatable("text.simple_config_lib.saving")
+                : error ? Component.translatable("text.simple_config_lib.save_error") : CommonComponents.GUI_DONE);
+        this.doneButton.active = !this.readOnly && this.dirty && this.pendingRequest == 0 && !error
+                && this.invalidInputs.isEmpty() && !this.invalidListValues;
+    }
+
+    private void save() {
+        markDirty();
+        if (!this.doneButton.active) return;
+        boolean connected = this.minecraft.player != null;
+        boolean sendToServer = connected && this.viewEnv != ConfigSide.CLIENT;
+        if (sendToServer) {
+            this.pendingRequest = ++nextRequestId;
+            this.saveDeadline = System.currentTimeMillis() + 10000;
+            updateDoneButton();
+            try {
+                NetworkClient.sendToServer(new ConfigApplyPayload(this.holder.id(), this.editing.snapshot(), this.pendingRequest));
+            } catch (Exception e) {
+                LOGGER.error("Failed to send config {}", this.holder.id(), e);
+                saveFailed();
+            }
+        } else if (this.holder.saveSnapshot(this.editing.snapshot())) {
+            saved();
+        } else {
+            saveFailed();
         }
     }
 
+    public void handleResult(io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload result) {
+        if (this.pendingRequest == 0 || result.requestId() != this.pendingRequest || !result.name().equals(this.holder.id())) return;
+        if (result.success()) saved();
+        else saveFailed();
+    }
+
+    private void saved() {
+        this.pendingRequest = 0;
+        this.dirty = false;
+        this.minecraft.gui.setScreen(this.lastScreen);
+    }
+
+    private void saveFailed() {
+        this.pendingRequest = 0;
+        this.errorUntil = System.currentTimeMillis() + 2000;
+        updateDoneButton();
+    }
+
+    @Override
+    public void tick() {
+        if (this.pendingRequest != 0 && System.currentTimeMillis() >= this.saveDeadline) saveFailed();
+        updateDoneButton();
+        AutoConfigList list = currentList();
+        if (list != null) list.tickDrag();
+    }
+
     private void onReset() {
-        this.holder.reset();
+        this.editing.reset();
         this.rebuildWidgets();
+    }
+
+    private void toggleSearch() {
+        closeActions();
+        this.searchOpen = !this.searchOpen;
+        this.searchBox.visible = this.searchOpen;
+        if (!this.searchOpen) this.searchBox.setValue("");
+        repositionElements();
+        this.setFocused(this.searchOpen ? this.searchBox : currentList());
+    }
+
+    private void filter(String value) {
+        this.search = value;
+        for (AutoConfigList list : this.lists) list.setFilter(value);
+        AutoConfigList current = currentList();
+        if (!value.isBlank() && (current == null || current.children().isEmpty())) {
+            for (int i = 0; i < this.lists.size(); i++) {
+                if (!this.lists.get(i).children().isEmpty()) {
+                    this.tabNavigationBar.selectTab(i, false);
+                    break;
+                }
+            }
+        }
+    }
+
+    record RowAction(String key, Runnable action, boolean enabled) {}
+
+    void openActions(List<RowAction> actions, int x, int y) {
+        closeActions();
+        if (this.readOnly || this.pendingRequest != 0 || actions.isEmpty()) return;
+        AutoConfigList list = currentList();
+        if (list != null) {
+            list.cancelItemDrag();
+            list.closePickersExceptSwatchAt(Integer.MIN_VALUE, Integer.MIN_VALUE);
+        }
+        this.contextMenu = this.addRenderableWidget(new ContextMenu(this.font, actions, this::closeActions,
+                x, y, this.width, this.height));
+        this.setFocused(this.contextMenu);
+    }
+
+    boolean hasContextMenu() {
+        return this.contextMenu != null;
+    }
+
+    private void closeActions() {
+        if (this.contextMenu == null) return;
+        if (this.getFocused() == this.contextMenu) this.setFocused(currentList());
+        this.removeWidget(this.contextMenu);
+        this.contextMenu = null;
     }
 
     private String key(final String raw) {
@@ -230,7 +346,7 @@ public class AutoConfigScreen extends Screen {
 
         if (this.resetButton != null) {
             boolean shift = Minecraft.getInstance().hasShiftDown();
-            this.resetButton.active = shift;
+            this.resetButton.active = !this.readOnly && this.pendingRequest == 0 && shift;
             Component resetComponent = Component.translatable("text.simple_config_lib.reset");
             this.resetButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
                     shift
@@ -241,6 +357,14 @@ public class AutoConfigScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+        if (this.pendingRequest != 0) return true;
+        if (this.contextMenu != null) {
+            if (this.contextMenu.isMouseOver(mouseButtonEvent.x(), mouseButtonEvent.y())) {
+                return this.contextMenu.mouseClicked(mouseButtonEvent, doubleClick);
+            }
+            closeActions();
+            if (mouseButtonEvent.button() != 3) return true;
+        }
         AutoConfigList list = currentList();
 
         if (list != null && list.isPopupOpenAt(mouseButtonEvent.x(), mouseButtonEvent.y())) {
@@ -257,7 +381,7 @@ public class AutoConfigScreen extends Screen {
     @Override
     public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
         AutoConfigList list = currentList();
-        if (list != null && list.isPickerDragging()) {
+        if (list != null && (list.isPickerDragging() || list.hasItemDrag())) {
             return list.mouseDragged(mouseButtonEvent, dx, dy);
         }
         return super.mouseDragged(mouseButtonEvent, dx, dy);
@@ -266,7 +390,7 @@ public class AutoConfigScreen extends Screen {
     @Override
     public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
         AutoConfigList list = currentList();
-        if (list != null && list.isPickerDragging()) {
+        if (list != null && (list.isPickerDragging() || list.hasItemDrag())) {
             list.mouseReleased(mouseButtonEvent);
             return true;
         }
@@ -278,24 +402,68 @@ public class AutoConfigScreen extends Screen {
         if (this.tabNavigationBar != null) {
             this.tabNavigationBar.arrangeElements(this.width);
             int tabAreaTop = this.tabNavigationBar.getRectangle().bottom();
+            if (this.searchBox != null) {
+                this.searchBox.setPosition(8, tabAreaTop + 2);
+                this.searchBox.setWidth(Math.max(40, this.width - 16));
+            }
+            if (this.searchOpen) tabAreaTop += 26;
             ScreenRectangle tabArea = new ScreenRectangle(0, tabAreaTop, this.width,
                     this.height - this.layout.getFooterHeight() - tabAreaTop);
             this.tabManager.setTabArea(tabArea);
             this.layout.setHeaderHeight(tabAreaTop);
             this.layout.arrangeElements();
         }
-        if (this.resetButton != null) {
-            this.resetButton.setPosition(this.layout.getFooterHeight() / 2 - 10, this.height - this.layout.getFooterHeight() / 2 - 10);
+        int y = this.height - this.layout.getFooterHeight() / 2 - 10;
+        if (this.resetButton != null) this.resetButton.setPosition(8, y);
+        if (this.searchButton != null) {
+            this.searchButton.setPosition(this.resetButton != null && this.resetButton.visible ? 32 : 8, y);
         }
     }
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
+        if (this.pendingRequest != 0) return true;
+        if (this.contextMenu != null) return this.contextMenu.keyPressed(keyEvent);
+        AutoConfigList list = currentList();
+        if (list != null && list.hasItemDrag()) {
+            if (keyEvent.isEscape()) list.cancelItemDrag();
+            return true;
+        }
+        if (list != null && ((keyEvent.key() == InputConstants.KEY_F10 && keyEvent.hasShiftDown()) || keyEvent.hasAltDown())
+                && list.keyPressed(keyEvent)) return true;
+        if (keyEvent.key() == InputConstants.KEY_F && keyEvent.hasControlDown()) {
+            if (!this.searchOpen) toggleSearch();
+            this.setFocused(this.searchBox);
+            return true;
+        }
+        if (keyEvent.isEscape() && this.searchOpen) {
+            toggleSearch();
+            return true;
+        }
         return (this.tabNavigationBar != null && this.tabNavigationBar.keyPressed(keyEvent)) || super.keyPressed(keyEvent);
     }
 
     @Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        return this.pendingRequest != 0 || this.contextMenu != null || super.charTyped(event);
+    }
+
+    @Override
+    public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
+        if (this.pendingRequest != 0) return true;
+        if (this.contextMenu != null) {
+            closeActions();
+            return true;
+        }
+        AutoConfigList list = currentList();
+        if (list != null && list.hasItemDrag()) return list.mouseScrolled(x, y, horizontal, vertical);
+        return super.mouseScrolled(x, y, horizontal, vertical);
+    }
+
+    @Override
     public void onClose() {
+        if (this.pendingRequest != 0) return;
+        closeActions();
         if (!this.dirty) {
             this.minecraft.gui.setScreen(this.lastScreen);
             return;
@@ -304,12 +472,7 @@ public class AutoConfigScreen extends Screen {
         this.minecraft.gui.setScreen(new ConfirmScreen(
                 yes -> {
                     if (yes) {
-                        boolean remote = this.minecraft.player != null && !this.minecraft.hasSingleplayerServer();
-                        if (remote && this.viewEnv != ConfigSide.CLIENT) {
-                            this.holder.restoreServerSnapshot(this.initialSnapshot);
-                        } else {
-                            this.holder.load();
-                        }
+                        if (this.viewEnv == ConfigSide.CLIENT) this.holder.applySnapshot(this.initialSnapshot);
                         this.minecraft.gui.setScreen(this.lastScreen);
                     } else {
                         this.minecraft.gui.setScreen(this);
@@ -332,7 +495,7 @@ public class AutoConfigScreen extends Screen {
                     AutoConfigScreen.this.height, 0, AutoConfigScreen.this);
             AutoConfigScreen.this.lists.add(this.list);
             for (Field field : fields) {
-                Node node = AutoConfigScreen.this.buildNode(AutoConfigScreen.this.holder.get(), field);
+                Node node = AutoConfigScreen.this.buildNode(AutoConfigScreen.this.editing.get(), field);
                 if (node != null) {
                     this.list.addNode(node);
                 }
@@ -351,6 +514,7 @@ public class AutoConfigScreen extends Screen {
         @Override
         public void doLayout(final ScreenRectangle rectangle) {
             this.list.updateSizeAndPosition(rectangle.width(), rectangle.height(), rectangle.top());
+            this.list.restoreScroll();
         }
     }
 
@@ -359,6 +523,49 @@ public class AutoConfigScreen extends Screen {
     }
 
     private Node buildNode(final Object config, final Field field, final String fieldPrefix) {
+        Node node = buildFieldNode(config, field, fieldPrefix);
+        if (node != null && field.getType() != Component.class) {
+            node.resetAction = () -> {
+                try {
+                    field.set(config, defaultValue(config, field));
+                    if (node instanceof WidgetNode widgetNode) {
+                        widgetNode.widget = buildWidget(config, field);
+                        currentList().rebuild();
+                    } else {
+                        this.rebuildWidgets();
+                    }
+                    markDirty();
+                } catch (IllegalAccessException e) {
+                    LOGGER.error("Failed to reset config field {}", field.getName(), e);
+                }
+            };
+            if (node instanceof WidgetNode widgetNode && widgetNode.widget instanceof IntSlider) {
+                node.manualAction = () -> {
+                    try {
+                        if (widgetNode.widget instanceof EditBox box) {
+                            if (parseElement(Integer.class, box.getValue()) == null) return;
+                            this.invalidInputs.remove(box);
+                            widgetNode.widget = buildWidget(config, field);
+                            currentList().rebuild();
+                            currentList().focusWidget(widgetNode.widget);
+                        } else {
+                            EditBox box = numberBox(config, field);
+                            widgetNode.widget = box;
+                            currentList().rebuild();
+                            currentList().focusWidget(box);
+                            box.setCursorPosition(box.getValue().length());
+                            box.setHighlightPos(0);
+                        }
+                    } catch (IllegalAccessException e) {
+                        LOGGER.error("Failed to edit config field {}", field.getName(), e);
+                    }
+                };
+            }
+        }
+        return node;
+    }
+
+    private Node buildFieldNode(final Object config, final Field field, final String fieldPrefix) {
         field.setAccessible(true);
         try {
             Class<?> t = field.getType();
@@ -384,6 +591,10 @@ public class AutoConfigScreen extends Screen {
                     value = instantiate(t);
                     setQuietly(config, field, value);
                 }
+                this.defaultFactories.put(value, () -> {
+                    Object defaults = defaultValue(config, field);
+                    return defaults != null ? defaults : instantiate(t);
+                });
                 GroupNode g = new GroupNode();
                 g.label = labelFor(field, fieldPrefix);
                 g.tooltip = tooltipFor(field, fieldPrefix);
@@ -428,6 +639,7 @@ public class AutoConfigScreen extends Screen {
         final Color colorCfg = field.getAnnotation(Color.class);
 
         List<?> current = (List<?>) field.get(config);
+        Supplier<List<?>> defaults = () -> (List<?>) defaultValue(config, field);
 
         if (isSupportedListElement(element)) {
             List<Element> initial = new ArrayList<>();
@@ -445,7 +657,16 @@ public class AutoConfigScreen extends Screen {
                             element == Boolean.class ? "false"
                                     : colorCfg  != null ? "0"
                                       : sliderCfg != null ? String.valueOf(sliderCfg.min())
-                                        : ""));
+                                        : Number.class.isAssignableFrom(element) ? "0" : ""));
+            for (int i = 0; i < initial.size(); i++) {
+                int index = i;
+                initial.get(i).resetFactory = () -> {
+                    List<?> values = defaults.get();
+                    Object value = values != null && index < values.size() ? values.get(index) : null;
+                    if (value instanceof Component component) return new ScalarElement(component);
+                    return value != null ? new ScalarElement(String.valueOf(value)) : model.factory.get();
+                };
+            }
             model.textMaxLength = textMaxLength(field);
 
             if (element == Integer.class) {
@@ -454,6 +675,7 @@ public class AutoConfigScreen extends Screen {
             }
 
             applyActions.add(() -> {
+                if (!model.active) return;
                 List<Object> result = new ArrayList<>();
                 for (Element e : model.elements) {
                     if (e instanceof ScalarElement s) {
@@ -461,9 +683,11 @@ public class AutoConfigScreen extends Screen {
                             result.add(s.component != null ? s.component : Component.literal(s.value));
                         } else {
                             Object parsed = parseElement(element, s.value);
-                            if (parsed != null) {
-                                result.add(parsed);
+                            if (parsed == null) {
+                                this.invalidListValues = true;
+                                return;
                             }
+                            result.add(parsed);
                         }
                     }
                 }
@@ -480,14 +704,25 @@ public class AutoConfigScreen extends Screen {
         if (isNestedObject(element)) {
             List<Element> initial = new ArrayList<>();
             if (current != null) {
-                for (Object o : current) {
-                    initial.add(buildObjectElement(element, o, field, translateElements, expandElements));
+                for (int i = 0; i < current.size(); i++) {
+                    int index = i;
+                    Object value = current.get(i);
+                    Supplier<Object> factory = () -> {
+                        List<?> values = defaults.get();
+                        return values != null && index < values.size() && values.get(index) != null
+                                ? values.get(index) : instantiate(element);
+                    };
+                    this.defaultFactories.put(value, factory);
+                    ObjectElement entry = buildObjectElement(element, value, field, translateElements, expandElements);
+                    entry.resetFactory = () -> defaultObjectElement(element, factory, field, translateElements, expandElements);
+                    initial.add(entry);
                 }
             }
             final ListModel model = new ListModel(initial, editable, expanded, addToFront, element,
-                    () -> buildObjectElement(element, instantiate(element), field, translateElements, expandElements));
+                    () -> defaultObjectElement(element, () -> instantiate(element), field, translateElements, expandElements));
 
             applyActions.add(() -> {
+                if (!model.active) return;
                 List<Object> result = new ArrayList<>();
                 for (Element e : model.elements) {
                     if (e instanceof ObjectElement oe) {
@@ -509,6 +744,24 @@ public class AutoConfigScreen extends Screen {
 
         LOGGER.warn("Skipping list {}: unsupported element type {}", field.getName(), element.getSimpleName());
         return null;
+    }
+
+    private Object defaultValue(Object config, Field field) {
+        Supplier<Object> factory = this.defaultFactories.get(config);
+        try {
+            return field.get(factory != null ? factory.get() : instantiate(config.getClass()));
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Failed to read default config field " + field.getName(), e);
+        }
+    }
+
+    private ObjectElement defaultObjectElement(Class<?> element, Supplier<Object> defaults, Field field,
+                                               boolean translate, boolean expanded) {
+        Object value = defaults.get();
+        this.defaultFactories.put(value, defaults);
+        ObjectElement entry = buildObjectElement(element, value, field, translate, expanded);
+        entry.resetFactory = () -> defaultObjectElement(element, defaults, field, translate, expanded);
+        return entry;
     }
 
     private ObjectElement buildObjectElement(final Class<?> element, final Object obj,
@@ -574,7 +827,7 @@ public class AutoConfigScreen extends Screen {
 
         if (t == String.class) {
             EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, Component.empty());
-            box.setMaxLength(textMaxLength(field));
+            box.setMaxLength(Math.max(textMaxLength(field), ((String) field.get(config)).length()));
             box.setValue((String) field.get(config));
             box.setResponder(v -> apply(config, field, v));
             return box;
@@ -582,13 +835,7 @@ public class AutoConfigScreen extends Screen {
 
         if (t == int.class || t == Integer.class || t == long.class || t == Long.class
                 || t == float.class || t == Float.class || t == double.class || t == Double.class) {
-            EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, Component.empty());
-            box.setValue(String.valueOf(field.get(config)));
-            box.setResponder(v -> {
-                parseNumber(config, field, v);
-                markDirty();
-            });
-            return box;
+            return numberBox(config, field);
         }
 
         return null;
@@ -728,7 +975,7 @@ public class AutoConfigScreen extends Screen {
         return null;
     }
 
-    private static Object parseElement(final Class<?> type, final String raw) {
+    static Object parseElement(final Class<?> type, final String raw) {
         String s = raw.trim();
         try {
             if (type == String.class) return raw;
@@ -736,8 +983,14 @@ public class AutoConfigScreen extends Screen {
             if (s.isEmpty()) return null;
             if (type == Integer.class) return Integer.parseInt(s);
             if (type == Long.class) return Long.parseLong(s);
-            if (type == Float.class) return Float.parseFloat(s);
-            if (type == Double.class) return Double.parseDouble(s);
+            if (type == Float.class) {
+                float value = Float.parseFloat(s);
+                return Float.isFinite(value) ? value : null;
+            }
+            if (type == Double.class) {
+                double value = Double.parseDouble(s);
+                return Double.isFinite(value) ? value : null;
+            }
         } catch (NumberFormatException ignored) {
             return null;
         }
@@ -757,16 +1010,31 @@ public class AutoConfigScreen extends Screen {
         }
     }
 
-    private static void parseNumber(final Object config, final Field field, final String raw) {
-        Class<?> t = field.getType();
-        try {
-            field.setAccessible(true);
-            if (t == int.class || t == Integer.class) field.set(config, Integer.parseInt(raw.trim()));
-            else if (t == long.class || t == Long.class) field.set(config, Long.parseLong(raw.trim()));
-            else if (t == float.class || t == Float.class) field.set(config, Float.parseFloat(raw.trim()));
-            else if (t == double.class || t == Double.class) field.set(config, Double.parseDouble(raw.trim()));
-        } catch (Exception ignored) {
-        }
+    private EditBox numberBox(final Object config, final Field field) throws IllegalAccessException {
+        EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, labelFor(field));
+        box.setValue(String.valueOf(field.get(config)));
+        box.setResponder(raw -> {
+            Object value = parseElement(boxed(field.getType()), raw);
+            if (value == null) {
+                this.invalidInputs.add(box);
+                box.setTextColor(0xFFFF5555);
+            } else {
+                this.invalidInputs.remove(box);
+                box.setTextColor(0xFFE0E0E0);
+                setQuietly(config, field, value);
+            }
+            markDirty();
+        });
+        return box;
+    }
+
+
+    private static Class<?> boxed(Class<?> type) {
+        if (type == int.class) return Integer.class;
+        if (type == long.class) return Long.class;
+        if (type == float.class) return Float.class;
+        if (type == double.class) return Double.class;
+        return type;
     }
 
     public static final class IntSlider extends AbstractSliderButton {

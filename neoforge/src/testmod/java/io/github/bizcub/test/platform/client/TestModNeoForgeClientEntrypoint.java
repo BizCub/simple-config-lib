@@ -8,6 +8,7 @@ import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 @Mod(value = TestModMain.MOD_ID, dist = Dist.CLIENT)
@@ -25,5 +26,10 @@ public class TestModNeoForgeClientEntrypoint {
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         TestModClient.onClientTick();
+    }
+
+    @SubscribeEvent
+    public static void onScreenRender(ScreenEvent.Render.Post event) {
+        TestModClient.renderPreview(event.getScreen(), event.getGuiGraphics());
     }
 }

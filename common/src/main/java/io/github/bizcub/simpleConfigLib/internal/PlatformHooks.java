@@ -3,6 +3,7 @@ package io.github.bizcub.simpleConfigLib.internal;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import java.nio.file.Path;
 
 public interface PlatformHooks {
@@ -12,7 +13,7 @@ public interface PlatformHooks {
 
     boolean isPhysicalClient();
     Path gameDir();
-    void sendToPlayer(ServerPlayer player, ConfigSyncPayload payload);
+    void sendToPlayer(ServerPlayer player, CustomPacketPayload payload);
     void sendToAllPlayers(MinecraftServer server, ConfigSyncPayload payload);
 
     class Holder {

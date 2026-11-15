@@ -10,5 +10,16 @@
     "text.simple_config_lib.confirm.message": "You have unsaved changes. Exit without saving?",
     "text.simple_config_lib.confirm.discard": "Discard",
     "text.simple_config_lib.confirm.keep": "Keep Editing",
-    "text.simple_config_lib.command.reload": "Reloaded %s config(s)"
+    "text.simple_config_lib.command.reload": "Reloaded %s config(s)",
+    "text.simple_config_lib.saving": "Saving…",
+    "text.simple_config_lib.save_error": "Save failed",
+    "text.simple_config_lib.search": "Search settings (Ctrl+F)",
+    "text.simple_config_lib.reset_value": "Reset value",
+    "text.simple_config_lib.enter_value": "Enter value",
+    "text.simple_config_lib.restore_slider": "Restore slider",
+    "text.simple_config_lib.add": "Add element",
+    "text.simple_config_lib.add_before": "Add before",
+    "text.simple_config_lib.add_after": "Add after",
+    "text.simple_config_lib.drag": "Drag to reorder (Alt+Up/Down)",
+    "text.simple_config_lib.remove": "Remove"
 }

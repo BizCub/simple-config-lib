@@ -4,6 +4,9 @@ import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreens;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,7 +29,7 @@ public class NeoForgeHooks implements PlatformHooks {
     }
 
     @Override
-    public void sendToPlayer(ServerPlayer player, ConfigSyncPayload payload) {
+    public void sendToPlayer(ServerPlayer player, CustomPacketPayload payload) {
         PacketDistributor.sendToPlayer(player, payload);
     }
 
@@ -42,5 +45,7 @@ public class NeoForgeHooks implements PlatformHooks {
                 }));
         registrar.playToClient(ConfigSyncPayload.TYPE, ConfigSyncPayload.CODEC, (payload, context) ->
                 context.enqueueWork(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json())));
+        registrar.playToClient(ConfigResultPayload.TYPE, ConfigResultPayload.CODEC, (payload, context) ->
+                context.enqueueWork(() -> ConfigScreens.handleResult(payload)));
     }
 }

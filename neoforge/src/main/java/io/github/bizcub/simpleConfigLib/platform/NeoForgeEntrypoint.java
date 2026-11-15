@@ -15,7 +15,7 @@ public class NeoForgeEntrypoint {
 
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
-        NeoForgeHooks.registerPayloads(event.registrar("1"));
+        NeoForgeHooks.registerPayloads(event.registrar("3"));
     }
 
     @SubscribeEvent

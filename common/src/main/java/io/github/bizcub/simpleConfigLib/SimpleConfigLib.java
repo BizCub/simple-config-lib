@@ -5,6 +5,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
 import io.github.bizcub.simpleConfigLib.internal.network.Network;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -41,18 +42,15 @@ public class SimpleConfigLib {
     }
 
     public static void handleApply(ConfigApplyPayload payload, ServerPlayer player) {
-        boolean allowed = player.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
-        if (!allowed) return;
-
+        boolean allowed = player.permissions().hasPermission(Permissions.COMMANDS_ADMIN)
+                || player.level().getServer().isSingleplayerOwner(player.nameAndId());
         ConfigHolder<?> holder = ConfigHolder.byId(payload.name());
-        if (holder == null) return;
-        ConfigSide env = holder.getMeta().side();
-        if (env != ConfigSide.SERVER && env != ConfigSide.COMMON) return;
-
-        holder.applySnapshot(payload.json());
-        holder.save();
-
-        Network.sendToAllPlayers(player.level().getServer(), new ConfigSyncPayload(holder.id(), holder.snapshot()));
+        boolean success = allowed && holder != null && holder.getMeta().side() != ConfigSide.CLIENT
+                && holder.saveSnapshot(payload.json());
+        if (success) {
+            Network.sendToAllPlayers(player.level().getServer(), new ConfigSyncPayload(holder.id(), holder.snapshot()));
+        }
+        Network.sendToPlayer(player, new ConfigResultPayload(payload.name(), payload.requestId(), success));
     }
 
     public static void onPlayerJoin(ServerPlayer player) {

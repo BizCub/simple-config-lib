@@ -4,6 +4,8 @@ import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.gui.ConfigScreens;
 import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
@@ -32,7 +34,7 @@ public class ForgeHooks implements PlatformHooks {
     }
 
     @Override
-    public void sendToPlayer(ServerPlayer player, ConfigSyncPayload payload) {
+    public void sendToPlayer(ServerPlayer player, CustomPacketPayload payload) {
         CHANNEL.send(payload, PacketDistributor.PLAYER.with(player));
     }
 
@@ -43,9 +45,13 @@ public class ForgeHooks implements PlatformHooks {
 
     static void buildChannel() {
         CHANNEL = ChannelBuilder.named(Identifier.withDefaultNamespace("config"))
-                .networkProtocolVersion(1).optional().payloadChannel().play()
+                .networkProtocolVersion(3).optional().payloadChannel().play()
                 .clientbound().add(ConfigSyncPayload.TYPE, ConfigSyncPayload.CODEC, (payload, context) -> {
                     context.enqueueWork(() -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
+                    context.setPacketHandled(true);
+                })
+                .clientbound().add(ConfigResultPayload.TYPE, ConfigResultPayload.CODEC, (payload, context) -> {
+                    context.enqueueWork(() -> ConfigScreens.handleResult(payload));
                     context.setPacketHandled(true);
                 })
                 .serverbound().add(ConfigApplyPayload.TYPE, ConfigApplyPayload.CODEC, (payload, context) -> {

@@ -14,11 +14,52 @@ import java.util.List;
 
 @AutoConfig(name = TestModMain.MOD_ID, fileName = TestModMain.MOD_ID + "_client", side = ConfigSide.CLIENT)
 public class SimpleConfigClient {
+    private static int changes;
+
+    public static int changes() {
+        return changes;
+    }
+
     public static ConfigHolder<SimpleConfigClient> getInstance() {
-        return ConfigHolder.register(SimpleConfigClient.class).onSave(config -> System.out.println("Client config saved!"));
+        return ConfigHolder.register(SimpleConfigClient.class)
+                .onSave(config -> {
+                    System.out.println("Client config saved! Changes: " + changes);
+                    changes = 0;
+                })
+                .onChange(config -> changes++);
     }
 
     public boolean testClient = false;
+
+    @ConfigGroup("preview")
+    @Slider(min = -100, max = 100)
+    public int previewOffsetX = 0;
+
+    @ConfigGroup("preview")
+    @Slider(min = -40, max = 40)
+    public int previewOffsetY = 0;
+
+    @ConfigGroup("preview")
+    @Color
+    public int previewColor = 0xFFFFFF;
+
+    @ConfigGroup("lists")
+    @ListConfig(expanded = true)
+    public List<String> emptyList = new ArrayList<>();
+
+    @ConfigGroup("lists")
+    @ListConfig(expanded = true)
+    @Slider(min = 0, max = 10)
+    public List<Integer> numbers = new ArrayList<>(List.of(1, 5, 9));
+
+    @ConfigGroup("lists")
+    @ListConfig(expanded = true)
+    public List<Double> decimals = new ArrayList<>(List.of(1.5, 2.5));
+
+    @ConfigGroup("lists")
+    @ListConfig(expanded = true)
+    public List<String> longList = new ArrayList<>(java.util.stream.IntStream.rangeClosed(1, 20)
+            .mapToObj(i -> "Element " + i).toList());
 
     @BooleanConfig(yesNo = false)
     public boolean enableOptimizations = true;

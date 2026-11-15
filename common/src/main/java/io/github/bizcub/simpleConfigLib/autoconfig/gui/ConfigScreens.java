@@ -11,6 +11,10 @@ import java.util.List;
 
 public class ConfigScreens {
 
+    public static void handleResult(io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload result) {
+        if (Minecraft.getInstance().gui.screen() instanceof AutoConfigScreen screen) screen.handleResult(result);
+    }
+
     public static Screen open(Screen parent) {
         return open(parent, ConfigHolder.registered());
     }

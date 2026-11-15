@@ -1,5 +1,6 @@
 package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Color;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Slider;
 import io.github.bizcub.simpleConfigLib.internal.GuiSounds;
@@ -12,6 +13,9 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.renderer.state.gui.GuiTextRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -31,11 +35,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     private static final int SIDE_PADDING = 40;
     private static final int ROW_HEIGHT = 25;
     private static final int LABEL_COLOR = -1;
-    private static final int SELECTED_BG = 0x80FFFFFF;
+    private static final int DRAG_COLOR = 0xFF66BBFF;
 
-    private static final int INDENT = 12;
+    private static final int INDENT = 8;
     private static final int HEADER_BTN = 20;
-    private static final int HEADER_BTN_GAP = 4;
+    private static final int HANDLE_WIDTH = 12;
+    private static final int HANDLE_GAP = 2;
 
     protected final Screen screen;
     private final Font font;
@@ -47,6 +52,101 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     private final List<Node> nodes = new ArrayList<>();
 
     private boolean readOnly;
+    private String filter = "";
+    private ListModel dragModel;
+    private Element dragElement;
+    private int dropIndex = -1;
+    private double startX, startY, pointerX, pointerY;
+    private boolean dragging;
+    private Double pendingScroll;
+
+    private int contentWidth() {
+        return getRowWidth();
+    }
+
+    void focusWidget(AbstractWidget widget) {
+        for (Row row : this.children()) {
+            if (row.children().contains(widget)) {
+                this.setFocused(row);
+                row.setFocused(widget);
+                widget.setFocused(true);
+                if (this.screen != null) this.screen.setFocused(this);
+                break;
+            }
+        }
+    }
+
+    public boolean containsWidget(AbstractWidget widget) {
+        return containsWidget(this.nodes, widget);
+    }
+
+    private boolean containsWidget(List<Node> nodes, AbstractWidget widget) {
+        for (Node node : nodes) {
+            if (node instanceof WidgetNode field && field.widget == widget) return true;
+            if (node instanceof GroupNode group && containsWidget(group.children, widget)) return true;
+            if (node instanceof ListNode list) {
+                for (Element element : list.model.elements) {
+                    if (element instanceof ObjectElement object && containsWidget(object.group.children, widget)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void setFilter(String value) {
+        String next = value.strip().toLowerCase(java.util.Locale.ROOT);
+        if (next.equals(this.filter)) return;
+        cancelItemDrag();
+        commitScalarElements();
+        this.filter = next;
+        rebuild();
+        setScrollAmount(0);
+    }
+
+    record ViewState(double scroll, java.util.Map<String, Boolean> expanded) {}
+
+    ViewState viewState() {
+        java.util.Map<String, Boolean> expanded = new java.util.HashMap<>();
+        visitNodes(this.nodes, "", (path, node) -> {
+            if (node instanceof GroupNode group) expanded.put(path, group.expanded);
+            if (node instanceof ListNode list) expanded.put(path, list.model.expanded);
+        });
+        return new ViewState(scrollAmount(), expanded);
+    }
+
+    void restoreViewState(ViewState state) {
+        visitNodes(this.nodes, "", (path, node) -> {
+            Boolean expanded = state.expanded().get(path);
+            if (expanded == null) return;
+            if (node instanceof GroupNode group) group.expanded = expanded;
+            if (node instanceof ListNode list) list.model.expanded = expanded;
+        });
+        rebuild();
+        this.pendingScroll = state.scroll();
+    }
+
+    void restoreScroll() {
+        if (this.pendingScroll != null) {
+            setScrollAmount(this.pendingScroll);
+            this.pendingScroll = null;
+        }
+    }
+
+    private void visitNodes(List<Node> nodes, String prefix, java.util.function.BiConsumer<String, Node> visitor) {
+        for (int i = 0; i < nodes.size(); i++) {
+            Node node = nodes.get(i);
+            String path = prefix + "/" + i;
+            visitor.accept(path, node);
+            if (node instanceof GroupNode group) visitNodes(group.children, path + "/g", visitor);
+            if (node instanceof ListNode list) {
+                for (int j = 0; j < list.model.elements.size(); j++) {
+                    if (list.model.elements.get(j) instanceof ObjectElement object) {
+                        visitNodes(List.of(object.group), path + "/e" + j, visitor);
+                    }
+                }
+            }
+        }
+    }
 
     public AutoConfigList(final Minecraft minecraft, final int width, final int height, final int y, final Screen screen) {
         super(minecraft, width, height, y, ROW_HEIGHT);
@@ -79,13 +179,17 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     @Override
     public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        boolean overPopup = isPopupOpenAt(mouseX, mouseY);
+        boolean overPopup = isPopupOpenAt(mouseX, mouseY)
+                || this.screen instanceof AutoConfigScreen configScreen && configScreen.hasContextMenu();
         int hoverX = overPopup ? Integer.MIN_VALUE : mouseX;
         int hoverY = overPopup ? Integer.MIN_VALUE : mouseY;
 
         this.pendingTooltip = null;
 
         super.extractWidgetRenderState(graphics, hoverX, hoverY, a);
+        for (Row row : this.children()) {
+            row.renderHandle(graphics, hoverX, hoverY, a);
+        }
 
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
@@ -94,7 +198,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             }
         }
 
-        if (this.pendingTooltip != null) {
+        renderDropTarget(graphics);
+        if (this.pendingTooltip != null && !this.dragging) {
             graphics.setTooltipForNextFrame(this.font,
                     this.font.split(this.pendingTooltip, 200),
                     this.pendingTooltipX, this.pendingTooltipY);
@@ -102,14 +207,132 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
-            if (picker != null && picker.isOverPicker(mouseButtonEvent.x(), mouseButtonEvent.y())) {
-                return row.mouseClicked(mouseButtonEvent, doubleClick);
+            if (picker != null && picker.isOverPicker(event.x(), event.y())) return row.mouseClicked(event, doubleClick);
+        }
+        if (inside(event.x(), event.y())) {
+            for (Row row : this.children()) {
+                if (event.y() < row.getContentY() || event.y() >= row.getContentY() + ROW_HEIGHT) continue;
+                if (event.button() == 3) {
+                    row.openContext((int) event.x(), (int) event.y());
+                    return true;
+                }
+                if (event.button() == 1 && row.canDrag() && row.overHandle(event.x())) {
+                    commitScalarElements();
+                    this.dragModel = row.model();
+                    this.dragElement = this.dragModel.elements.get(row.index());
+                    this.startX = this.pointerX = event.x();
+                    this.startY = this.pointerY = event.y();
+                    this.setFocused(row);
+                    row.setFocused(row.handle());
+                    return true;
+                }
             }
         }
-        return super.mouseClicked(mouseButtonEvent, doubleClick);
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    private boolean inside(double x, double y) {
+        return x >= getRowLeft() && x < getRowLeft() + getRowWidth() && y >= getY() && y < getBottom();
+    }
+
+    public boolean hasItemDrag() {
+        return this.dragModel != null;
+    }
+
+    public void cancelItemDrag() {
+        this.dragModel = null;
+        this.dragElement = null;
+        this.dragging = false;
+        this.dropIndex = -1;
+    }
+
+    public void tickDrag() {
+        if (!this.dragging || !inside(this.pointerX, this.pointerY)) return;
+        if (this.pointerY < getY() + 20) setScrollAmount(scrollAmount() - 10);
+        else if (this.pointerY > getBottom() - 20) setScrollAmount(scrollAmount() + 10);
+        updateDropTarget();
+    }
+
+    private void updateDropTarget() {
+        this.dropIndex = -1;
+        if (!inside(this.pointerX, this.pointerY)) return;
+        Row first = null, last = null;
+        for (Row row : this.children()) {
+            if (row.model() == this.dragModel) {
+                if (first == null) first = row;
+                last = row;
+            }
+        }
+        if (first == null || this.pointerY < first.getContentY() - ROW_HEIGHT || this.pointerY >= blockBottom(last)) return;
+        this.dropIndex = this.dragModel.elements.size();
+        for (Row row : this.children()) {
+            if (row.model() == this.dragModel && this.pointerY < row.getContentY() + HEADER_BTN / 2.0) {
+                this.dropIndex = row.index();
+                break;
+            }
+        }
+    }
+
+    private int blockBottom(Row header) {
+        int end = header.getContentY() + ROW_HEIGHT;
+        int start = this.children().indexOf(header);
+        for (int i = start + 1; i < this.children().size(); i++) {
+            Row row = this.children().get(i);
+            if (row.depth() <= header.depth()) break;
+            end = row.getContentY() + ROW_HEIGHT;
+        }
+        return end;
+    }
+
+    private void renderDropTarget(GuiGraphicsExtractor graphics) {
+        if (!this.dragging) return;
+        graphics.enableScissor(getRowLeft(), getY(), getRowLeft() + getRowWidth(), getBottom());
+        int line = -1;
+        for (Row row : this.children()) {
+            if (row.model() != this.dragModel) continue;
+            if (row.model().elements.get(row.index()) == this.dragElement) {
+                graphics.fill(getRowLeft(), row.getContentY() - 2, getRowLeft() + getRowWidth(), row.getContentY() + 20, 0x4066BBFF);
+            }
+            if (row.index() == this.dropIndex) line = row.getContentY() - 2;
+            else if (this.dropIndex == this.dragModel.elements.size()) line = blockBottom(row) - 2;
+        }
+        if (this.dropIndex >= 0 && line >= getY() && line <= getBottom()) {
+            graphics.fill(getRowLeft(), line, getRowLeft() + getRowWidth(), line + 2, DRAG_COLOR);
+        }
+        graphics.disableScissor();
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (event.isEscape() && hasItemDrag()) {
+            cancelItemDrag();
+            return true;
+        }
+        Row row = this.getFocused();
+        if (row != null && event.key() == InputConstants.KEY_F10 && event.hasShiftDown()) {
+            row.openContext(getRowLeft(), row.getContentY() + HEADER_BTN);
+            return true;
+        }
+        if (row != null && row.canDrag() && row.getFocused() == row.handle() && event.hasAltDown()
+                && (event.isUp() || event.isDown())) {
+            int next = row.index() + (event.isUp() ? -1 : 1);
+            if (next >= 0 && next < row.model().elements.size()) {
+                move(row.model(), row.index(), next);
+                for (Row moved : this.children()) {
+                    if (moved.model() == row.model() && moved.index() == next) {
+                        this.setFocused(moved);
+                        moved.setFocused(moved.handle());
+                        scrollToEntry(moved);
+                        break;
+                    }
+                }
+            }
+            return true;
+        }
+        return super.keyPressed(event);
     }
 
     @Override
@@ -142,13 +365,16 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         return false;
     }
 
-    private void toggleSelect(final ListModel model, final int index) {
-        model.selectedIndex = (model.selectedIndex == index) ? -1 : index;
-        notifySelectionChanged();
-    }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
+        if (hasItemDrag()) {
+            this.pointerX = mouseButtonEvent.x();
+            this.pointerY = mouseButtonEvent.y();
+            if (Math.hypot(this.pointerX - this.startX, this.pointerY - this.startY) >= 4) this.dragging = true;
+            if (this.dragging) updateDropTarget();
+            return true;
+        }
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
             if (picker != null && picker.isDraggingPicker()) {
@@ -159,7 +385,29 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     @Override
+    public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
+        if (!hasItemDrag()) return super.mouseScrolled(x, y, horizontal, vertical);
+        this.pointerX = x;
+        this.pointerY = y;
+        super.mouseScrolled(x, y, horizontal, vertical);
+        if (this.dragging) updateDropTarget();
+        return true;
+    }
+
+    @Override
     public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
+        if (hasItemDrag()) {
+            this.pointerX = mouseButtonEvent.x();
+            this.pointerY = mouseButtonEvent.y();
+            updateDropTarget();
+            ListModel model = this.dragModel;
+            int from = model.elements.indexOf(this.dragElement);
+            int to = this.dropIndex > from ? this.dropIndex - 1 : this.dropIndex;
+            boolean apply = this.dragging && from >= 0 && this.dropIndex >= 0;
+            cancelItemDrag();
+            if (apply) move(model, from, to);
+            return true;
+        }
         boolean handled = false;
         for (Row row : this.children()) {
             ColorWidget picker = colorPickerOf(row);
@@ -213,34 +461,151 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         this.setScrollAmount(scroll);
     }
 
+    private boolean matches(Component text) {
+        return text != null && text.getString().toLowerCase(java.util.Locale.ROOT).contains(this.filter);
+    }
+
+    private boolean matches(Node node) {
+        if (this.filter.isEmpty() || matches(node.label) || matches(node.tooltip)) return true;
+        if (node instanceof GroupNode group) return group.children.stream().anyMatch(this::matches);
+        if (node instanceof ListNode list) return list.model.elements.stream().anyMatch(this::matches);
+        return false;
+    }
+
+    private boolean matches(Element element) {
+        if (element instanceof ObjectElement object) return matches(object.group);
+        return element instanceof ScalarElement scalar
+                && scalar.value.toLowerCase(java.util.Locale.ROOT).contains(this.filter);
+    }
+
     private void addNode(final Node node, final int depth) {
-        if (node instanceof WidgetNode w) {
-            this.addEntry(new WidgetRow(w, depth));
-        } else if (node instanceof GroupNode g) {
-            this.addEntry(new GroupHeaderRow(g, depth));
-            if (g.expanded) {
-                for (Node c : g.children) {
-                    addNode(c, depth + 1);
-                }
+        addNode(node, depth, false, 0);
+    }
+
+    private void addNode(final Node node, final int depth, final boolean showAll, final int inset) {
+        if (!showAll && !matches(node)) return;
+        boolean showChildren = showAll || matches(node.label);
+        if (node instanceof WidgetNode widget) {
+            addRow(new WidgetRow(widget, depth), inset);
+        } else if (node instanceof GroupNode group) {
+            addRow(new GroupHeaderRow(group, depth), inset);
+            if (group.expanded || !this.filter.isEmpty()) {
+                for (Node child : group.children) addNode(child, depth + 1, showChildren, inset);
             }
-        } else if (node instanceof ListNode l) {
-            this.addEntry(new ListHeaderRow(l, depth));
-            if (l.model.expanded) {
-                for (int i = 0; i < l.model.elements.size(); i++) {
-                    Element e = l.model.elements.get(i);
-                    if (e instanceof ScalarElement) {
-                        this.addEntry(new ScalarElementRow(l.model, i, depth + 1));
-                    } else if (e instanceof ObjectElement oe) {
-                        this.addEntry(new ObjectElementRow(l.model, i, depth + 1));
-                        if (oe.group.expanded) {
-                            for (Node c : oe.group.children) {
-                                addNode(c, depth + 2);
+        } else if (node instanceof ListNode list) {
+            addRow(new ListHeaderRow(list, depth), inset);
+            if (list.model.expanded || !this.filter.isEmpty()) {
+                for (int i = 0; i < list.model.elements.size(); i++) {
+                    Element element = list.model.elements.get(i);
+                    if (!showChildren && !matches(element)) continue;
+                    if (element instanceof ScalarElement) {
+                        addRow(new ScalarElementRow(list.model, i, depth + 1), inset);
+                    } else if (element instanceof ObjectElement object) {
+                        addRow(new ObjectElementRow(list.model, i, depth + 1), inset);
+                        if (object.group.expanded || !this.filter.isEmpty()) {
+                            for (Node child : object.group.children) {
+                                addNode(child, depth + 2, showChildren, inset + HANDLE_WIDTH + HANDLE_GAP);
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    private void addRow(Row row, int inset) {
+        row.inset = inset;
+        this.addEntry(row);
+    }
+
+    private List<AutoConfigScreen.RowAction> nodeActions(Node node) {
+        List<AutoConfigScreen.RowAction> actions = new ArrayList<>();
+        if (this.readOnly) return actions;
+        if (node.resetAction != null) actions.add(new AutoConfigScreen.RowAction(
+                "text.simple_config_lib.reset_value", node.resetAction, true));
+        if (node.manualAction != null) {
+            EditBox input = node instanceof WidgetNode widget && widget.widget instanceof EditBox box ? box : null;
+            boolean manual = input != null;
+            boolean valid = !manual || AutoConfigScreen.parseElement(Integer.class, input.getValue()) != null;
+            actions.add(new AutoConfigScreen.RowAction(manual ? "text.simple_config_lib.restore_slider"
+                    : "text.simple_config_lib.enter_value", node.manualAction, valid));
+        }
+        return actions;
+    }
+
+    private List<AutoConfigScreen.RowAction> elementActions(ListModel model, int index) {
+        List<AutoConfigScreen.RowAction> actions = new ArrayList<>();
+        if (this.readOnly) return actions;
+        if (model.sliderCfg != null && model.elements.get(index) instanceof ScalarElement scalar) {
+            boolean manual = scalar.manualInput;
+            boolean valid = !manual || AutoConfigScreen.parseElement(Integer.class, scalar.value) != null;
+            actions.add(new AutoConfigScreen.RowAction(manual ? "text.simple_config_lib.restore_slider"
+                    : "text.simple_config_lib.enter_value", () -> {
+                commitScalarElements();
+                if (scalar.manualInput && AutoConfigScreen.parseElement(Integer.class, scalar.value) == null) return;
+                scalar.manualInput = !scalar.manualInput;
+                rebuild();
+                for (Row row : this.children()) {
+                    if (row.model() == model && row.index() == index && row instanceof ScalarElementRow number) {
+                        focusWidget(number.widget);
+                        if (number.widget instanceof EditBox box) {
+                            box.setCursorPosition(box.getValue().length());
+                            box.setHighlightPos(0);
+                        }
+                    }
+                }
+            }, valid));
+        }
+        actions.add(new AutoConfigScreen.RowAction("text.simple_config_lib.reset_value", () -> resetElement(model, index), true));
+        if (!model.editable) return actions;
+        actions.add(new AutoConfigScreen.RowAction("text.simple_config_lib.add_before", () -> addElement(model, index), true));
+        actions.add(new AutoConfigScreen.RowAction("text.simple_config_lib.add_after", () -> addElement(model, index + 1), true));
+        actions.add(new AutoConfigScreen.RowAction("text.simple_config_lib.remove", () -> {
+            commitScalarElements();
+            discardElement(model.elements.remove(index));
+            rebuild();
+            markDirty();
+        }, true));
+        return actions;
+    }
+
+    private void resetElement(ListModel model, int index) {
+        commitScalarElements();
+        ViewState state = viewState();
+        Element current = model.elements.get(index);
+        discardElement(current);
+        Supplier<Element> factory = current.resetFactory != null ? current.resetFactory : model.factory;
+        Element replacement = factory.get();
+        replacement.resetFactory = factory;
+        model.elements.set(index, replacement);
+        restoreViewState(state);
+        restoreScroll();
+        markDirty();
+    }
+
+    private void discardElement(Element element) {
+        if (element instanceof ObjectElement object) {
+            visitNodes(List.of(object.group), "", (path, node) -> {
+                if (node instanceof ListNode list) list.model.active = false;
+            });
+        }
+    }
+
+    private void addElement(ListModel model, int index) {
+        commitScalarElements();
+        model.elements.add(index, model.factory.get());
+        model.expanded = true;
+        rebuild();
+        markDirty();
+    }
+
+    private void move(ListModel model, int from, int to) {
+        if (this.readOnly || !this.filter.isEmpty() || !model.editable || from == to
+                || from < 0 || to < 0 || from >= model.elements.size() || to >= model.elements.size()) return;
+        commitScalarElements();
+        model.elements.add(to, model.elements.remove(from));
+        rebuild();
+        markDirty();
     }
 
     public void commitElements() {
@@ -255,13 +620,6 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
     }
 
-    private void notifySelectionChanged() {
-        for (Row row : this.children()) {
-            if (row instanceof ListHeaderRow header) {
-                header.refreshButtons();
-            }
-        }
-    }
 
     private static Style styleUnderCursor(Font font, FormattedCharSequence text, int leftX, int topY, int mouseX, int mouseY) {
         GuiTextRenderState state = new GuiTextRenderState(font, text, new Matrix3x2f(), leftX, topY, ARGB.white(1.0F), 0, true, true, null);
@@ -273,6 +631,8 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     public abstract static class Node {
         public Component label;
         public Component tooltip;
+        public Runnable resetAction;
+        public Runnable manualAction;
     }
 
     public static final class WidgetNode extends Node {
@@ -289,12 +649,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     public static final class ListModel {
+        boolean active = true;
         public boolean editable;
         public boolean expanded;
         public final boolean addToFront;
         public Slider sliderCfg;
         public Color colorCfg;
-        public int selectedIndex = -1;
         public Class<?> type;
         public int textMaxLength = 256;
 
@@ -312,10 +672,13 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
     }
 
-    public interface Element {}
+    public abstract static class Element {
+        public Supplier<Element> resetFactory;
+    }
 
-    public static final class ScalarElement implements Element {
+    public static final class ScalarElement extends Element {
         public String value;
+        public boolean manualInput;
         public Component component;
 
         public ScalarElement(final String value) {
@@ -328,7 +691,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
     }
 
-    public static final class ObjectElement implements Element {
+    public static final class ObjectElement extends Element {
         public final GroupNode group;
 
         public ObjectElement(final GroupNode group) {
@@ -336,11 +699,86 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         }
     }
 
-    public abstract static class Row extends ContainerObjectSelectionList.Entry<Row> {
-        protected int lastTop;
+    public abstract class Row extends ContainerObjectSelectionList.Entry<Row> {
+        private DragHandle dragHandle;
+        private int inset;
+
+        int indent() {
+            return depth() * INDENT + this.inset;
+        }
+
+        protected abstract List<AutoConfigScreen.RowAction> actions();
+        protected abstract int depth();
+        protected ListModel model() { return null; }
+        protected int index() { return -1; }
+
+        boolean canDrag() {
+            return !AutoConfigList.this.readOnly && AutoConfigList.this.filter.isEmpty()
+                    && model() != null && model().editable;
+        }
+
+        DragHandle handle() {
+            if (this.dragHandle == null) this.dragHandle = new DragHandle();
+            return this.dragHandle;
+        }
+
+        boolean overHandle(double x) {
+            int left = AutoConfigList.this.getRowLeft() + indent();
+            return x >= left && x < left + HANDLE_WIDTH;
+        }
+
+        void openContext(int x, int y) {
+            if (AutoConfigList.this.screen instanceof AutoConfigScreen configScreen && !actions().isEmpty()) {
+                configScreen.openActions(actions(), x, y);
+            }
+        }
+
+        protected List<GuiEventListener> rowWidgets(GuiEventListener... widgets) {
+            List<GuiEventListener> result = new ArrayList<>(List.of(widgets));
+            if (canDrag()) result.add(handle());
+            return result;
+        }
+
+        @Override
+        public List<? extends NarratableEntry> narratables() {
+            return children().stream().filter(NarratableEntry.class::isInstance).map(NarratableEntry.class::cast).toList();
+        }
+
+        void renderHandle(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+            if (!canDrag()) return;
+            handle().setPosition(AutoConfigList.this.getRowLeft() + indent(), getContentY());
+            if (getContentY() >= AutoConfigList.this.getY() && getContentY() + HEADER_BTN <= AutoConfigList.this.getBottom()) {
+                handle().extractRenderState(graphics, mouseX, mouseY, partialTick);
+            }
+        }
+
+        private final class DragHandle extends AbstractWidget {
+            DragHandle() {
+                super(0, 0, HANDLE_WIDTH, HEADER_BTN, Component.translatable("text.simple_config_lib.drag"));
+            }
+
+            @Override
+            protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+                graphics.text(AutoConfigList.this.font, Component.literal("⋮"), getX() + 4, getY() + 6,
+                        isFocused() || isMouseOver(mouseX, mouseY) ? DRAG_COLOR : 0xFF999999);
+            }
+
+            @Override
+            protected void updateWidgetNarration(NarrationElementOutput output) {
+                output.add(NarratedElementType.TITLE, getMessage());
+            }
+        }
     }
 
     private final class WidgetRow extends Row {
+        @Override
+        protected int depth() { return this.depth; }
+
+        @Override
+        protected List<AutoConfigScreen.RowAction> actions() {
+            return nodeActions(this.node);
+        }
+
         private final WidgetNode node;
         private final int depth;
 
@@ -352,9 +790,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         @Override
         public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
-            int labelX = rowLeft + this.depth * INDENT;
+            int labelX = rowLeft + indent();
 
             int widgetW = AutoConfigList.this.widgetWidth();
             int widgetX = rowLeft + rowWidth - widgetW;
@@ -408,13 +846,13 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
             int rowLeft = AutoConfigList.this.getRowLeft();
             int y = this.getContentY();
-            int labelX = rowLeft + this.depth * INDENT;
+            int labelX = rowLeft + indent();
             int labelWidth = AutoConfigList.this.font.width(this.node.label);
 
             boolean overLabel = mouseButtonEvent.x() >= labelX && mouseButtonEvent.x() <= labelX + labelWidth
                     && mouseButtonEvent.y() >= y && mouseButtonEvent.y() <= y + 20;
 
-            if (overLabel) {
+            if (mouseButtonEvent.button() == 1 && overLabel) {
                 Style style = styleUnderCursor(AutoConfigList.this.font, this.node.label.getVisualOrderText(),
                         labelX, y + 6, (int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
 
@@ -430,16 +868,21 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return List.of(this.node.widget);
+            return rowWidgets(this.node.widget);
         }
 
-        @Override
-        public List<? extends NarratableEntry> narratables() {
-            return List.of(this.node.widget);
-        }
+
     }
 
     private final class GroupHeaderRow extends Row {
+        @Override
+        protected int depth() { return this.depth; }
+
+        @Override
+        protected List<AutoConfigScreen.RowAction> actions() {
+            return nodeActions(this.node);
+        }
+
         private final GroupNode node;
         private final int depth;
         private final Button toggleButton;
@@ -461,9 +904,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         @Override
         public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
-            int labelX = rowLeft + this.depth * INDENT;
+            int labelX = rowLeft + indent();
 
             graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
@@ -488,10 +931,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 return true;
             }
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
             int buttonsLeft = rowLeft + rowWidth - HEADER_BTN;
-            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) {
+            if (mouseButtonEvent.button() == 1 && mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) {
                 GuiSounds.playClick();
                 toggle();
                 return true;
@@ -501,20 +944,27 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return List.of(this.toggleButton);
+            return rowWidgets(this.toggleButton);
         }
 
-        @Override
-        public List<? extends NarratableEntry> narratables() {
-            return List.of(this.toggleButton);
-        }
+
     }
 
     private final class ListHeaderRow extends Row {
+        @Override
+        protected int depth() { return this.depth; }
+
+        @Override
+        protected List<AutoConfigScreen.RowAction> actions() {
+            List<AutoConfigScreen.RowAction> result = nodeActions(this.node);
+            if (!AutoConfigList.this.readOnly && this.node.model.editable) result.add(
+                    new AutoConfigScreen.RowAction("text.simple_config_lib.add", () -> addElement(this.node.model,
+                            this.node.model.addToFront ? 0 : this.node.model.elements.size()), true));
+            return result;
+        }
+
         private final ListNode node;
         private final int depth;
-        private final Button addButton;
-        private final Button removeButton;
         private final Button toggleButton;
 
         ListHeaderRow(final ListNode node, final int depth) {
@@ -525,60 +975,21 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             this.toggleButton = Button.builder(toggleLabel(model.expanded), b -> toggle())
                     .size(HEADER_BTN, HEADER_BTN).build();
 
-            if (model.editable) {
-                this.addButton = Button.builder(Component.literal("+"), b -> {
-                    AutoConfigList.this.commitScalarElements();
-                    Element created = model.factory.get();
-                    if (model.addToFront) {
-                        model.elements.add(0, created);
-                        if (model.selectedIndex >= 0) model.selectedIndex++;
-                    } else {
-                        model.elements.add(created);
-                    }
-                    model.expanded = true;
-                    refreshButtons();
-                    AutoConfigList.this.rebuild();
-                    AutoConfigList.this.markDirty();
-                }).size(HEADER_BTN, HEADER_BTN).build();
-
-                this.removeButton = Button.builder(Component.literal("−"), b -> {
-                    AutoConfigList.this.commitScalarElements();
-                    if (model.expanded && model.selectedIndex >= 0 && model.selectedIndex < model.elements.size()) {
-                        model.elements.remove(model.selectedIndex);
-                        model.selectedIndex = -1;
-                        refreshButtons();
-                        AutoConfigList.this.rebuild();
-                        AutoConfigList.this.markDirty();
-                    }
-                }).size(HEADER_BTN, HEADER_BTN).build();
-            } else {
-                this.addButton = null;
-                this.removeButton = null;
-            }
-
-            refreshButtons();
         }
 
         private void toggle() {
             AutoConfigList.this.commitScalarElements();
             this.node.model.expanded = !this.node.model.expanded;
             this.toggleButton.setMessage(toggleLabel(this.node.model.expanded));
-            refreshButtons();
             AutoConfigList.this.rebuild();
-        }
-
-        void refreshButtons() {
-            if (this.removeButton != null) {
-                this.removeButton.active = this.node.model.expanded && this.node.model.selectedIndex >= 0;
-            }
         }
 
         @Override
         public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
-            int labelX = rowLeft + this.depth * INDENT;
+            int labelX = rowLeft + indent();
 
             graphics.text(AutoConfigList.this.font, this.node.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
 
@@ -586,15 +997,6 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             int toggleX = right - HEADER_BTN;
             this.toggleButton.setPosition(toggleX, y);
             this.toggleButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
-
-            if (this.node.model.editable) {
-                int removeX = toggleX - HEADER_BTN - HEADER_BTN_GAP;
-                int addX = removeX - HEADER_BTN - HEADER_BTN_GAP;
-                this.addButton.setPosition(addX, y);
-                this.removeButton.setPosition(removeX, y);
-                this.addButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
-                this.removeButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
-            }
 
             if (this.node.tooltip != null) {
                 int labelWidth = AutoConfigList.this.font.width(this.node.label);
@@ -613,11 +1015,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 return true;
             }
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
-            int buttonCount = this.node.model.editable ? 3 : 1;
-            int buttonsLeft = rowLeft + rowWidth - (buttonCount * HEADER_BTN + (buttonCount - 1) * HEADER_BTN_GAP);
-            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) {
+            int buttonsLeft = rowLeft + rowWidth - HEADER_BTN;
+            if (mouseButtonEvent.button() == 1 && mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < buttonsLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) {
                 GuiSounds.playClick();
                 toggle();
                 return true;
@@ -627,22 +1028,27 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
         @Override
         public List<? extends GuiEventListener> children() {
-            if (this.node.model.editable) {
-                return List.of(this.addButton, this.removeButton, this.toggleButton);
-            }
-            return List.of(this.toggleButton);
+            return rowWidgets(this.toggleButton);
         }
 
-        @Override
-        public List<? extends NarratableEntry> narratables() {
-            if (this.node.model.editable) {
-                return List.of(this.addButton, this.removeButton, this.toggleButton);
-            }
-            return List.of(this.toggleButton);
-        }
+
     }
 
     private final class ScalarElementRow extends Row {
+        @Override
+        protected int depth() { return this.depth; }
+
+        @Override
+        protected ListModel model() { return this.model; }
+
+        @Override
+        protected int index() { return this.index; }
+
+        @Override
+        protected List<AutoConfigScreen.RowAction> actions() {
+            return elementActions(this.model, this.index);
+        }
+
         private final ListModel model;
         private final int index;
         private final int depth;
@@ -653,19 +1059,19 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             this.model = model;
             this.index = index;
             this.depth = depth;
-            int pad = depth * INDENT;
+            int pad = depth * INDENT + HANDLE_WIDTH + HANDLE_GAP;
             ScalarElement e = scalar();
             String value = e != null ? e.value : "";
 
             if (model.type == Component.class) {
                 this.componentLabel = (e != null && e.component != null) ? e.component : Component.literal(value);
-                this.widget = new StringWidget(0, 0, getRowWidth() - pad, 20,
+                this.widget = new StringWidget(0, 0, contentWidth() - pad, 20,
                         Component.empty(), AutoConfigList.this.font);
             } else if (model.type == Boolean.class) {
                 boolean initial = Boolean.parseBoolean(value);
                 this.widget = CycleButton.onOffBuilder(initial)
                         .displayOnlyValue()
-                        .create(0, 0, getRowWidth() - pad, 20, Component.empty(),
+                        .create(0, 0, contentWidth() - pad, 20, Component.empty(),
                                 (b, v) -> {
                                     ScalarElement s = scalar();
                                     if (s != null) {
@@ -673,7 +1079,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                                         markDirty();
                                     }
                                 });
-            } else if (model.sliderCfg != null) {
+            } else if (model.sliderCfg != null && !e.manualInput) {
                 Slider r = model.sliderCfg;
                 int initial = value.isEmpty() ? r.min() : Integer.parseInt(value.trim());
                 this.widget = new AutoConfigScreen.IntSlider(r.min(), r.max(), r.step(), initial, v -> {
@@ -697,13 +1103,14 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 });
             } else {
                 EditBox eb = new EditBox(AutoConfigList.this.font, 0, 0,
-                        getRowWidth() - pad, 20, Component.empty());
-                eb.setMaxLength(this.model.textMaxLength);
+                        contentWidth() - pad, 20, Component.empty());
+                eb.setMaxLength(Math.max(this.model.textMaxLength, value.length()));
                 eb.setValue(value);
                 eb.setResponder(v -> {
                     ScalarElement s = scalar();
                     if (s != null) {
                         s.value = v;
+                        if (this.model.type != String.class) eb.setTextColor(AutoConfigScreen.parseElement(this.model.type, v) == null ? 0xFFFF5555 : 0xFFE0E0E0);
                         markDirty();
                     }
                 });
@@ -729,14 +1136,11 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         @Override
         public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
 
-            if (this.model.selectedIndex == this.index) {
-                graphics.fill(rowLeft, y - 2, rowLeft + rowWidth, y + 22, SELECTED_BG);
-            }
 
-            int boxX = rowLeft + this.depth * INDENT;
+            int boxX = rowLeft + indent() + HANDLE_WIDTH + HANDLE_GAP;
             int boxW = rowLeft + rowWidth - boxX;
 
             this.widget.setPosition(boxX, y);
@@ -774,13 +1178,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 return cw.mouseClicked(mouseButtonEvent, doubleClick);
             }
 
-            if (mouseButtonEvent.button() == 3 && this.model.editable) {
-                AutoConfigList.this.toggleSelect(this.model, this.index);
-                return true;
-            }
 
             if (this.componentLabel != null) {
-                int boxX = AutoConfigList.this.getRowLeft() + this.depth * INDENT;
+                int boxX = AutoConfigList.this.getRowLeft() + indent() + HANDLE_WIDTH + HANDLE_GAP;
                 int y = this.getContentY();
                 int labelW = AutoConfigList.this.font.width(this.componentLabel);
                 if (mouseButtonEvent.x() >= boxX && mouseButtonEvent.x() <= boxX + labelW && mouseButtonEvent.y() >= y && mouseButtonEvent.y() <= y + 20) {
@@ -808,16 +1208,27 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return List.of(this.widget);
+            return rowWidgets(this.widget);
         }
 
-        @Override
-        public List<? extends NarratableEntry> narratables() {
-            return List.of(this.widget);
-        }
+
     }
 
     private final class ObjectElementRow extends Row {
+        @Override
+        protected int depth() { return this.depth; }
+
+        @Override
+        protected ListModel model() { return this.model; }
+
+        @Override
+        protected int index() { return this.index; }
+
+        @Override
+        protected List<AutoConfigScreen.RowAction> actions() {
+            return elementActions(this.model, this.index);
+        }
+
         private final ListModel model;
         private final int index;
         private final int depth;
@@ -846,13 +1257,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         @Override
         public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
-            int labelX = rowLeft + this.depth * INDENT;
+            int labelX = rowLeft + indent() + HANDLE_WIDTH + HANDLE_GAP;
 
-            if (this.model.selectedIndex == this.index) {
-                graphics.fill(rowLeft, y - 2, rowLeft + rowWidth, y + 22, SELECTED_BG);
-            }
 
             GroupNode g = group();
             graphics.text(AutoConfigList.this.font, g.label.getVisualOrderText(), labelX, y + 6, LABEL_COLOR);
@@ -865,7 +1273,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         @Override
         public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
             int rowLeft = AutoConfigList.this.getRowLeft();
-            int rowWidth = AutoConfigList.this.getRowWidth();
+            int rowWidth = AutoConfigList.this.contentWidth();
             int y = this.getContentY();
             int toggleLeft = rowLeft + rowWidth - HEADER_BTN;
 
@@ -873,14 +1281,9 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 return true;
             }
 
-            if (mouseButtonEvent.x() >= rowLeft && mouseButtonEvent.x() < toggleLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) {
+            if (mouseButtonEvent.x() >= rowLeft + indent() + HANDLE_WIDTH + HANDLE_GAP && mouseButtonEvent.x() < toggleLeft && mouseButtonEvent.y() >= y && mouseButtonEvent.y() < y + 20) {
                 int button = mouseButtonEvent.button();
-                if (button == 3) {
-                    if (this.model.editable) {
-                        AutoConfigList.this.toggleSelect(this.model, this.index);
-                    }
-                    return true;
-                } else if (button == 1) {
+                if (button == 1) {
                     GuiSounds.playClick();
                     this.toggle();
                     return true;
@@ -891,13 +1294,10 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return List.of(this.toggleButton);
+            return rowWidgets(this.toggleButton);
         }
 
-        @Override
-        public List<? extends NarratableEntry> narratables() {
-            return List.of(this.toggleButton);
-        }
+
     }
 
     private static Component toggleLabel(final boolean expanded) {

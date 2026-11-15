@@ -3,6 +3,8 @@ package io.github.bizcub.simpleConfigLib.platform;
 import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -25,7 +27,7 @@ public class FabricHooks implements PlatformHooks {
     }
 
     @Override
-    public void sendToPlayer(ServerPlayer player, ConfigSyncPayload payload) {
+    public void sendToPlayer(ServerPlayer player, CustomPacketPayload payload) {
         ServerPlayNetworking.send(player, payload);
     }
 
@@ -39,6 +41,7 @@ public class FabricHooks implements PlatformHooks {
     static void registerPayloads() {
         PayloadTypeRegistry.serverboundPlay().register(ConfigApplyPayload.TYPE, ConfigApplyPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ConfigSyncPayload.TYPE, ConfigSyncPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ConfigResultPayload.TYPE, ConfigResultPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(ConfigApplyPayload.TYPE, (payload, context) ->
                 context.server().execute(() -> SimpleConfigLib.handleApply(payload, context.player())));
     }
