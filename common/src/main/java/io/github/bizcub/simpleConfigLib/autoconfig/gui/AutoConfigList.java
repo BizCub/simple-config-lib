@@ -3,6 +3,7 @@ package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Color;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Slider;
+import io.github.bizcub.simpleConfigLib.client.SimpleConfigClient;
 import io.github.bizcub.simpleConfigLib.internal.GuiSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
@@ -35,11 +36,9 @@ import java.util.function.Supplier;
 
 public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.Row> {
 
-    private static final int MAX_ROW_WIDTH = 520;
     private static final int SIDE_PADDING = 40;
     private static final int ROW_HEIGHT = 25;
     private static final int LABEL_COLOR = -1;
-    private static final int DRAG_COLOR = 0xFF66BBFF;
 
     private static final int INDENT = 8;
     private static final int HEADER_BTN = 20;
@@ -201,7 +200,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         renderDropTarget(graphics);
         if (this.pendingTooltip != null && !this.dragging) {
             graphics.setTooltipForNextFrame(this.font,
-                    this.font.split(this.pendingTooltip, 200),
+                    this.font.split(this.pendingTooltip, tooltipWidth()),
                     this.pendingTooltipX, this.pendingTooltipY);
         }
     }
@@ -294,13 +293,14 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         for (Row row : this.children()) {
             if (row.model() != this.dragModel) continue;
             if (row.model().elements.get(row.index()) == this.dragElement) {
-                graphics.fill(getRowLeft(), row.getContentY() - 2, getRowLeft() + getRowWidth(), row.getContentY() + 20, 0x4066BBFF);
+                graphics.fill(getRowLeft(), row.getContentY() - 2, getRowLeft() + getRowWidth(), row.getContentY() + 20,
+                        (accentColor() & 0xFFFFFF) | 0x40000000);
             }
             if (row.index() == this.dropIndex) line = row.getContentY() - 2;
             else if (this.dropIndex == this.dragModel.elements.size()) line = blockBottom(row) - 2;
         }
         if (this.dropIndex >= 0 && line >= getY() && line <= getBottom()) {
-            graphics.fill(getRowLeft(), line, getRowLeft() + getRowWidth(), line + 2, DRAG_COLOR);
+            graphics.fill(getRowLeft(), line, getRowLeft() + getRowWidth(), line + 2, accentColor());
         }
         graphics.disableScissor();
     }
@@ -342,7 +342,15 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     @Override
     public int getRowWidth() {
-        return Math.min(MAX_ROW_WIDTH, this.width - SIDE_PADDING);
+        return Math.max(1, Math.min(Math.max(240, SimpleConfigClient.getInstance().get().editorMaxWidth), this.width - SIDE_PADDING));
+    }
+
+    private int tooltipWidth() {
+        return Math.max(1, Math.min(Math.max(40, SimpleConfigClient.getInstance().get().tooltipMaxWidth), this.width - 16));
+    }
+
+    private int accentColor() {
+        return 0xFF000000 | (SimpleConfigClient.getInstance().get().accentColor & 0xFFFFFF);
     }
 
     private int widgetWidth() {
@@ -665,7 +673,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
 
     public static final class ScalarElement extends Element {
         public String value;
-        public boolean manualInput;
+        public boolean manualInput = SimpleConfigClient.getInstance().get().slidersAsNumbers;
         public Component component;
 
         public ScalarElement(final String value) {
@@ -753,7 +761,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             @Override
             protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
                 graphics.text(AutoConfigList.this.font, Component.literal("⋮"), getX() + 4, getY() + 6,
-                        isFocused() || isMouseOver(mouseX, mouseY) ? DRAG_COLOR : 0xFF999999);
+                        isFocused() || isMouseOver(mouseX, mouseY) ? accentColor() : 0xFF999999);
             }
 
             @Override
@@ -912,7 +920,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     && mouseX <= labelX + AutoConfigList.this.font.width(this.node.label)
                     && mouseY >= y && mouseY <= y + HEADER_BTN) {
                 graphics.setTooltipForNextFrame(AutoConfigList.this.font,
-                        AutoConfigList.this.font.split(this.node.tooltip, 200), mouseX, mouseY);
+                        AutoConfigList.this.font.split(this.node.tooltip, tooltipWidth()), mouseX, mouseY);
             }
         }
 

@@ -16,6 +16,7 @@ import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.ScalarElem
 import io.github.bizcub.simpleConfigLib.autoconfig.gui.AutoConfigList.WidgetNode;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigResultPayload;
+import io.github.bizcub.simpleConfigLib.client.SimpleConfigClient;
 import io.github.bizcub.simpleConfigLib.internal.KeyFormatter;
 import io.github.bizcub.simpleConfigLib.internal.network.NetworkClient;
 import net.minecraft.ChatFormatting;
@@ -156,7 +157,7 @@ public class AutoConfigScreen extends Screen {
         this.searchBox.setHint(Component.translatable("gui.recipebook.search_hint"));
         this.searchBox.setValue(this.search);
         this.searchBox.setResponder(this::filter);
-        this.searchBox.visible = this.searchOpen;
+        this.searchBox.visible = searchVisible();
         for (AutoConfigList list : this.lists) list.setFilter(this.search);
         repositionElements();
         updateDoneButton();
@@ -236,6 +237,14 @@ public class AutoConfigScreen extends Screen {
     public void tick() {
         if (this.pendingRequest != 0 && System.currentTimeMillis() >= this.saveDeadline) saveFailed();
         updateDoneButton();
+        if (this.searchBox != null && this.searchBox.visible != searchVisible()) {
+            this.searchBox.visible = searchVisible();
+            if (!this.searchBox.visible) {
+                this.searchBox.setValue("");
+                if (this.getFocused() == this.searchBox) this.setFocused(currentList());
+            }
+            repositionElements();
+        }
         AutoConfigList list = currentList();
         if (list != null) list.tickDrag();
     }
@@ -245,13 +254,17 @@ public class AutoConfigScreen extends Screen {
         this.rebuildWidgets();
     }
 
+    private boolean searchVisible() {
+        return this.searchOpen || SimpleConfigClient.getInstance().get().alwaysShowSearch;
+    }
+
     private void toggleSearch() {
         closeActions();
-        this.searchOpen = !this.searchOpen;
-        this.searchBox.visible = this.searchOpen;
-        if (!this.searchOpen) this.searchBox.setValue("");
+        if (!SimpleConfigClient.getInstance().get().alwaysShowSearch) this.searchOpen = !this.searchOpen;
+        this.searchBox.visible = searchVisible();
+        if (!this.searchBox.visible) this.searchBox.setValue("");
         repositionElements();
-        this.setFocused(this.searchOpen ? this.searchBox : currentList());
+        this.setFocused(this.searchBox.visible ? this.searchBox : currentList());
     }
 
     private void filter(String value) {
@@ -384,7 +397,7 @@ public class AutoConfigScreen extends Screen {
                 this.searchBox.setPosition(8, tabAreaTop + 2);
                 this.searchBox.setWidth(Math.max(40, this.width - 16));
             }
-            if (this.searchOpen) tabAreaTop += 26;
+            if (searchVisible()) tabAreaTop += 26;
             ScreenRectangle tabArea = new ScreenRectangle(0, tabAreaTop, this.width,
                     this.height - this.layout.getFooterHeight() - tabAreaTop);
             this.tabManager.setTabArea(tabArea);
@@ -410,13 +423,19 @@ public class AutoConfigScreen extends Screen {
         if (list != null && ((keyEvent.key() == InputConstants.KEY_F10 && keyEvent.hasShiftDown()) || keyEvent.hasAltDown())
                 && list.keyPressed(keyEvent)) return true;
         if (keyEvent.key() == InputConstants.KEY_F && keyEvent.hasControlDown()) {
-            if (!this.searchOpen) toggleSearch();
+            if (!searchVisible()) toggleSearch();
             this.setFocused(this.searchBox);
             return true;
         }
-        if (keyEvent.isEscape() && this.searchOpen) {
-            toggleSearch();
-            return true;
+        if (keyEvent.isEscape() && searchVisible()) {
+            if (!SimpleConfigClient.getInstance().get().alwaysShowSearch) {
+                toggleSearch();
+                return true;
+            }
+            if (!this.searchBox.getValue().isEmpty()) {
+                this.searchBox.setValue("");
+                return true;
+            }
         }
         return (this.tabNavigationBar != null && this.tabNavigationBar.keyPressed(keyEvent)) || super.keyPressed(keyEvent);
     }
@@ -517,7 +536,8 @@ public class AutoConfigScreen extends Screen {
                     LOGGER.error("Failed to reset config field {}", field.getName(), e);
                 }
             };
-            if (node instanceof WidgetNode widgetNode && widgetNode.widget instanceof IntSlider) {
+            if (node instanceof WidgetNode widgetNode && field.isAnnotationPresent(Slider.class)
+                    && (field.getType() == int.class || field.getType() == Integer.class)) {
                 node.manualAction = () -> {
                     AutoConfigList list = currentList();
                     if (list == null) return;
@@ -525,7 +545,7 @@ public class AutoConfigScreen extends Screen {
                         if (widgetNode.widget instanceof EditBox box) {
                             if (parseElement(Integer.class, box.getValue()) == null) return;
                             this.invalidInputs.remove(box);
-                            widgetNode.widget = buildWidget(config, field);
+                            widgetNode.widget = sliderWidget(config, field);
                         } else {
                             widgetNode.widget = numberBox(config, field);
                         }
@@ -770,9 +790,8 @@ public class AutoConfigScreen extends Screen {
         }
 
         if ((t == int.class || t == Integer.class) && field.isAnnotationPresent(Slider.class)) {
-            Slider r = field.getAnnotation(Slider.class);
-            int initial = (Integer) field.get(config);
-            return new IntSlider(r.min(), r.max(), r.step(), initial, v -> apply(config, field, v));
+            return SimpleConfigClient.getInstance().get().slidersAsNumbers
+                    ? numberBox(config, field) : sliderWidget(config, field);
         }
 
         if ((t == int.class || t == Integer.class) && field.isAnnotationPresent(Color.class)) {
@@ -976,6 +995,12 @@ public class AutoConfigScreen extends Screen {
             field.set(config, value);
         } catch (IllegalAccessException ignored) {
         }
+    }
+
+    private IntSlider sliderWidget(final Object config, final Field field) throws IllegalAccessException {
+        Slider slider = field.getAnnotation(Slider.class);
+        return new IntSlider(slider.min(), slider.max(), slider.step(), (Integer) field.get(config),
+                value -> apply(config, field, value));
     }
 
     private EditBox numberBox(final Object config, final Field field) throws IllegalAccessException {

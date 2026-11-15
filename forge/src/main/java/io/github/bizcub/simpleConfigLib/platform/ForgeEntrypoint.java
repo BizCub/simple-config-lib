@@ -1,6 +1,7 @@
 package io.github.bizcub.simpleConfigLib.platform;
 
 import io.github.bizcub.simpleConfigLib.SimpleConfigLib;
+import io.github.bizcub.simpleConfigLib.platform.client.ForgeClientEntrypoint;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -9,6 +10,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 @Mod(SimpleConfigLib.MOD_ID)
 @EventBusSubscriber(modid = SimpleConfigLib.MOD_ID)
@@ -16,6 +18,7 @@ public class ForgeEntrypoint {
 
     public ForgeEntrypoint(FMLJavaModLoadingContext context) {
         FMLCommonSetupEvent.getBus(context.getModBusGroup()).addListener(ForgeEntrypoint::onCommonSetup);
+        if (FMLEnvironment.dist.isClient()) ForgeClientEntrypoint.init(context);
     }
 
     private static void onCommonSetup(FMLCommonSetupEvent event) {
