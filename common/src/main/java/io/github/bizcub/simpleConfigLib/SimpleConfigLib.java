@@ -5,26 +5,16 @@ import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigSyncPayload;
-import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
-import io.github.bizcub.simpleConfigLib.util.network.Network;
+import io.github.bizcub.simpleConfigLib.internal.network.Network;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 public class SimpleConfigLib {
     public static final String MOD_ID = "simple_config_lib";
-
-    private static boolean payloadsRegistered = false;
-
-    public static void registerPayloads() {
-        if (payloadsRegistered) return;
-        payloadsRegistered = true;
-
-        Network.registerServerbound(ConfigApplyPayload.class, SimpleConfigLib::handleApply);
-        Network.registerClientbound(ConfigSyncPayload.class, payload -> ConfigHolder.applyServerSnapshot(payload.name(), payload.json()));
-    }
 
     public static int reloadAll(MinecraftServer server) {
         int count = 0;
@@ -45,7 +35,7 @@ public class SimpleConfigLib {
                 .then(Commands.literal("reload").executes(ctx -> {
                     int n = reloadAll(ctx.getSource().getServer());
                     ctx.getSource().sendSuccess(
-                            () -> ComponentBuilder.translatable("text.simple_config_lib.command.reload", n).build(), true);
+                            () -> Component.translatable("text.simple_config_lib.command.reload", n), true);
                     return n;
                 }));
     }

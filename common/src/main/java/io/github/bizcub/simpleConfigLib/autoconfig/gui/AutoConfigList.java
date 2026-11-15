@@ -2,8 +2,7 @@ package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Color;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.Slider;
-import io.github.bizcub.simpleConfigLib.util.GuiSounds;
-import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import io.github.bizcub.simpleConfigLib.internal.GuiSounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
@@ -527,7 +526,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     .size(HEADER_BTN, HEADER_BTN).build();
 
             if (model.editable) {
-                this.addButton = Button.builder(ComponentBuilder.literal("+").build(), b -> {
+                this.addButton = Button.builder(Component.literal("+"), b -> {
                     AutoConfigList.this.commitScalarElements();
                     Element created = model.factory.get();
                     if (model.addToFront) {
@@ -542,7 +541,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                     AutoConfigList.this.markDirty();
                 }).size(HEADER_BTN, HEADER_BTN).build();
 
-                this.removeButton = Button.builder(ComponentBuilder.literal("−").build(), b -> {
+                this.removeButton = Button.builder(Component.literal("−"), b -> {
                     AutoConfigList.this.commitScalarElements();
                     if (model.expanded && model.selectedIndex >= 0 && model.selectedIndex < model.elements.size()) {
                         model.elements.remove(model.selectedIndex);
@@ -659,14 +658,14 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             String value = e != null ? e.value : "";
 
             if (model.type == Component.class) {
-                this.componentLabel = (e != null && e.component != null) ? e.component : ComponentBuilder.literal(value).build();
+                this.componentLabel = (e != null && e.component != null) ? e.component : Component.literal(value);
                 this.widget = new StringWidget(0, 0, getRowWidth() - pad, 20,
-                        ComponentBuilder.empty().build(), AutoConfigList.this.font);
+                        Component.empty(), AutoConfigList.this.font);
             } else if (model.type == Boolean.class) {
                 boolean initial = Boolean.parseBoolean(value);
                 this.widget = CycleButton.onOffBuilder(initial)
                         .displayOnlyValue()
-                        .create(0, 0, getRowWidth() - pad, 20, ComponentBuilder.empty().build(),
+                        .create(0, 0, getRowWidth() - pad, 20, Component.empty(),
                                 (b, v) -> {
                                     ScalarElement s = scalar();
                                     if (s != null) {
@@ -698,7 +697,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
                 });
             } else {
                 EditBox eb = new EditBox(AutoConfigList.this.font, 0, 0,
-                        getRowWidth() - pad, 20, ComponentBuilder.empty().build());
+                        getRowWidth() - pad, 20, Component.empty());
                 eb.setMaxLength(this.model.textMaxLength);
                 eb.setValue(value);
                 eb.setResponder(v -> {
@@ -902,6 +901,6 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
     }
 
     private static Component toggleLabel(final boolean expanded) {
-        return ComponentBuilder.literal(expanded ? "▼" : "▶").build();
+        return Component.literal(expanded ? "▼" : "▶");
     }
 }

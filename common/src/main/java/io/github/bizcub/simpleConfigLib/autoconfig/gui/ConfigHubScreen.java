@@ -2,8 +2,7 @@ package io.github.bizcub.simpleConfigLib.autoconfig.gui;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
-import io.github.bizcub.simpleConfigLib.util.KeyFormatter;
-import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
+import io.github.bizcub.simpleConfigLib.internal.KeyFormatter;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.FrameLayout;
 import net.minecraft.client.gui.layouts.GridLayout;
@@ -18,7 +17,7 @@ public class ConfigHubScreen extends Screen {
     private final List<ConfigHolder<?>> holders;
 
     public ConfigHubScreen(Screen lastScreen, List<ConfigHolder<?>> holders) {
-        super(ComponentBuilder.translatable("text.simple_config_lib.hub.title").build());
+        super(Component.translatable("text.simple_config_lib.hub.title"));
         this.lastScreen = lastScreen;
         this.holders = holders;
     }
@@ -33,10 +32,10 @@ public class ConfigHubScreen extends Screen {
             boolean readOnly = ConfigScreens.readOnlyFor(holder);
 
             String pretty = KeyFormatter.humanize(holder.getMeta().name());
-            Component envLabel = ComponentBuilder.translatable("text.simple_config_lib.env." + env.name().toLowerCase()).build();
+            Component envLabel = Component.translatable("text.simple_config_lib.env." + env.name().toLowerCase());
 
             Button b = Button.builder(
-                            ComponentBuilder.translatable("text.simple_config_lib.hub.entry", pretty, envLabel).build(),
+                            Component.translatable("text.simple_config_lib.hub.entry", pretty, envLabel),
                             button -> this.minecraft.gui.setScreen(
                                     AutoConfigScreen.create(holder, this, env, readOnly)))
                     .width(200)

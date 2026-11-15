@@ -1,4 +1,4 @@
-package io.github.bizcub.simpleConfigLib.util;
+package io.github.bizcub.simpleConfigLib.internal;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;

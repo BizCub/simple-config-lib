@@ -3,70 +3,65 @@ package io.github.bizcub.test.client.config;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigHolder;
 import io.github.bizcub.simpleConfigLib.autoconfig.ConfigSide;
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.*;
-import io.github.bizcub.simpleConfigLib.util.component.ClickEventBuilder;
-import io.github.bizcub.simpleConfigLib.util.component.ComponentBuilder;
-import io.github.bizcub.simpleConfigLib.util.component.HoverEventBuilder;
 import io.github.bizcub.test.main.TestModMain;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @AutoConfig(name = TestModMain.MOD_ID, fileName = TestModMain.MOD_ID + "_client", side = ConfigSide.CLIENT)
-public class SimpleConfigClient implements ConfigClient {
+public class SimpleConfigClient {
     public static ConfigHolder<SimpleConfigClient> getInstance() {
         return ConfigHolder.register(SimpleConfigClient.class).onSave(config -> System.out.println("Client config saved!"));
     }
 
+    public boolean testClient = false;
+
     @BooleanConfig(yesNo = false)
-    public boolean enableOptimizations = ConfigClient.super.enableOptimizations();
+    public boolean enableOptimizations = true;
 
     @Tooltip
     @Slider(min = 30, max = 240, step = 10)
-    public int fpsLimit = ConfigClient.super.fpsLimit();
+    public int fpsLimit = 120;
 
     @Tooltip
     @Slider(min = 2, max = 32)
-    public int renderDistance = ConfigClient.super.renderDistance();
+    public int renderDistance = 12;
 
     @Tooltip
     @EnumConfig(translate = true)
-    public PerformancePreset preset = ConfigClient.super.preset();
+    public PerformancePreset preset = PerformancePreset.BALANCED;
 
     @Color
-    public int fpsOverlayColor = ConfigClient.super.fpsOverlayColor();
+    public int fpsOverlayColor = 0x00FF00;
 
     @Color(alpha = true)
-    public int profilerBackground = ConfigClient.super.profilerBackground();
+    public int profilerBackground = 0x80202020;
 
     @Tooltip
     @TextConfig(maxLength = 32)
     @ListConfig(expanded = true, addToFront = true)
-    public List<String> ignoredMods = ConfigClient.super.ignoredMods();
+    public List<String> ignoredMods = new ArrayList<>(List.of("examplemod"));
 
     @ListConfig(editable = false)
-    public List<Boolean> perDimensionCulling = ConfigClient.super.perDimensionCulling();
+    public List<Boolean> perDimensionCulling = new ArrayList<>(List.of(true, false, true));
 
-    public Component headerNote = ComponentBuilder.literal("Performance Settings")
-            .color(ChatFormatting.GOLD)
-            .bold()
-            .build()
-            .copy()
-            .append(ComponentBuilder.literal(" (beta)")
-                    .color(ChatFormatting.GRAY)
-                    .hoverEvent(HoverEventBuilder.create().showText(" (beta)").build())
-                    .clickEvent(ClickEventBuilder.create().copyToClipboard(" (beta)").build())
-                    .italic()
-                    .build()
-            );
+    public Component headerNote = Component.literal("Performance Settings")
+            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+            .append(Component.literal(" (beta)").withStyle(style -> style
+                    .withColor(ChatFormatting.GRAY)
+                    .withHoverEvent(new HoverEvent.ShowText(Component.literal(" (beta)")))
+                    .withClickEvent(new ClickEvent.CopyToClipboard(" (beta)"))
+                    .withItalic(true)));
 
-    public Component emptyNote = ComponentBuilder.literal("Tweak with care")
-            .color(ChatFormatting.YELLOW)
-            .underline()
-            .hoverEvent(HoverEventBuilder.create().showText("Changing these may affect FPS").build())
-            .clickEvent(ClickEventBuilder.create().copyToClipboard("456").build())
-            .build();
+    public Component emptyNote = Component.literal("Tweak with care").withStyle(style -> style
+            .withColor(ChatFormatting.YELLOW)
+            .withUnderlined(true)
+            .withHoverEvent(new HoverEvent.ShowText(Component.literal("Changing these may affect FPS")))
+            .withClickEvent(new ClickEvent.CopyToClipboard("456")));
 
     @ListConfig(editable = false)
     public List<Component> hints = new ArrayList<>(List.of(headerNote, emptyNote));
@@ -74,83 +69,18 @@ public class SimpleConfigClient implements ConfigClient {
     @Tooltip
     @TextConfig(maxLength = 10)
     @ConfigGroup("gameplay")
-    public String worldProfile = ConfigClient.super.worldProfile();
+    public String worldProfile = "default";
 
     @ConfigGroup("gameplay")
     @Slider(min = 0, max = 100)
-    public int entityLodBias = ConfigClient.super.entityLodBias();
+    public int entityLodBias = 50;
 
     @ConfigGroup("gameplay")
-    public RenderQuality renderQuality = ConfigClient.super.renderQuality();
+    public RenderQuality renderQuality = RenderQuality.MEDIUM;
 
     @ConfigGroup("gameplay")
-    public List<ChunkProfile> chunkProfiles = ConfigClient.super.chunkProfiles();
+    public List<ChunkProfile> chunkProfiles = new ArrayList<>(List.of(new ChunkProfile(), new ChunkProfile()));
 
     @Category
-    public Graphics graphics = ConfigClient.super.graphics();
-
-    @Override
-    public boolean enableOptimizations() {
-        return this.enableOptimizations;
-    }
-
-    @Override
-    public int fpsLimit() {
-        return this.fpsLimit;
-    }
-
-    @Override
-    public int renderDistance() {
-        return this.renderDistance;
-    }
-
-    @Override
-    public PerformancePreset preset() {
-        return this.preset;
-    }
-
-    @Override
-    public int fpsOverlayColor() {
-        return this.fpsOverlayColor;
-    }
-
-    @Override
-    public int profilerBackground() {
-        return this.profilerBackground;
-    }
-
-    @Override
-    public List<String> ignoredMods() {
-        return this.ignoredMods;
-    }
-
-    @Override
-    public List<Boolean> perDimensionCulling() {
-        return this.perDimensionCulling;
-    }
-
-    @Override
-    public String worldProfile() {
-        return this.worldProfile;
-    }
-
-    @Override
-    public int entityLodBias() {
-        return this.entityLodBias;
-    }
-
-    @Override
-    public RenderQuality renderQuality() {
-        return this.renderQuality;
-    }
-
-    @Override
-    public List<ChunkProfile> chunkProfiles() {
-        return this.chunkProfiles;
-    }
-
-    @Override
-    public Graphics graphics() {
-        return this.graphics;
-    }
+    public Graphics graphics = new Graphics();
 }

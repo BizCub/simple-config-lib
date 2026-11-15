@@ -1,7 +1,7 @@
 package io.github.bizcub.simpleConfigLib.autoconfig;
 
 import io.github.bizcub.simpleConfigLib.autoconfig.annotation.AutoConfig;
-import io.github.bizcub.simpleConfigLib.util.Platform;
+import io.github.bizcub.simpleConfigLib.internal.PlatformHooks;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -86,7 +86,7 @@ public class ConfigHolder<T> {
         String file = this.meta.fileName().isEmpty()
                 ? this.meta.name()
                 : this.meta.fileName();
-        return Platform.gameDir().resolve("config").resolve(file + ".json");
+        return PlatformHooks.get().gameDir().resolve("config").resolve(file + ".json");
     }
 
     @SuppressWarnings("unchecked")
@@ -148,7 +148,7 @@ public class ConfigHolder<T> {
             if (Files.exists(file)) {
                 backup();
             }
-            if (!(this.meta.side() == ConfigSide.SERVER && Platform.isPhysicalClient())) {
+            if (!(this.meta.side() == ConfigSide.SERVER && PlatformHooks.get().isPhysicalClient())) {
                 save();
             }
             return;

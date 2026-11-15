@@ -1,10 +1,6 @@
 package io.github.bizcub.simpleConfigLib.internal;
 
-import io.github.bizcub.simpleConfigLib.util.network.SclPayload;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-
-import java.util.function.BiConsumer;
+import io.github.bizcub.simpleConfigLib.autoconfig.network.ConfigApplyPayload;
 
 public interface ClientHooks {
 
@@ -12,11 +8,7 @@ public interface ClientHooks {
         return Holder.INSTANCE;
     }
 
-    void registerKeyMapping(KeyMapping mapping);
-
-    <T extends SclPayload> void registerClientboundReceiver(Class<T> type, BiConsumer<T, Minecraft> handler);
-
-    void sendToServer(SclPayload payload);
+    void sendToServer(ConfigApplyPayload payload);
 
     class Holder {
         static final ClientHooks INSTANCE = PlatformLoader.create(ClientHooks.class, "client.%sClientHooks");

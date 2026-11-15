@@ -9,7 +9,7 @@ public class FabricEntrypoint implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        SimpleConfigLib.registerPayloads();
+        FabricHooks.registerPayloads();
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 SimpleConfigLib.onPlayerJoin(handler.player));

@@ -11,8 +11,7 @@ public class TestModFabricClientEntrypoint implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         TestModClient.init();
-
-        ClientTickEvents.END_CLIENT_TICK.register(minecraft -> TestModClient.onClientTick());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> TestModClient.onClientTick());
     }
 
     public static class ModMenu implements ModMenuApi {

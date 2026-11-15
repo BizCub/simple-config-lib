@@ -1,4 +1,4 @@
-package io.github.bizcub.simpleConfigLib.util;
+package io.github.bizcub.simpleConfigLib.internal;
 
 public final class KeyFormatter {
 
