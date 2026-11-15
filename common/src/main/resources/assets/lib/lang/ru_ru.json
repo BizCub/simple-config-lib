@@ -33,5 +33,8 @@
     "text.simple_config_lib.add_before": "Добавить перед",
     "text.simple_config_lib.add_after": "Добавить после",
     "text.simple_config_lib.drag": "Перетащить (Alt+↑/↓)",
-    "text.simple_config_lib.remove": "Удалить"
+    "text.simple_config_lib.remove": "Удалить",
+    "text.simple_config_lib.item.search": "Поиск предметов",
+    "text.simple_config_lib.item.empty": "Предметы не найдены",
+    "text.simple_config_lib.item.unavailable": "Предмет недоступен"
 }

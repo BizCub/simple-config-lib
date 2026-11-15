@@ -33,5 +33,8 @@
     "text.simple_config_lib.add_before": "Add before",
     "text.simple_config_lib.add_after": "Add after",
     "text.simple_config_lib.drag": "Drag to reorder (Alt+Up/Down)",
-    "text.simple_config_lib.remove": "Remove"
+    "text.simple_config_lib.remove": "Remove",
+    "text.simple_config_lib.item.search": "Search items",
+    "text.simple_config_lib.item.empty": "No items found",
+    "text.simple_config_lib.item.unavailable": "Item unavailable"
 }

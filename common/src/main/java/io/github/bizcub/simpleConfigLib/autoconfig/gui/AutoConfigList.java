@@ -650,6 +650,7 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
         public final boolean addToFront;
         public Slider sliderCfg;
         public Color colorCfg;
+        public boolean itemSelector;
         public final Class<?> type;
         public int textMaxLength = 256;
 
@@ -990,7 +991,12 @@ public class AutoConfigList extends ContainerObjectSelectionList<AutoConfigList.
             int pad = depth * INDENT + HANDLE_WIDTH + HANDLE_GAP;
             String value = this.element.value;
 
-            if (model.type == Component.class) {
+            if (model.itemSelector) {
+                this.widget = new ItemWidget(AutoConfigList.this.font, value, this::setValue,
+                        picker -> {
+                            if (screen instanceof AutoConfigScreen configScreen) configScreen.openItemPicker(picker);
+                        });
+            } else if (model.type == Component.class) {
                 this.componentLabel = this.element.component != null ? this.element.component : Component.literal(value);
                 this.widget = new StringWidget(0, 0, getRowWidth() - pad, 20,
                         Component.empty(), AutoConfigList.this.font);

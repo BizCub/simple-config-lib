@@ -54,6 +54,7 @@ public class AutoConfigScreen extends Screen {
     private final Map<Object, Supplier<Object>> defaultFactories = new IdentityHashMap<>();
     private final Set<EditBox> invalidInputs = Collections.newSetFromMap(new IdentityHashMap<>());
     private ContextMenu contextMenu;
+    private ItemPicker itemPicker;
     private EditBox searchBox;
     private Button searchButton;
     private boolean searchOpen;
@@ -110,6 +111,7 @@ public class AutoConfigScreen extends Screen {
         this.defaultFactories.put(this.editing.get(), this.editing::defaults);
         this.invalidInputs.clear();
         this.contextMenu = null;
+        this.itemPicker = null;
 
         List<ConfigTab> tabs = new ArrayList<>();
         groupFields().forEach((key, value) ->
@@ -284,6 +286,7 @@ public class AutoConfigScreen extends Screen {
     record RowAction(String key, Runnable action, boolean enabled) {}
 
     void openActions(List<RowAction> actions, int x, int y) {
+        closeItemPicker();
         closeActions();
         if (this.readOnly || this.pendingRequest != 0 || actions.isEmpty()) return;
         AutoConfigList list = currentList();
@@ -297,7 +300,27 @@ public class AutoConfigScreen extends Screen {
     }
 
     boolean hasContextMenu() {
-        return this.contextMenu != null;
+        return this.contextMenu != null || this.itemPicker != null;
+    }
+
+    void openItemPicker(ItemWidget owner) {
+        if (this.readOnly || this.pendingRequest != 0) return;
+        closeActions();
+        closeItemPicker();
+        AutoConfigList list = currentList();
+        if (list != null) {
+            list.cancelItemDrag();
+            list.closePickersExceptSwatchAt(Integer.MIN_VALUE, Integer.MIN_VALUE);
+        }
+        this.itemPicker = this.addRenderableWidget(new ItemPicker(this.font, owner, this::closeItemPicker, this.width, this.height));
+        this.setFocused(this.itemPicker);
+    }
+
+    private void closeItemPicker() {
+        if (this.itemPicker == null) return;
+        this.removeWidget(this.itemPicker);
+        this.itemPicker = null;
+        this.setFocused(currentList());
     }
 
     private void closeActions() {
@@ -349,6 +372,7 @@ public class AutoConfigScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         if (this.pendingRequest != 0) return true;
+        if (this.itemPicker != null) return this.itemPicker.mouseClicked(mouseButtonEvent, doubleClick);
         if (this.contextMenu != null) {
             if (this.contextMenu.isMouseOver(mouseButtonEvent.x(), mouseButtonEvent.y())) {
                 return this.contextMenu.mouseClicked(mouseButtonEvent, doubleClick);
@@ -366,11 +390,14 @@ public class AutoConfigScreen extends Screen {
         if (list != null) {
             list.closePickersExceptSwatchAt(mouseButtonEvent.x(), mouseButtonEvent.y());
         }
-        return super.mouseClicked(mouseButtonEvent, doubleClick);
+        boolean handled = super.mouseClicked(mouseButtonEvent, doubleClick);
+        if (this.itemPicker != null) this.setFocused(this.itemPicker);
+        return handled;
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
+        if (this.itemPicker != null) return this.itemPicker.mouseDragged(mouseButtonEvent, dx, dy);
         AutoConfigList list = currentList();
         if (list != null && (list.isPickerDragging() || list.hasItemDrag())) {
             return list.mouseDragged(mouseButtonEvent, dx, dy);
@@ -380,6 +407,7 @@ public class AutoConfigScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
+        if (this.itemPicker != null) return this.itemPicker.mouseReleased(mouseButtonEvent);
         AutoConfigList list = currentList();
         if (list != null && (list.isPickerDragging() || list.hasItemDrag())) {
             list.mouseReleased(mouseButtonEvent);
@@ -414,6 +442,7 @@ public class AutoConfigScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
         if (this.pendingRequest != 0) return true;
+        if (this.itemPicker != null) return this.itemPicker.keyPressed(keyEvent);
         if (this.contextMenu != null) return this.contextMenu.keyPressed(keyEvent);
         AutoConfigList list = currentList();
         if (list != null && list.hasItemDrag()) {
@@ -442,12 +471,14 @@ public class AutoConfigScreen extends Screen {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
+        if (this.itemPicker != null) return this.itemPicker.charTyped(event);
         return this.pendingRequest != 0 || this.contextMenu != null || super.charTyped(event);
     }
 
     @Override
     public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
         if (this.pendingRequest != 0) return true;
+        if (this.itemPicker != null) return this.itemPicker.mouseScrolled(x, y, horizontal, vertical);
         if (this.contextMenu != null) {
             closeActions();
             return true;
@@ -666,6 +697,7 @@ public class AutoConfigScreen extends Screen {
                 };
             }
             model.textMaxLength = textMaxLength(field);
+            model.itemSelector = element == String.class && field.isAnnotationPresent(ItemSelector.class);
 
             if (element == Integer.class) {
                 model.sliderCfg = sliderCfg;
@@ -813,6 +845,9 @@ public class AutoConfigScreen extends Screen {
         }
 
         if (t == String.class) {
+            if (field.isAnnotationPresent(ItemSelector.class)) {
+                return new ItemWidget(this.font, (String) field.get(config), v -> apply(config, field, v), this::openItemPicker);
+            }
             EditBox box = new EditBox(this.font, 0, 0, DEFAULT_WIDGET_WIDTH, 20, Component.empty());
             box.setMaxLength(Math.max(textMaxLength(field), ((String) field.get(config)).length()));
             box.setValue((String) field.get(config));

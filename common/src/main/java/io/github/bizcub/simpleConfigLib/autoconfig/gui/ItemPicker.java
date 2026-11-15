@@ -1,0 +1,192 @@
+package io.github.bizcub.simpleConfigLib.autoconfig.gui;
+
+import io.github.bizcub.simpleConfigLib.internal.GuiSounds;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+
+final class ItemPicker extends AbstractWidget {
+    private static final int ROW_HEIGHT = 20;
+    private static final int HEADER = 26;
+    private final Font font;
+    private final ItemWidget owner;
+    private final Runnable close;
+    private final EditBox search;
+    private final List<Entry> entries;
+    private List<Entry> filtered;
+    private int selected;
+    private int offset;
+    private boolean scrolling;
+
+    private record Entry(String id, ItemStack stack, Component name, String searchText) {}
+
+    ItemPicker(Font font, ItemWidget owner, Runnable close, int screenWidth, int screenHeight) {
+        super(0, 0, Math.max(1, Math.min(Math.max(220, owner.getWidth()), screenWidth - 4)),
+                Math.max(1, Math.min(HEADER + ROW_HEIGHT * 8 + 4, screenHeight - 4)), Component.empty());
+        this.font = font;
+        this.owner = owner;
+        this.close = close;
+        int below = owner.getBottom() + 2;
+        int y = below + getHeight() <= screenHeight - 2 ? below : owner.getY() - getHeight() - 2;
+        setPosition(Math.max(2, Math.min(owner.getX(), screenWidth - getWidth() - 2)),
+                Math.max(2, Math.min(y, screenHeight - getHeight() - 2)));
+        this.entries = BuiltInRegistries.ITEM.stream().map(item -> {
+            String id = BuiltInRegistries.ITEM.getKey(item).toString();
+            ItemStack stack = ItemWidget.previewStack(item);
+            Component name = ItemWidget.previewName(item, stack);
+            return new Entry(id, stack, name, (name.getString() + " " + id).toLowerCase(Locale.ROOT));
+        }).sorted(Comparator.comparing(Entry::searchText)).toList();
+        this.search = new EditBox(font, getX() + 4, getY() + 3, Math.max(1, getWidth() - 8), 20,
+                Component.translatable("text.simple_config_lib.item.search"));
+        this.search.setHint(Component.translatable("gui.recipebook.search_hint"));
+        this.search.setMaxLength(256);
+        this.search.setResponder(this::filter);
+        this.search.setFocused(true);
+        filter("");
+        Identifier currentId = Identifier.tryParse(owner.value());
+        for (int i = 0; currentId != null && i < this.filtered.size(); i++) {
+            if (this.filtered.get(i).id().equals(currentId.toString())) { this.selected = i; break; }
+        }
+        revealSelected();
+    }
+
+    private int visibleRows() { return Math.max(0, (getHeight() - HEADER - 4) / ROW_HEIGHT); }
+
+    private void filter(String query) {
+        String text = query.trim().toLowerCase(Locale.ROOT);
+        this.filtered = this.entries.stream().filter(entry -> entry.searchText().contains(text)).toList();
+        this.selected = this.filtered.isEmpty() ? -1 : 0;
+        this.offset = 0;
+    }
+
+    private void revealSelected() {
+        int rows = visibleRows();
+        if (this.selected < this.offset) this.offset = Math.max(0, this.selected);
+        else if (this.selected >= this.offset + rows) this.offset = Math.max(0, this.selected - rows + 1);
+    }
+
+    private int hovered(double x, double y) {
+        if (x < getX() + 2 || x >= getRight() - 6 || y < getY() + HEADER) return -1;
+        int row = (int) (y - getY() - HEADER) / ROW_HEIGHT;
+        int index = this.offset + row;
+        return row < visibleRows() && index < this.filtered.size() ? index : -1;
+    }
+
+    @Override
+    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        graphics.nextStratum();
+        graphics.fill(getX() - 1, getY() - 1, getRight() + 1, getBottom() + 1, 0xFF000000);
+        graphics.fill(getX(), getY(), getRight(), getBottom(), 0xFF202020);
+        this.search.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        int hovered = hovered(mouseX, mouseY);
+        for (int row = 0; row < visibleRows() && this.offset + row < this.filtered.size(); row++) {
+            int index = this.offset + row;
+            Entry entry = this.filtered.get(index);
+            int y = getY() + HEADER + row * ROW_HEIGHT;
+            if (index == hovered || (hovered < 0 && index == this.selected)) {
+                graphics.fill(getX() + 2, y, getRight() - 6, y + ROW_HEIGHT, 0xFF404040);
+            }
+            ItemWidget.renderIcon(graphics, this.font, entry.stack(), getX() + 4, y + 2);
+            graphics.text(this.font, this.font.plainSubstrByWidth(entry.name().getString(), Math.max(0, getWidth() - 32)),
+                    getX() + 24, y + 6, 0xFFFFFFFF);
+        }
+        if (this.filtered.isEmpty()) graphics.text(this.font, Component.translatable("text.simple_config_lib.item.empty"),
+                getX() + 6, getY() + HEADER + 6, 0xFFAAAAAA);
+        int rows = visibleRows();
+        if (rows > 0 && this.filtered.size() > rows) {
+            int track = rows * ROW_HEIGHT;
+            int thumb = Math.max(8, track * rows / this.filtered.size());
+            int y = getY() + HEADER + (track - thumb) * this.offset / (this.filtered.size() - rows);
+            graphics.fill(getRight() - 4, y, getRight() - 2, y + thumb, 0xFF808080);
+        }
+        if (hovered >= 0) graphics.setTooltipForNextFrame(Component.literal(this.filtered.get(hovered).id()), mouseX, mouseY);
+    }
+
+    private void select(int index) {
+        if (index < 0 || index >= this.filtered.size()) return;
+        this.owner.select(this.filtered.get(index).id());
+        GuiSounds.playClick();
+        this.close.run();
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (!isMouseOver(event.x(), event.y())) { this.close.run(); return true; }
+        if (event.button() == 1) {
+            if (event.x() >= getRight() - 6 && event.y() >= getY() + HEADER && this.filtered.size() > visibleRows()) {
+                this.scrolling = true;
+                scrollTo(event.y());
+            } else if (this.search.isMouseOver(event.x(), event.y())) this.search.mouseClicked(event, doubleClick);
+            else select(hovered(event.x(), event.y()));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        if (this.scrolling) scrollTo(event.y());
+        else this.search.mouseDragged(event, dx, dy);
+        return true;
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        this.scrolling = false;
+        this.search.mouseReleased(event);
+        return true;
+    }
+
+    private void scrollTo(double y) {
+        int rows = visibleRows();
+        int track = rows * ROW_HEIGHT;
+        int thumb = Math.max(8, track * rows / Math.max(1, this.filtered.size()));
+        double position = (y - getY() - HEADER - thumb / 2.0) / Math.max(1, track - thumb);
+        this.offset = Mth.clamp((int) Math.round(position * (this.filtered.size() - rows)),
+                0, Math.max(0, this.filtered.size() - rows));
+    }
+
+    @Override
+    public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
+        if (isMouseOver(x, y)) this.offset = Mth.clamp(this.offset - (int) Math.signum(vertical) * 3,
+                0, Math.max(0, this.filtered.size() - visibleRows()));
+        return true;
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (event.isEscape()) this.close.run();
+        else if (event.isUp() || event.isDown()) {
+            if (!this.filtered.isEmpty()) this.selected = Mth.clamp(this.selected + (event.isUp() ? -1 : 1), 0, this.filtered.size() - 1);
+            revealSelected();
+        } else if (event.isConfirmation()) select(this.selected);
+        else this.search.keyPressed(event);
+        return true;
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        this.search.charTyped(event);
+        return true;
+    }
+
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput output) {
+        this.search.updateNarration(output);
+        if (this.selected >= 0) output.add(NarratedElementType.TITLE, this.filtered.get(this.selected).name());
+    }
+}

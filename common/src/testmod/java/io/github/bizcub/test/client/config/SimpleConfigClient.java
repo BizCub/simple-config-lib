@@ -43,6 +43,19 @@ public class SimpleConfigClient {
     @Color
     public int previewColor = 0xFFFFFF;
 
+    @ConfigGroup("items")
+    @ItemSelector
+    public String selectedItem = "minecraft:diamond";
+
+    @ConfigGroup("items")
+    @ItemSelector
+    @ListConfig(expanded = true)
+    public List<String> selectedItems = new ArrayList<>(List.of("minecraft:apple", "minecraft:diamond_pickaxe"));
+
+    @ConfigGroup("items")
+    @ItemSelector
+    public String unavailableItem = "missing_mod:example_item";
+
     @ConfigGroup("lists")
     @ListConfig(expanded = true)
     public List<String> emptyList = new ArrayList<>();
