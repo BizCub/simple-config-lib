@@ -312,7 +312,7 @@ public class AutoConfigScreen extends Screen {
             list.cancelItemDrag();
             list.closePickersExceptSwatchAt(Integer.MIN_VALUE, Integer.MIN_VALUE);
         }
-        this.itemPicker = this.addRenderableWidget(new ItemPicker(this.font, owner, this::closeItemPicker, this.width, this.height));
+        this.itemPicker = this.addWidget(new ItemPicker(this.font, owner, this::closeItemPicker, this.width, this.height));
         this.setFocused(this.itemPicker);
     }
 
@@ -357,6 +357,10 @@ public class AutoConfigScreen extends Screen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        if (this.itemPicker != null) {
+            this.itemPicker.updateLayout(this.width, this.height);
+            this.itemPicker.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        }
 
         if (this.resetButton != null) {
             boolean shift = Minecraft.getInstance().hasShiftDown();

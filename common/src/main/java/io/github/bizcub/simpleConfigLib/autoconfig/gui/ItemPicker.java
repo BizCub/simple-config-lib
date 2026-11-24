@@ -23,6 +23,8 @@ import java.util.Locale;
 final class ItemPicker extends AbstractWidget {
     private static final int ROW_HEIGHT = 20;
     private static final int HEADER = 26;
+    private static final int BOTTOM_PADDING = 2;
+    private static final int MAX_VISIBLE_ROWS = 8;
     private final Font font;
     private final ItemWidget owner;
     private final Runnable close;
@@ -36,28 +38,24 @@ final class ItemPicker extends AbstractWidget {
     private record Entry(String id, ItemStack stack, Component name, String searchText) {}
 
     ItemPicker(Font font, ItemWidget owner, Runnable close, int screenWidth, int screenHeight) {
-        super(0, 0, Math.max(1, Math.min(Math.max(220, owner.getWidth()), screenWidth - 4)),
-                Math.max(1, Math.min(HEADER + ROW_HEIGHT * 8 + 4, screenHeight - 4)), Component.empty());
+        super(0, 0, 0, 0, Component.empty());
         this.font = font;
         this.owner = owner;
         this.close = close;
-        int below = owner.getBottom() + 2;
-        int y = below + getHeight() <= screenHeight - 2 ? below : owner.getY() - getHeight() - 2;
-        setPosition(Math.max(2, Math.min(owner.getX(), screenWidth - getWidth() - 2)),
-                Math.max(2, Math.min(y, screenHeight - getHeight() - 2)));
         this.entries = BuiltInRegistries.ITEM.stream().map(item -> {
             String id = BuiltInRegistries.ITEM.getKey(item).toString();
             ItemStack stack = ItemWidget.previewStack(item);
             Component name = ItemWidget.previewName(item, stack);
             return new Entry(id, stack, name, (name.getString() + " " + id).toLowerCase(Locale.ROOT));
         }).sorted(Comparator.comparing(Entry::searchText)).toList();
-        this.search = new EditBox(font, getX() + 4, getY() + 3, Math.max(1, getWidth() - 8), 20,
+        this.search = new EditBox(font, 0, 0, 1, 20,
                 Component.translatable("text.simple_config_lib.item.search"));
         this.search.setHint(Component.translatable("gui.recipebook.search_hint"));
         this.search.setMaxLength(256);
         this.search.setResponder(this::filter);
         this.search.setFocused(true);
         filter("");
+        updateLayout(screenWidth, screenHeight);
         Identifier currentId = Identifier.tryParse(owner.value());
         for (int i = 0; currentId != null && i < this.filtered.size(); i++) {
             if (this.filtered.get(i).id().equals(currentId.toString())) { this.selected = i; break; }
@@ -65,7 +63,34 @@ final class ItemPicker extends AbstractWidget {
         revealSelected();
     }
 
-    private int visibleRows() { return Math.max(0, (getHeight() - HEADER - 4) / ROW_HEIGHT); }
+    void updateLayout(int screenWidth, int screenHeight) {
+        int width = Math.max(1, Math.min(this.owner.getWidth(), screenWidth - 4));
+        int fixedHeight = HEADER + BOTTOM_PADDING;
+        int preferredHeight = fixedHeight + ROW_HEIGHT * MAX_VISIBLE_ROWS;
+        int below = this.owner.getBottom() + 2;
+        int above = this.owner.getY() - 2;
+        int spaceBelow = screenHeight - 2 - below;
+        int spaceAbove = above - 2;
+        boolean openBelow = spaceBelow >= preferredHeight || spaceBelow >= spaceAbove;
+        int availableHeight = openBelow ? spaceBelow : spaceAbove;
+        int maxRows = Math.clamp(this.filtered.size(), 1, MAX_VISIBLE_ROWS);
+        int rows = Math.clamp((availableHeight - fixedHeight) / ROW_HEIGHT, 1, maxRows);
+        int height = Math.max(1, Math.min(fixedHeight + ROW_HEIGHT * rows, screenHeight - 4));
+        int x = Math.max(2, Math.min(this.owner.getX(), screenWidth - width - 2));
+        int y = Math.max(2, Math.min(openBelow ? below : above - height, screenHeight - height - 2));
+        if (x == getX() && y == getY() && width == getWidth() && height == getHeight()) return;
+
+        boolean selectedVisible = this.selected >= this.offset && this.selected < this.offset + visibleRows();
+        setPosition(x, y);
+        setWidth(width);
+        setHeight(height);
+        this.search.setPosition(x + 4, y + 3);
+        this.search.setWidth(Math.max(1, width - 8));
+        this.offset = Math.min(this.offset, Math.max(0, this.filtered.size() - visibleRows()));
+        if (selectedVisible && visibleRows() > 0) revealSelected();
+    }
+
+    private int visibleRows() { return Math.max(0, (getHeight() - HEADER - BOTTOM_PADDING) / ROW_HEIGHT); }
 
     private void filter(String query) {
         String text = query.trim().toLowerCase(Locale.ROOT);
